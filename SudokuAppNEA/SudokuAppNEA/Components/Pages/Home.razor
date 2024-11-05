@@ -1,0 +1,44 @@
+﻿@page "/"
+@inject NavigationManager NavigationManager
+
+<PageTitle>Home</PageTitle>
+
+<h1 class="text-center mb-5">Welcome!</h1>
+
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 50vh;">
+    <div class="col-md-5 col-mr-5" text-align: center>
+        <EditForm Model="@user" FormName="Login" OnValidSubmit="HandleSubmit">
+            <div class="mb-5 text-center">
+                <label for="Username" class="form-label" style="font-size: 30px">Username:</label>
+                <InputText id="username" @bind-Value="user!.Username" class="form-control" style="font-size: 25px"></InputText>
+            </div>
+            <div class="mb-5 text-center">
+                <label for="Password" class="form-label" style="font-size: 30px">Password:</label>
+                <InputText id="password" @bind-Value="user.Password" class="form-control" style="font-size: 25px"></InputText>
+            </div>
+            <button type="submit" class="btn btn-primary" style="">Enter</button>
+        </EditForm>
+    </div>
+</div>
+
+@code
+{
+    [SupplyParameterFromForm]
+    public User? user { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        user = new User()
+            {
+                Username = string.Empty,
+                Password = string.Empty
+            };
+    }
+
+    public void HandleSubmit()
+    {
+        // find user in database if record exists, otherwise add a new user
+        NavigationManager.NavigateTo("/menu");
+    }
+}
