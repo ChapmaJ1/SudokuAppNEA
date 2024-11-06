@@ -3,28 +3,48 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1 class="text-center mb-5">Welcome!</h1>
+<style>
+    .form-container{
+        max-width: 400px;
+        margin: 0 auto;
+        min-height: 50vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    label{
+        font-size: 30px;
+        margin-bottom: 10px;
+        margin-top: 20px;
+    }
+    input{
+        font-size: 10px;
+        text-align: left;
+        margin-bottom: 20px;
+    }
+</style>
 
+<h1 style="text-align: center; font-size: 50px">Welcome!</h1>
 
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 50vh;">
-    <div class="col-md-5 col-mr-5" text-align: center>
-        <EditForm Model="@user" FormName="Login" OnValidSubmit="HandleSubmit">
-            <div class="mb-5 text-center">
-                <label for="Username" class="form-label" style="font-size: 30px">Username:</label>
-                <InputText id="username" @bind-Value="user!.Username" class="form-control" style="font-size: 25px"></InputText>
-            </div>
-            <div class="mb-5 text-center">
-                <label for="Password" class="form-label" style="font-size: 30px">Password:</label>
-                <InputText id="password" @bind-Value="user.Password" class="form-control" style="font-size: 25px"></InputText>
-            </div>
-            <button type="submit" class="btn btn-primary" style="">Enter</button>
-        </EditForm>
+<EditForm Model="@user" FormName="Login" OnValidSubmit="HandleSubmit">
+    <div class="form-container">
+        <div>
+            <label for="username">Username:</label> <br />
+            <InputText id="username" @bind-Value="user!.Username" class="form-control" />
+        </div>
+        <div>
+            <label for="password">Password:</label> <br />
+            <InputText id="password" @bind-Value="user.Password" class="form-control" />
+        </div>
+        <div>
+            <button class="btn btn-primary" style="margin-top: 20px; font-size: 20px">Submit</button>
+        </div>
     </div>
-</div>
+</EditForm>
 
 @code
 {
-    [SupplyParameterFromForm]
     public User? user { get; set; }
 
     protected override void OnParametersSet()
