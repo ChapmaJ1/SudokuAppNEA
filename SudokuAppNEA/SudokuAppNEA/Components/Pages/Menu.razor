@@ -1,31 +1,26 @@
 ﻿@page "/menu"
 @inject NavigationManager NavigationManager
 
-<style>
-    .btn {
-        font-size: 30px;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-</style>
+<h1 style="text-align: center; margin-bottom: 50px">Welcome</h1>
 
-<h1 class="container" style="text-align: center; margin-bottom: 50px">Welcome</h1>
-
-<div class="container" style="display: flex; flex-direction: column; gap: 30px; min-height: 50vh; text-align: center">
-    <div class="btn">
-        <a class="btn btn-primary" href="/game">New Game</a>
+<div style="display: flex; flex-direction: column;  gap: 100px; min-height: 50vh; text-align: center;">
+    <div>
+        <a type="button" class="btn-primary" href="/difficulty">New Game</a>
     </div>
-    <div class="btn">
-        <a class="btn btn-primary">Continue Game</a>
+    <div>
+        <a type="button" class="btn-primary" href="/continue">Continue Game</a>
     </div>
-    <div class="btn">
-        <a class="btn btn-primary" href="leaderboard" >Leaderboard</a>
+    <div>
+        <a type="button" class="btn-primary" href="leaderboard" >Leaderboard</a>
     </div>
-    <div class="btn">
-        <a class="btn btn-primary" href="/settings">Settings</a>
+    <div>
+        <a type="button" class="btn-primary" href="/settings">Settings</a>
     </div>
 </div>
 
 @code {
-
+    private void Navigate()
+    {
+        NavigationManager.NavigateTo("/difficulty");
+    }
 }

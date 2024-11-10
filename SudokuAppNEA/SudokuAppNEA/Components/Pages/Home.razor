@@ -3,42 +3,20 @@
 
 <PageTitle>Home</PageTitle>
 
-<style>
-    .form-container{
-        max-width: 400px;
-        margin: 0 auto;
-        min-height: 50vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    label{
-        font-size: 30px;
-        margin-bottom: 10px;
-        margin-top: 20px;
-    }
-    input{
-        font-size: 10px;
-        text-align: left;
-        margin-bottom: 20px;
-    }
-</style>
-
-<h1 style="text-align: center; font-size: 50px">Welcome!</h1>
+<h1>Welcome!</h1>
 
 <EditForm Model="@user" FormName="Login" OnValidSubmit="HandleSubmit">
     <div class="form-container">
         <div>
-            <label for="username">Username:</label> <br />
-            <InputText id="username" @bind-Value="user!.Username" class="form-control" />
+            <label class="form-label" for="username">Username:</label> 
+            <InputText id="username" @bind-Value="user!.Username" class="form-control input-text" />
         </div>
         <div>
-            <label for="password">Password:</label> <br />
-            <InputText id="password" @bind-Value="user.Password" class="form-control" />
+            <label class="form-label" for="password">Password:</label>
+            <InputText id="password" @bind-Value="user.Password" class="form-control input-text" />
         </div>
         <div>
-            <button class="btn btn-primary" style="margin-top: 20px; font-size: 20px">Submit</button>
+            <button class="btn-primary">Submit</button>
         </div>
     </div>
 </EditForm>

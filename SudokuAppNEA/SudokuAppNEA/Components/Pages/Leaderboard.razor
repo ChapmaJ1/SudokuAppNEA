@@ -1,5 +1,25 @@
-﻿<h3>Leaderboard</h3>
+﻿@page "/leaderboard"
+@inject NavigationManager NavigationManager
+
+<h1 style="font-size: 50px; text-align: center">Leaderboard</h1>
+
+<div style="margin-left: 100px; margin-top: 50px">
+    <strong><u>Name</u></strong>
+    <strong><u>Score</u></strong>
+    <strong><u>Date</u></strong>
+    <div>
+        <button class="btn-leaderboard">Main Menu</button>
+        <button class="btn-leaderboard">Next Page</button>
+        <button class="btn-leaderboard">Previous Page</button>
+    </div>
+</div>
+
 
 @code {
-
+    private LeaderboardEntry[]? data;
+    
+    protected override void OnParametersSet()
+    {
+        // fetch data from database backend class
+    }
 }

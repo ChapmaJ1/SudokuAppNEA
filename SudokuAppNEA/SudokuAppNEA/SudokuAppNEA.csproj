@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\Style.css" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SudokuAppNEA.Client\SudokuAppNEA.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.10" />
   </ItemGroup>
