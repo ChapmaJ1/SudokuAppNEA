@@ -12,7 +12,7 @@ namespace Sudoku_Solver_NEA
         public HeapPriorityQueue Queue { get; private set; }
         public ForwardChecker(Board board, List<Cell> variableNodes, HeapPriorityQueue queue) : base(board, variableNodes)
         {
-            VisitedNodes = new List<Cell>();
+            VisitedNodes = new();
             Queue = queue;
         }
         public override bool Solve()
@@ -54,11 +54,11 @@ namespace Sudoku_Solver_NEA
 
         private Dictionary<Cell, List<int>> RemoveRemainingNumbers(int number, Cell node)
         {
-            Dictionary<Cell, List<int>> removedNumbers = new Dictionary<Cell, List<int>>();
+            Dictionary<Cell, List<int>> removedNumbers = new();
             List<Cell> changeNodes = Board.AdjacencyList[node];   // all cells that the given node is linked to
             foreach (Cell changeNode in changeNodes)
             {
-                removedNumbers[changeNode] = new List<int>();
+                removedNumbers[changeNode] = new();
                 if (changeNode.Domain.Contains(number))   // if the current value of the node is in the domain of a connected cell
                 {
                     changeNode.Domain.Remove(number);
@@ -110,7 +110,7 @@ namespace Sudoku_Solver_NEA
 
         private List<(int,int)> SortByLCV(Cell cell)    // if MRV is not 1, run LCV
         {
-            List<(int,int)> orderedDomain = new List<(int,int)>();
+            List<(int,int)> orderedDomain = new();
             foreach (int number in cell.Domain)
             {
                 int impact = 0;

@@ -90,7 +90,7 @@ namespace Sudoku_Solver_NEA
                     return cell;
                 }
             }
-            throw new IndexOutOfRangeException("Cell index does not exist");
+            return null;
         }
 
         private List<Cell> GetFixedNodes()
