@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using SudokuAppNEA.Components;
+using SudokuAppNEA.Components.Clients;
 
 namespace SudokuAppNEA
 {
@@ -10,6 +11,7 @@ namespace SudokuAppNEA
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            //builder.Services.AddSingleton<UserClient>();
             //builder.Services.AddSingleton<NavigationManager>();
 
             builder.Services.AddRazorComponents()

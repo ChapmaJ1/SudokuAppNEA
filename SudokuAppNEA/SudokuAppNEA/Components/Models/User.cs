@@ -1,8 +1,12 @@
-﻿namespace SudokuAppNEA.Components.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SudokuAppNEA.Components.Models
 {
     public class User
     {
-        public required string Username { get; set; }
-        public required string Password { get; set; }
+        [Required]
+        public string Username { get; set; } = string.Empty;
+        [Required]
+        public string Password { get; set; } = string.Empty;
     }
 }

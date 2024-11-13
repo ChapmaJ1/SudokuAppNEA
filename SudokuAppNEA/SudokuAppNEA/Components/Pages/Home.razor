@@ -1,42 +1,38 @@
 ﻿@page "/"
 @inject NavigationManager NavigationManager
+@inject UserClient UserClient
 
 <PageTitle>Home</PageTitle>
 
 <h1>Welcome!</h1>
 
 <EditForm Model="@user" FormName="Login" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator/>
     <div class="form-container">
         <div>
             <label class="form-label" for="username">Username:</label> 
-            <InputText id="username" @bind-Value="user!.Username" class="form-control input-text" />
+            <InputText id="username" @bind-Value="user!.Username" class="form-control" />
+            <ValidationMessage For="(() => user.Username)" />
         </div>
         <div>
             <label class="form-label" for="password">Password:</label>
-            <InputText id="password" @bind-Value="user.Password" class="form-control input-text" />
+            <InputText id="password" @bind-Value="user.Password" type="password" class="form-control" />
         </div>
         <div>
-            <button class="btn-primary">Submit</button>
+            <button class="btn-primary" type="submit" style="margin-top: 50px;">Submit</button>
         </div>
     </div>
 </EditForm>
 
 @code
 {
-    public User? user { get; set; }
+    [SupplyParameterFromForm]
+    private User? user { get; set; } = new User();
 
-    protected override void OnParametersSet()
-    {
-        user = new User()
-            {
-                Username = string.Empty,
-                Password = string.Empty
-            };
-    }
-
-    public void HandleSubmit()
+    private void HandleSubmit()
     {
         // find user in database if record exists, otherwise add a new user
-        NavigationManager.NavigateTo("/menu");
+        UserClient.User = user!;
+        NavigationManager.NavigateTo($"/menu/{user!.Username}");
     }
 }

@@ -1,14 +1,54 @@
-﻿@page "/game/{difficulty}"
+﻿@using Sudoku_Solver_NEA
+
+@page "/game/{difficulty}"
 
 <h1>Game</h1>
 
+<div class="sudoku-container" ADDCSS>
+    @for (int row=0; row<9; row++)
+    {
+        <div class="sudoku-row">
+        @for (int column=0; column<9; column++)
+        {
+            <input type="text" class="sudoku-cell" ADDCSS @onfocus="() => OnCellSelected(row, column)"/>
+        }
+        </div>
+    }
+</div>
 
 @code {
     [Parameter]
     public string? difficulty {get; set;}
+    public Cell? selectedCell { get; set; }
+    public Board? board { get; set; }
 
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
-        base.OnParametersSet();
+        GenerateBoard();
+        base.OnInitialized();
+    }
+
+    private async void GenerateBoard()
+    {
+        BoardGeneratorAPI generator = new BoardGeneratorAPI();
+        ResponseData responseData = await generator.GenerateBoard();
+        board = generator.ConvertToBoard(responseData);
+        board.InitialiseGraph();
+        HeapPriorityQueue queue = new HeapPriorityQueue(board.VariableNodes, 9);
+        foreach (Cell node in board.VariableNodes)
+        {
+            queue.Enqueue(node);
+        }
+    }
+
+    public void OnCellSelected(int row, int column)
+    {
+        foreach (Cell cell in board!.VariableNodes)
+        {
+            if (cell.Position.Item1 == column && cell.Position.Item2 == row)
+            {
+                selectedCell = cell;
+            }
+        }
     }
 }

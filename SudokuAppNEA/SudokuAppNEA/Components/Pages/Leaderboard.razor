@@ -1,5 +1,6 @@
 ﻿@page "/leaderboard"
 @inject NavigationManager NavigationManager
+@inject UserClient UserClient
 
 <h1 style="font-size: 50px; text-align: center">Leaderboard</h1>
 
@@ -8,7 +9,7 @@
     <strong><u>Score</u></strong>
     <strong><u>Date</u></strong>
     <div>
-        <button class="btn-leaderboard">Main Menu</button>
+        <a type="button" class="btn-leaderboard" href="/menu">Main Menu</a>
         <button class="btn-leaderboard">Next Page</button>
         <button class="btn-leaderboard">Previous Page</button>
     </div>
