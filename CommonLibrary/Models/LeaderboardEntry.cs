@@ -1,4 +1,4 @@
-﻿namespace SudokuAppNEA.Components.Models
+﻿namespace CommonLibrary.Models
 {
     public class LeaderboardEntry
     {

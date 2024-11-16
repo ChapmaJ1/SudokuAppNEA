@@ -11,7 +11,6 @@ namespace Sudoku_Solver_NEA
         public string Difficulty { get; private set; }
         public List<Board> Solutions { get; private set; }
         public int[,] BoardSketch { get; private set; }
-        public Dictionary<Cell, List<(int, int)>> CellLocations { get; private set; }
         public List<Cell> VariableNodes { get; private set; }
         public Dictionary<Cell, List<Cell>> AdjacencyList { get; private set; }
 
@@ -20,7 +19,6 @@ namespace Sudoku_Solver_NEA
             Difficulty = difficulty;
             Solutions = new List<Board>();
             BoardSketch = boardSketch;
-            CellLocations = new Dictionary<Cell, List<(int, int)>>();
             AdjacencyList = new Dictionary<Cell, List<Cell>>();  // a dictionary of nodes (key) and the cells which the node links to via an edge (value)
             VariableNodes = new List<Cell>();
         }
@@ -33,7 +31,6 @@ namespace Sudoku_Solver_NEA
                 {
                     Cell cell = new Cell((i, j), BoardSketch[i, j]);
                     AdjacencyList.Add(cell, new List<Cell>());
-                    CellLocations.Add(cell, new List<(int, int)>());
                 }
             }
             foreach (Cell cell in AdjacencyList.Keys)
@@ -56,7 +53,6 @@ namespace Sudoku_Solver_NEA
                 if (i != jDimension)  // ensures that a cell is not shown to link to itself
                 {
                     AdjacencyList[cell].Add(GetCellLocation(iDimension, i));   // finds all the squares in the same row
-                    CellLocations[cell].Add((iDimension, i));
                 }
             }
             for (int i = 0; i < 9; i++)
@@ -64,7 +60,6 @@ namespace Sudoku_Solver_NEA
                 if (i != iDimension)
                 {
                     AdjacencyList[cell].Add(GetCellLocation(i, jDimension));  // finds all the squares in the same column
-                    CellLocations[cell].Add((i, jDimension));
                 }
             }
             for (int i = 0; i <= 2; i++)
@@ -73,7 +68,7 @@ namespace Sudoku_Solver_NEA
                 {
                     int addI = i + boxI * 3;
                     int addJ = j + boxJ * 3;  // finds which box the square lies in, and the corresponding nodes it must be joined to
-                    if (!(addI == iDimension && addJ == jDimension) && !CellLocations[cell].Contains((addI, addJ)))
+                    if (!(addI == iDimension && addJ == jDimension) && !AdjacencyList[cell].Contains(GetCellLocation(addI, addJ)))
                     {
                         AdjacencyList[cell].Add(GetCellLocation(addI, addJ));
                     }
@@ -90,7 +85,7 @@ namespace Sudoku_Solver_NEA
                     return cell;
                 }
             }
-            return null;
+            throw new InvalidOperationException("Cell does not exist");
         }
 
         private List<Cell> GetFixedNodes()

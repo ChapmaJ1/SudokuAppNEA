@@ -1,34 +1,46 @@
-﻿@using Sudoku_Solver_NEA
-
-@page "/game/{difficulty}"
+﻿@page "/game/{difficulty}"
 
 <h1>Game</h1>
 
+@if (board == null)
+{
+    <h1 style="margin-top: 100px">Loading...</h1>
+}
+else
+{
 <div class="sudoku-container" ADDCSS>
-    @for (int row=0; row<9; row++)
+    @for (int column = 0; column < 9; column++)
     {
         <div class="sudoku-row">
-        @for (int column=0; column<9; column++)
-        {
-            <input type="text" class="sudoku-cell" ADDCSS @onfocus="() => OnCellSelected(row, column)"/>
-        }
+            @for (int row = 0; row < 9; row++)
+            {
+                <button class="sudoku-cell" @onclick="() => {OnCellSelected(row, column); StateHasChanged();}">@DisplayCell(column, row)</button>
+            }
         </div>
     }
 </div>
+<div class="number-buttons-container">
+    @for (int i = 1; i < 10; i++)
+    {
+        <button class="button-cell" @onclick="() => {ChangeCellValue(i, () => StateHasChanged());}">@i</button>
+    }
+</div>
+}
 
 @code {
     [Parameter]
     public string? difficulty {get; set;}
-    public Cell? selectedCell { get; set; }
+    public Cell? selectedCell;
     public Board? board { get; set; }
+    public ForwardChecker? solver { get; set; }
 
-    protected override void OnInitialized()
+
+    protected override async Task OnInitializedAsync()
     {
-        GenerateBoard();
-        base.OnInitialized();
+        await InitialiseBoardAndSolver();
     }
 
-    private async void GenerateBoard()
+    private async Task InitialiseBoardAndSolver()
     {
         BoardGeneratorAPI generator = new BoardGeneratorAPI();
         ResponseData responseData = await generator.GenerateBoard();
@@ -39,9 +51,22 @@
         {
             queue.Enqueue(node);
         }
+        solver = new ForwardChecker(board, board.VariableNodes, queue);
     }
 
-    public void OnCellSelected(int row, int column)
+    public int DisplayCell(int column, int row)
+    {
+        foreach (Cell cell in board!.AdjacencyList.Keys)
+        {
+            if (cell.Position.Item1 == column && cell.Position.Item2 == row)
+            {
+                return cell.Entry;
+            }
+        }
+        throw new InvalidOperationException("Cell does not exist");
+    }
+
+    public void OnCellSelected(int column, int row)
     {
         foreach (Cell cell in board!.VariableNodes)
         {
@@ -50,5 +75,11 @@
                 selectedCell = cell;
             }
         }
+    }
+
+    public void ChangeCellValue(int number, Action refresh)
+    {
+        selectedCell!.Entry = number;
+        
     }
 }

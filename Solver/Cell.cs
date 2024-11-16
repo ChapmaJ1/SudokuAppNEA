@@ -9,7 +9,7 @@ namespace Sudoku_Solver_NEA
     public class Cell
     {
         public (int, int) Position { get; private set; }
-        public int Entry { get; internal set; }
+        public int Entry { get; set; }
         public List<int> Domain { get; private set; }
 
         public Cell((int,int) position, int entry)

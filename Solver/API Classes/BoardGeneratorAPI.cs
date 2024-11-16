@@ -26,7 +26,7 @@ namespace Sudoku_Solver_NEA
             {
                 string data = await response.Content.ReadAsStringAsync();     // serialises the data into a string
                 var result = JsonSerializer.Deserialize<ResponseData>(data, _options);   // deserialises the data a single ResponseData object
-                return result;
+                return result!;
             }
             else
             {

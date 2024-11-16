@@ -1,16 +1,17 @@
 ﻿using Microsoft.Data.Sqlite;
-using SudokuAppNEA.Components.Models;
+using CommonLibrary.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommonLibrary.Interfaces;
 
 namespace SQLDatabase
 {
-    public class DBCaller
+    public class DBCaller: IDatabaseCaller
     {
-        public string _connectionString { get; private set; }
+        public string _connectionString { get; set; }
         public DBCaller(string connectionString)
         {
             _connectionString = connectionString;

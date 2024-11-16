@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SudokuAppNEA", "SudokuAppNE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SudokuAppNEA.Client", "SudokuAppNEA\SudokuAppNEA.Client\SudokuAppNEA.Client.csproj", "{68F9A13D-52B7-467A-912B-14BBF93FDFC1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLDatabase", "SQLDatabase\SQLDatabase.csproj", "{1C4943CC-DA01-4D74-857A-50BA17A11DFC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLDatabase", "SQLDatabase\SQLDatabase.csproj", "{1C4943CC-DA01-4D74-857A-50BA17A11DFC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Solver", "Solver\Solver.csproj", "{A9C9ACBB-096B-471D-A5D0-E887CAB05125}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Solver", "Solver\Solver.csproj", "{A9C9ACBB-096B-471D-A5D0-E887CAB05125}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonLibrary", "CommonLibrary\CommonLibrary.csproj", "{D6721902-2B81-4D39-B7AE-7A6944F4D323}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{A9C9ACBB-096B-471D-A5D0-E887CAB05125}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9C9ACBB-096B-471D-A5D0-E887CAB05125}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9C9ACBB-096B-471D-A5D0-E887CAB05125}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6721902-2B81-4D39-B7AE-7A6944F4D323}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6721902-2B81-4D39-B7AE-7A6944F4D323}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6721902-2B81-4D39-B7AE-7A6944F4D323}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6721902-2B81-4D39-B7AE-7A6944F4D323}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

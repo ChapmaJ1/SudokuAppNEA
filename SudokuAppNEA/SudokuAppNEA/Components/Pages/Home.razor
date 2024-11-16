@@ -1,6 +1,5 @@
 ﻿@page "/"
 @inject NavigationManager NavigationManager
-@inject UserClient UserClient
 
 <PageTitle>Home</PageTitle>
 
@@ -12,7 +11,6 @@
         <div>
             <label class="form-label" for="username">Username:</label> 
             <InputText id="username" @bind-Value="user!.Username" class="form-control" />
-            <ValidationMessage For="(() => user.Username)" />
         </div>
         <div>
             <label class="form-label" for="password">Password:</label>
@@ -32,7 +30,7 @@
     private void HandleSubmit()
     {
         // find user in database if record exists, otherwise add a new user
-        UserClient.User = user!;
+        //UserClient.User = user!;
         NavigationManager.NavigateTo($"/menu/{user!.Username}");
     }
 }

@@ -52,7 +52,7 @@ namespace Sudoku_Solver_NEA
             return false;
         }
 
-        protected bool CheckFinished()
+        public bool CheckFinished()
         {
             foreach (Cell node in Board.AdjacencyList.Keys)
             {
@@ -64,7 +64,7 @@ namespace Sudoku_Solver_NEA
             return true;
         }
 
-        protected bool CheckInvalid()
+        public bool CheckInvalid()
         {
             foreach (KeyValuePair<Cell, List<Cell>> link in Board.AdjacencyList)
             {
