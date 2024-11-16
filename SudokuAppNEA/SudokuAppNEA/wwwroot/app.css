@@ -84,22 +84,67 @@ strong {
     margin-bottom: 15px;
 }
 
-.sudoku-container{
+.difficulty-container {
+    display: flex;
+    flex-direction: column;
+    gap: 100px;
+    min-height: 50vh;
+    text-align: center;
+    margin-top: 50px;
+    width: 250px;
+    margin-left: 35em;
+}
 
+.sudoku-container{
+    margin-top: 5em;
+    transform: translate(0, -500px);
 }
 
 .sudoku-row{
+    margin-left: 28em;
+    display: flex;
+    flex-direction: row;
 
 }
 
 .sudoku-cell{
-
+    width: 50px;
+    height: 50px;
+    color: black;
+    border-color: black;
 }
 
 .number-buttons-container{
-
+    margin-left: 16em;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    transform: translate(0,-650px)
 }
 
 .button-cell{
+    width: 80px;
+    height: 80px;
+    border-color: white;
+    font-size: 50px;
+}
 
+.game-btn-container-left{
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    max-width: 150px;
+    text-align: center;
+    margin-left: 5em;
+    margin-top: 8em;
+}
+
+.game-btn-container-right {
+    transform: translate(0,-850px);
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    max-width: 150px;
+    text-align: center;
+    margin-left: 65em;
 }

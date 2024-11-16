@@ -8,23 +8,35 @@
 }
 else
 {
-<div class="sudoku-container" ADDCSS>
-    @for (int column = 0; column < 9; column++)
-    {
-        <div class="sudoku-row">
-            @for (int row = 0; row < 9; row++)
-            {
-                <button class="sudoku-cell" @onclick="() => {OnCellSelected(row, column); StateHasChanged();}">@DisplayCell(column, row)</button>
-            }
-        </div>
-    }
-</div>
-<div class="number-buttons-container">
-    @for (int i = 1; i < 10; i++)
-    {
-        <button class="button-cell" @onclick="() => {ChangeCellValue(i, () => StateHasChanged());}">@i</button>
-    }
-</div>
+    <div class="game-btn-container-left">
+        <button class="btn-primary" @onclick="SolveBoard">Solve Board</button>
+        <button class="btn-primary" @onclick="CheckBoard">Check Board</button>
+        <a type="button" class="btn-primary" href="/difficulty">New Game</a>
+    </div>
+
+    <div class="sudoku-container">
+        @for (int column = 0; column < 9; column++)
+        {
+            <div class="sudoku-row">
+                @for (int row = 0; row < 9; row++)
+                {
+                    <button class="sudoku-cell" @onclick="() => {OnCellSelected(row, column); StateHasChanged();}">@DisplayCell(column, row)</button>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="game-btn-container-right">
+        <button class="btn-primary" @onclick="GetHint">Get Hint</button>
+        <button class="btn-primary" @onclick="ChangeNotesFunctionality">Notes: Off</button>
+    </div>
+
+    <div class="number-buttons-container">
+        @for (int i = 1; i < 10; i++)
+        {
+            <button class="button-cell" @onclick="() => {ChangeCellValue(i, () => StateHasChanged());}">@i</button>
+        }
+    </div>
 }
 
 @code {
@@ -54,13 +66,17 @@ else
         solver = new ForwardChecker(board, board.VariableNodes, queue);
     }
 
-    public int DisplayCell(int column, int row)
+    public string DisplayCell(int column, int row)
     {
         foreach (Cell cell in board!.AdjacencyList.Keys)
         {
             if (cell.Position.Item1 == column && cell.Position.Item2 == row)
             {
-                return cell.Entry;
+                if (cell.Entry != 0)
+                {
+                    return cell.Entry.ToString();
+                }
+                return "";
             }
         }
         throw new InvalidOperationException("Cell does not exist");
@@ -80,6 +96,26 @@ else
     public void ChangeCellValue(int number, Action refresh)
     {
         selectedCell!.Entry = number;
+
+    }
+
+    public void CheckBoard()
+    {
+        solver!.CheckInvalid();
+    }
+
+    public void SolveBoard()
+    {
+
+    }
+
+    public void GetHint()
+    {
+
+    }
+
+    public void ChangeNotesFunctionality()
+    {
         
     }
 }
