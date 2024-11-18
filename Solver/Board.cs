@@ -141,5 +141,13 @@ namespace Sudoku_Solver_NEA
             }
             return newBoard;
         }
+
+        public void Reset()
+        {
+            foreach (Cell cell in VariableNodes)
+            {
+                cell.Entry = 0;
+            } // reset queue too?
+        }
     }
 }

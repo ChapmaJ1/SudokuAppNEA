@@ -171,8 +171,7 @@ namespace Sudoku_Solver_NEA
                 HasUniqueSolution();
                 AddBackRemainingNumbers(removed);
             }
-            //VisitedNodes.Remove(node);  // backtrack when a node in VisitedNodes has 0 remaining nodes - come back
-            //Board.BoardSketch[node.Item2, node.Item1] = 0;
+            VisitedNodes.Remove(node);  // backtrack when a node in VisitedNodes has 0 remaining nodes - come back
             node.Entry = 0;
             return;
         }

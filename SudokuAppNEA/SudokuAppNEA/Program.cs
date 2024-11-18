@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.Components;
 using SudokuAppNEA.Components;
 using SudokuAppNEA.Components.Clients;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace SudokuAppNEA
 {
@@ -13,7 +18,7 @@ namespace SudokuAppNEA
             // Add services to the container.
 
             builder.Services.AddRazorComponents()
-                .AddInteractiveWebAssemblyComponents();
+                .AddInteractiveServerComponents();
 
             //builder.Services.AddSingleton<UserClient>();
             //builder.Services.AddSingleton<NavigationManager>();
@@ -38,8 +43,7 @@ namespace SudokuAppNEA
             app.UseAntiforgery();
 
             app.MapRazorComponents<App>()
-                .AddInteractiveWebAssemblyRenderMode()
-                .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
+                .AddInteractiveServerRenderMode();
 
             app.Run();
         }

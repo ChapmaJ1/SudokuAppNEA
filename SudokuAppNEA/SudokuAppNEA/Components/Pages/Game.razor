@@ -1,4 +1,6 @@
 ﻿@page "/game/{difficulty}"
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
 
 <h1>Game</h1>
 
@@ -8,48 +10,64 @@
 }
 else
 {
-    <div class="game-btn-container-left">
-        <button class="btn-primary" @onclick="SolveBoard">Solve Board</button>
-        <button class="btn-primary" @onclick="CheckBoard">Check Board</button>
-        <a type="button" class="btn-primary" href="/difficulty">New Game</a>
-    </div>
-
     <div class="sudoku-container">
         @for (int column = 0; column < 9; column++)
         {
             <div class="sudoku-row">
                 @for (int row = 0; row < 9; row++)
                 {
-                    <button class="sudoku-cell" @onclick="() => {OnCellSelected(row, column); StateHasChanged();}">@DisplayCell(column, row)</button>
+                    int columnTemp = column; // if row, column directly used, OnSelected(9,9) would be called
+                    int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
+                    string backgroundColour = GetBackgroundColour(columnTemp, rowTemp);
+                    <button class="sudoku-cell-default" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(columnTemp, rowTemp)">@DisplayCell(column, row)</button>
                 }
             </div>
         }
     </div>
 
+    <div class="game-btn-container-left">
+        <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
+        <button class="btn-primary" @onclick=CheckBoard>Check Board</button>
+        <button class="btn-primary" @onclick=NavigateToDifficulty>New Game</button>
+    </div>
+
     <div class="game-btn-container-right">
-        <button class="btn-primary" @onclick="GetHint">Get Hint</button>
-        <button class="btn-primary" @onclick="ChangeNotesFunctionality">Notes: Off</button>
+        <button class="btn-primary" @onclick=Reset>Reset Board</button>
+        <button class="btn-primary" @onclick=GetHint>Get Hint</button>
+        <button class="btn-primary" @onclick=ChangeNotesFunctionality>Notes: Off</button>
     </div>
 
     <div class="number-buttons-container">
         @for (int i = 1; i < 10; i++)
         {
-            <button class="button-cell" @onclick="() => {ChangeCellValue(i, () => StateHasChanged());}">@i</button>
+            int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
+            <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
         }
     </div>
+    @if (selectedCell != null)
+    {
+        <h1>Selected Cell @selectedCell.Position.Item1 @selectedCell.Position.Item2</h1>
+    }
 }
 
 @code {
     [Parameter]
     public string? difficulty {get; set;}
-    public Cell? selectedCell;
-    public Board? board { get; set; }
-    public ForwardChecker? solver { get; set; }
-
+    private Cell? selectedCell;
+    private Board? board { get; set; }
+    private ForwardChecker? solver { get; set; }
+    private int[,]? correctNumbers = new int[9, 9];
+    private string difficultyUrl = "/difficulty";
+    private bool solved;
 
     protected override async Task OnInitializedAsync()
     {
         await InitialiseBoardAndSolver();
+    }
+
+    private void NavigateToDifficulty()
+    {
+        NavigationManager.NavigateTo(difficultyUrl);
     }
 
     private async Task InitialiseBoardAndSolver()
@@ -64,9 +82,31 @@ else
             queue.Enqueue(node);
         }
         solver = new ForwardChecker(board, board.VariableNodes, queue);
+        InitialiseCorrectNumbers();
+        solved = false;
     }
 
-    public string DisplayCell(int column, int row)
+    private void InitialiseCorrectNumbers()
+    {
+        solver!.HasUniqueSolution();
+        foreach (Cell cell in board!.Solutions[0].AdjacencyList.Keys)
+        {
+            correctNumbers![cell.Position.Item1, cell.Position.Item2] = cell.Entry;
+        }
+        board.Reset();
+    }
+
+    private string GetBackgroundColour(int column, int row)
+    {
+        string cellValue = DisplayCell(column, row);
+        if (cellValue != "" && cellValue != correctNumbers![column, row].ToString())
+        {
+            return "red";
+        }
+        return "white";
+    }
+
+    private string DisplayCell(int column, int row)
     {
         foreach (Cell cell in board!.AdjacencyList.Keys)
         {
@@ -82,39 +122,57 @@ else
         throw new InvalidOperationException("Cell does not exist");
     }
 
-    public void OnCellSelected(int column, int row)
+    private void OnCellSelected(int column, int row)
     {
-        foreach (Cell cell in board!.VariableNodes)
+        if (!solved)
         {
-            if (cell.Position.Item1 == column && cell.Position.Item2 == row)
+            foreach (Cell cell in board!.VariableNodes)
             {
-                selectedCell = cell;
+                if (cell.Position.Item1 == column && cell.Position.Item2 == row)
+                {
+                    selectedCell = cell;
+                }
             }
         }
     }
 
-    public void ChangeCellValue(int number, Action refresh)
+    private void ChangeCellValue(int number)
     {
-        selectedCell!.Entry = number;
-
+        if (!solved)
+        {
+            selectedCell!.Entry = number;
+        }
     }
 
-    public void CheckBoard()
+    private void CheckBoard()
     {
         solver!.CheckInvalid();
     }
 
-    public void SolveBoard()
+    private void SolveBoard()
+    {
+        if (!solved)
+        {
+            board!.Reset();
+            solver!.Solve();
+            solved = true;
+        }
+    }
+
+    private void Reset()
+    {
+        if (!solved)
+        {
+            board!.Reset();
+        }
+    }
+
+    private void GetHint()
     {
 
     }
 
-    public void GetHint()
-    {
-
-    }
-
-    public void ChangeNotesFunctionality()
+    private void ChangeNotesFunctionality()
     {
         
     }

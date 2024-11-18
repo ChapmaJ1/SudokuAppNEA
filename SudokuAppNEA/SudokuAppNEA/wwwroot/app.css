@@ -30,6 +30,8 @@ h1:focus {
 
 
 
+
+
 h1{
     text-align: center;
     font-size: 50px;
@@ -97,7 +99,6 @@ strong {
 
 .sudoku-container{
     margin-top: 5em;
-    transform: translate(0, -500px);
 }
 
 .sudoku-row{
@@ -107,29 +108,43 @@ strong {
 
 }
 
-.sudoku-cell{
+.sudoku-cell-default{
     width: 50px;
     height: 50px;
     color: black;
     border-color: black;
+    padding: 2px;
+    font-size: 15px;
 }
 
-.number-buttons-container{
+.sudoku-cell-incorrect {
+    width: 50px;
+    height: 50px;
+    color: black;
+    border-color: black;
+    background-color: red;
+    padding: 2px;
+    font-size: 15px;
+}
+
+.number-buttons-container {
     margin-left: 16em;
     display: flex;
     flex-direction: row;
     gap: 20px;
-    transform: translate(0,-650px)
+    transform: translate(0,-800px)
 }
 
 .button-cell{
     width: 80px;
     height: 80px;
-    border-color: white;
+    border-color: black;
     font-size: 50px;
+    text-align: center;
 }
 
-.game-btn-container-left{
+.game-btn-container-left {
+    transform: translate(0px,-540px);
     display: flex;
     flex-direction: column;
     gap: 50px;
@@ -140,7 +155,7 @@ strong {
 }
 
 .game-btn-container-right {
-    transform: translate(0,-850px);
+    transform: translate(0px,-890px);
     display: flex;
     flex-direction: column;
     gap: 50px;
