@@ -19,7 +19,7 @@ else
                     int columnTemp = column; // if row, column directly used, OnSelected(9,9) would be called
                     int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
                     string backgroundColour = GetBackgroundColour(columnTemp, rowTemp);
-                    <button class="sudoku-cell-default" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(columnTemp, rowTemp)">@DisplayCell(column, row)</button>
+                   <button class="sudoku-cell-default" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(columnTemp, rowTemp)">@DisplayCell(column, row)</button>
                 }
             </div>
         }
@@ -55,6 +55,7 @@ else
     public string? difficulty {get; set;}
     private Cell? selectedCell;
     private Board? board { get; set; }
+    private Board? solution { get; set; }
     private ForwardChecker? solver { get; set; }
     private int[,]? correctNumbers = new int[9, 9];
     private string difficultyUrl = "/difficulty";
@@ -62,7 +63,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await InitialiseBoardAndSolver();
+        await InitialiseBoardAndSolver();  // asynchronous method for API call
     }
 
     private void NavigateToDifficulty()
@@ -74,32 +75,32 @@ else
     {
         BoardGeneratorAPI generator = new BoardGeneratorAPI();
         ResponseData responseData = await generator.GenerateBoard();
-        board = generator.ConvertToBoard(responseData);
+        board = generator.ConvertToBoard(responseData); // fetch board from API
         board.InitialiseGraph();
-        HeapPriorityQueue queue = new HeapPriorityQueue(board.VariableNodes, 9);
-        foreach (Cell node in board.VariableNodes)
-        {
-            queue.Enqueue(node);
-        }
-        solver = new ForwardChecker(board, board.VariableNodes, queue);
+        board.SetQueue();  // initialise the board ready for solving
+        solver = new ForwardChecker(board, board.VariableNodes);
         InitialiseCorrectNumbers();
         solved = false;
     }
 
     private void InitialiseCorrectNumbers()
     {
-        solver!.HasUniqueSolution();
-        foreach (Cell cell in board!.Solutions[0].AdjacencyList.Keys)
+        solver!.Solve(); // solve the board to get correct numbers, storing the result in board.Solutions
+        for (int i=0; i<9; i++)  // to be accessed in constant time later on???
         {
-            correctNumbers![cell.Position.Item1, cell.Position.Item2] = cell.Entry;
+            for (int j=0; j<9; j++)
+            {
+                correctNumbers![i, j] = board!.Solutions[0].BoardSketch[i, j];  // set correct numbers
+            }
         }
-        board.Reset();
+        board!.Reset();  // reset the board so that it is rendered in its initial state for the user
+        board.SetQueue();
     }
 
     private string GetBackgroundColour(int column, int row)
     {
         string cellValue = DisplayCell(column, row);
-        if (cellValue != "" && cellValue != correctNumbers![column, row].ToString())
+        if (cellValue != "" && cellValue != correctNumbers![column, row].ToString())  // if cell is non-empty and is filled with an incorrect value
         {
             return "red";
         }
@@ -153,9 +154,11 @@ else
     {
         if (!solved)
         {
-            board!.Reset();
-            solver!.Solve();
-            solved = true;
+            foreach (Cell cell in board!.VariableNodes)
+            {
+                cell.Entry = correctNumbers![cell.Position.Item1, cell.Position.Item2];  // sets the value of all cells to the correct value, ensuring they are rendered correctly 
+         
+            }
         }
     }
 

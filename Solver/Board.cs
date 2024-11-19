@@ -13,6 +13,7 @@ namespace Sudoku_Solver_NEA
         public int[,] BoardSketch { get; private set; }
         public List<Cell> VariableNodes { get; private set; }
         public Dictionary<Cell, List<Cell>> AdjacencyList { get; private set; }
+        public HeapPriorityQueue Queue { get; private set; }
 
         public Board(string difficulty, int[,] boardSketch)
         {
@@ -39,6 +40,15 @@ namespace Sudoku_Solver_NEA
             }
             InitialiseRemainingNumbers(GetFixedNodes());
             SetVariableNodes();
+        }
+
+        public void SetQueue()
+        {
+            Queue = new HeapPriorityQueue(VariableNodes, BoardSketch.GetLength(0));
+            foreach (Cell cell in VariableNodes)
+            {
+                Queue.Enqueue(cell);
+            }
         }
 
         private void AddEdges(Cell cell)

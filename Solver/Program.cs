@@ -29,6 +29,7 @@ namespace Sudoku_Solver_NEA
                             { 0,0,9,6,8,0,0,0,0} };
             Board board = new Board("Hard", boardSketch);
             board.InitialiseGraph();
+            board.SetQueue();
 
             /*foreach (KeyValuePair<Cell, List<Cell>> pair in board.AdjacencyList)
             {
@@ -48,36 +49,19 @@ namespace Sudoku_Solver_NEA
             }
             Console.WriteLine(string.Join(",", board.GetVariableNodes()));*/
             //solver.Solve();
-            HeapPriorityQueue queue = new HeapPriorityQueue(board.VariableNodes, 9);
-            foreach (Cell node in board.VariableNodes)
-            {
-                queue.Enqueue(node);
-            }
-            ForwardChecker solver2 = new ForwardChecker(board, board.VariableNodes,queue);
-            /*solver2.HasUniqueSolution();
-            Console.WriteLine($"{board.Solutions.Count} solutions");
-            foreach (int[,] individualBoard in board.Solutions)
-            {
-                for (int i = 0; i < 9; i++)
-                {
-                    for (int j = 0; j < 9; j++)
-                    {
-                        Console.Write(individualBoard[i, j] + "  ");
-                    }
-                    Console.WriteLine();
-                }
-                Console.WriteLine("\n");
-            }*/
+            ForwardChecker solver2 = new ForwardChecker(board, board.VariableNodes);
             solver2.Solve();
+            //Console.WriteLine($"{board.Solutions.Count} solutions");
+            board.Reset();
+            Board boardTemp = board.Solutions[0];
+            Console.WriteLine($"{board.Solutions.Count} solutions");
             Console.WriteLine("Solved");
-            //solver2.HasUniqueSolution();
-
+          
             
             
             
             
-            
-            BoardGeneratorAPI generator = new BoardGeneratorAPI();
+           /* BoardGeneratorAPI generator = new BoardGeneratorAPI();
             
             ResponseData response = await generator.GenerateBoard();
             Board board2 = generator.ConvertToBoard(response);
@@ -88,8 +72,10 @@ namespace Sudoku_Solver_NEA
                 queue2.Enqueue(node);
             }
             ForwardChecker solver3 = new ForwardChecker(board2, board2.VariableNodes, queue2);
-            solver3.Solve();
-            Console.ReadLine();
+            //solver3.Solve();
+            solver3.HasUniqueSolution();
+            Console.WriteLine(board2.Solutions.Count);
+            Console.ReadLine(); */
         }
     }
 }

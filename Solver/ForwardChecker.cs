@@ -10,10 +10,10 @@ namespace Sudoku_Solver_NEA
     {
         public List<Cell> VisitedNodes { get; private set; }
         public HeapPriorityQueue Queue { get; private set; }
-        public ForwardChecker(Board board, List<Cell> variableNodes, HeapPriorityQueue queue) : base(board, variableNodes)
+        public ForwardChecker(Board board, List<Cell> variableNodes) : base(board, variableNodes)
         {
             VisitedNodes = new();
-            Queue = queue;
+            Queue = board.Queue;
         }
         public override bool Solve()
         {
@@ -24,6 +24,8 @@ namespace Sudoku_Solver_NEA
             if (CheckFinished())
             {
                 PrintBoard(Board);
+                Board tempBoard = Board.Clone(Board);
+                Board.Solutions.Add(tempBoard);
                 return true;
             }
             Cell node = GetMRV();
@@ -148,22 +150,13 @@ namespace Sudoku_Solver_NEA
             }
             if (CheckFinished())
             {
-                PrintBoard(Board);
-                Console.WriteLine("\n");
                 Board tempBoard = Board.Clone(Board);   // objects passed by reference not value, clone needed to store the actual values                 
                 Board.Solutions.Add(tempBoard);
                 return;
             }
-            Cell node = new Cell((9, 9), -1);
-            for (int i = 0; i < VariableNodes.Count; i++)
-            {
-                if (VariableNodes[i].Entry == 0)
-                {
-                    node = VariableNodes[i];
-                    break;
-                }
-            }
+            Cell node = GetMRV();
             VisitedNodes.Add(node);
+            List<(int, int)> orderedDomain = SortByLCV(node);
             for (int i = 0; i < node.Domain.Count; i++)
             {
                 node.Entry = node.Domain[i];
@@ -172,6 +165,7 @@ namespace Sudoku_Solver_NEA
                 AddBackRemainingNumbers(removed);
             }
             VisitedNodes.Remove(node);  // backtrack when a node in VisitedNodes has 0 remaining nodes - come back
+            Queue.Enqueue(node);
             node.Entry = 0;
             return;
         }
