@@ -9,7 +9,7 @@ using CommonLibrary.Interfaces;
 
 namespace SQLDatabase
 {
-    public class DBCaller: IDatabaseCaller
+    public class DBCaller: IDBCaller
     {
         public string _connectionString { get; set; }
         public DBCaller(string connectionString)
@@ -36,7 +36,7 @@ namespace SQLDatabase
                 connection.Open();
                 connection.ConnectionString = _connectionString;
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "insert into ...";
+                command.CommandText = "insert into  ";
                 // var 
             }
         }
@@ -49,7 +49,7 @@ namespace SQLDatabase
                 connection.Open();
                 connection.ConnectionString = _connectionString;
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "select ...";
+                command.CommandText = "select * from Boards where UserID = 1";
                 var reader = command.ExecuteReader();
                 while (reader.Read())
                 {

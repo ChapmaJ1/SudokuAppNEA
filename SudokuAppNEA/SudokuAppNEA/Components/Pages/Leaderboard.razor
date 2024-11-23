@@ -1,6 +1,5 @@
 ﻿@page "/leaderboard"
 @inject NavigationManager NavigationManager
-@inject UserClient UserClient
 
 <h1 style="font-size: 50px; text-align: center">Leaderboard</h1>
 
@@ -18,9 +17,10 @@
 
 @code {
     private LeaderboardEntry[]? data;
-    
+    private List<LeaderboardEntry>? dataEntries { get; set; }
+
     protected override void OnInitialized()
     {
-        // fetch data from database backend class
+        //dataEntries = DatabaseCaller.GetLeaderboardEntries();
     }
 }

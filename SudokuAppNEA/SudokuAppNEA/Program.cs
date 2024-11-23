@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using CommonLibrary.Interfaces;
+using SQLDatabase;
 
 namespace SudokuAppNEA
 {
@@ -20,8 +22,8 @@ namespace SudokuAppNEA
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
-            //builder.Services.AddSingleton<UserClient>();
-            //builder.Services.AddSingleton<NavigationManager>();
+            builder.Services.AddSingleton<UserClient>();
+            builder.Services.AddDatabaseServices();
 
             var app = builder.Build();
 

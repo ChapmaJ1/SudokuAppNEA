@@ -1,5 +1,6 @@
 ﻿@page "/"
 @inject NavigationManager NavigationManager
+@inject UserClient UserClient
 
 <PageTitle>Home</PageTitle>
 
@@ -30,7 +31,7 @@
     private void HandleSubmit()
     {
         // find user in database if record exists, otherwise add a new user
-        //UserClient.User = user!;
+        UserClient.User = user!;
         NavigationManager.NavigateTo($"/menu/{user!.Username}");
     }
 }

@@ -7,7 +7,7 @@ using CommonLibrary.Models;
 
 namespace CommonLibrary.Interfaces
 {
-    public interface IDatabaseCaller
+    public interface IDBCaller
     {
         string _connectionString { get; set; }
 
