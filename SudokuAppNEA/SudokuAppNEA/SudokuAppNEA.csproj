@@ -15,13 +15,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.10" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\CommonLibrary\CommonLibrary.csproj" />
+    <ProjectReference Include="..\..\CommonLibrary\SQLDatabase.csproj" />
     <ProjectReference Include="..\..\Solver\Solver.csproj" />
-    <ProjectReference Include="..\..\SQLDatabase\SQLDatabase.csproj" />
     <ProjectReference Include="..\SudokuAppNEA.Client\SudokuAppNEA.Client.csproj" />
   </ItemGroup>
 

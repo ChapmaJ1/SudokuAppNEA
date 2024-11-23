@@ -1,4 +1,4 @@
-﻿namespace CommonLibrary.Models
+﻿namespace CommonLibrary
 {
     public class LeaderboardEntry
     {

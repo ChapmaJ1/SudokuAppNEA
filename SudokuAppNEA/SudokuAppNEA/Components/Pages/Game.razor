@@ -10,6 +10,8 @@
 }
 else
 {
+    TimeSpan timer = DateTime.Now - launchTime;
+    <h3 style="margin-left: 100px">Timer: @timer.Minutes:@timer.Seconds</h3>
     <div class="sudoku-container">
         @for (int column = 0; column < 9; column++)
         {
@@ -44,10 +46,6 @@ else
             <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
         }
     </div>
-    @if (selectedCell != null)
-    {
-        <h1>Selected Cell @selectedCell.Position.Item1 @selectedCell.Position.Item2</h1>
-    }
 }
 
 @code {
@@ -60,10 +58,16 @@ else
     private int[,]? correctNumbers = new int[9, 9];
     private string difficultyUrl = "/difficulty";
     private bool solved;
+    private DateTime launchTime = DateTime.Now;
 
     protected override async Task OnInitializedAsync()
     {
         await InitialiseBoardAndSolver();  // asynchronous method for API call
+        while (solved == false)
+        {
+            await Task.Delay(1000);
+            StateHasChanged();
+        }
     }
 
     private void NavigateToDifficulty()

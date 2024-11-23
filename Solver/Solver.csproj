@@ -9,12 +9,11 @@
 
   <ItemGroup>
     <PackageReference Include="System.Net.Http.Json" Version="8.0.1" />
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommonLibrary\CommonLibrary.csproj" />
-    <ProjectReference Include="..\SQLDatabase\SQLDatabase.csproj" />
+    <ProjectReference Include="..\CommonLibrary\SQLDatabase.csproj" />
   </ItemGroup>
 
 </Project>
