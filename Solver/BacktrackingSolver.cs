@@ -10,12 +10,10 @@ namespace Sudoku_Solver_NEA
     {
         public Board Board { get; private set; }
         public List<Cell> VisitedCells { get; private set; }
-        public List<Cell> VariableNodes { get; private set; }
-        public BacktrackingSolver(Board board, List<Cell> variableNodes)
+        public BacktrackingSolver(Board board)
         {
             Board = board;
             VisitedCells = new List<Cell>();
-            VariableNodes = variableNodes;
         }
 
         public virtual bool Solve()
@@ -30,11 +28,11 @@ namespace Sudoku_Solver_NEA
                 return true;
             }
             Cell node = new Cell((9, 9), -1);   // new arbitrary cell to be assigned to
-            for (int i = 0; i < VariableNodes.Count; i++)
+            for (int i = 0; i < Board.VariableNodes.Count; i++)
             {
-                if (VariableNodes[i].Entry == 0)   // unassigned cell
+                if (Board.VariableNodes[i].Entry == 0)   // unassigned cell
                 {
-                    node = VariableNodes[i];
+                    node = Board.VariableNodes[i];
                     break;
                 }
             }

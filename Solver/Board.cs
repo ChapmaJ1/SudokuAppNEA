@@ -156,8 +156,8 @@ namespace Sudoku_Solver_NEA
         {
             foreach (Cell cell in VariableNodes)
             {
-                cell.Entry = 0;
-            } // reset queue too?
+                cell.Entry = 0;   // sets all cells that were not part of the fixed starting arrangement to empty
+            } 
         }
     }
 }

@@ -101,11 +101,10 @@ strong {
     margin-top: 5em;
 }
 
-.sudoku-row{
+.sudoku-column{
     margin-left: 28em;
     display: flex;
     flex-direction: row;
-
 }
 
 .sudoku-cell-default{
@@ -135,6 +134,14 @@ strong {
     transform: translate(0,-800px)
 }
 
+.number-buttons-container-low {
+    margin-left: 16em;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    transform: translate(0,-400px)
+}
+
 .button-cell{
     width: 80px;
     height: 80px;
@@ -162,4 +169,21 @@ strong {
     max-width: 150px;
     text-align: center;
     margin-left: 65em;
+}
+
+.custom-btn-container {
+    transform: translate(0px,-540px);
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    max-width: 150px;
+    text-align: center;
+    margin-left: 5em;
+    margin-top: 8em;
+}
+
+.right-text-container{
+    margin-left: 60em;
+    transform: translate(0px,-800px);
+    text-align: center;
 }

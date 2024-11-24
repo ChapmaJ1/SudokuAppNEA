@@ -49,7 +49,7 @@ namespace Sudoku_Solver_NEA
             }
             Console.WriteLine(string.Join(",", board.GetVariableNodes()));*/
             //solver.Solve();
-            ForwardChecker solver2 = new ForwardChecker(board, board.VariableNodes);
+            ForwardChecker solver2 = new ForwardChecker(board);
             solver2.Solve();
             //Console.WriteLine($"{board.Solutions.Count} solutions");
             board.Reset();

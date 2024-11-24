@@ -13,15 +13,15 @@ else
     TimeSpan timer = DateTime.Now - launchTime;
     <h3 style="margin-left: 100px">Timer: @timer.Minutes:@timer.Seconds</h3>
     <div class="sudoku-container">
-        @for (int column = 0; column < 9; column++)
+        @for (int row = 0; row < 9; row++)
         {
-            <div class="sudoku-row">
-                @for (int row = 0; row < 9; row++)
+            <div class="sudoku-column">
+                @for (int column = 0; column < 9; column++)
                 {
                     int columnTemp = column; // if row, column directly used, OnSelected(9,9) would be called
                     int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
-                    string backgroundColour = GetBackgroundColour(columnTemp, rowTemp);
-                   <button class="sudoku-cell-default" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(columnTemp, rowTemp)">@DisplayCell(column, row)</button>
+                    string backgroundColour = GetBackgroundColour(rowTemp, columnTemp);
+                   <button class="sudoku-cell-default" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
                 }
             </div>
         }
@@ -82,15 +82,15 @@ else
         board = generator.ConvertToBoard(responseData); // fetch board from API
         board.InitialiseGraph();
         board.SetQueue();  // initialise the board ready for solving
-        solver = new ForwardChecker(board, board.VariableNodes);
-        InitialiseCorrectNumbers();
+        solver = new ForwardChecker(board);
+        InitialiseCorrectNumbers(); 
         solved = false;
     }
 
     private void InitialiseCorrectNumbers()
     {
-        solver!.Solve(); // solve the board to get correct numbers, storing the result in board.Solutions
-        for (int i=0; i<9; i++)  // to be accessed in constant time later on???
+        solver!.Solve(); // solve the board to get correct numbers + caches the result in board.Solutions
+        for (int i=0; i<9; i++)  // for constant time access later on
         {
             for (int j=0; j<9; j++)
             {
@@ -111,29 +111,29 @@ else
         return "white";
     }
 
-    private string DisplayCell(int column, int row)
+    private string DisplayCell(int row, int column)
     {
         foreach (Cell cell in board!.AdjacencyList.Keys)
         {
-            if (cell.Position.Item1 == column && cell.Position.Item2 == row)
+            if (cell.Position.Item1 == row && cell.Position.Item2 == column)
             {
                 if (cell.Entry != 0)
                 {
                     return cell.Entry.ToString();
                 }
-                return "";
+                return "";  // displays the cell value if it is non-empty, otherwise displays nothing
             }
         }
         throw new InvalidOperationException("Cell does not exist");
     }
 
-    private void OnCellSelected(int column, int row)
+    private void OnCellSelected(int row, int column)
     {
         if (!solved)
         {
             foreach (Cell cell in board!.VariableNodes)
             {
-                if (cell.Position.Item1 == column && cell.Position.Item2 == row)
+                if (cell.Position.Item1 == row && cell.Position.Item2 == column)
                 {
                     selectedCell = cell;
                 }
@@ -161,9 +161,9 @@ else
             foreach (Cell cell in board!.VariableNodes)
             {
                 cell.Entry = correctNumbers![cell.Position.Item1, cell.Position.Item2];  // sets the value of all cells to the correct value, ensuring they are rendered correctly 
-         
             }
         }
+        solved = true;
     }
 
     private void Reset()

@@ -10,7 +10,7 @@ namespace Sudoku_Solver_NEA
     {
         public List<Cell> VisitedNodes { get; private set; }
         public HeapPriorityQueue Queue { get; private set; }
-        public ForwardChecker(Board board, List<Cell> variableNodes) : base(board, variableNodes)
+        public ForwardChecker(Board board) : base(board)
         {
             VisitedNodes = new();
             Queue = board.Queue;

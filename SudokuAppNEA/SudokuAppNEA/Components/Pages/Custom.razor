@@ -1,7 +1,119 @@
 ﻿@page "/custom"
+@inject NavigationManager NavigationManager
 
-<h3>Custom</h3>
+<h1>Custom Board</h1>
+
+@if (sketch == null)
+{
+    <h1 style="margin-top: 100px">Loading...</h1>
+}
+else
+{
+    <div class="sudoku-container">
+        @for (int row = 0; row < 9; row++)
+        {
+            <div class="sudoku-column">
+                @for (int column = 0; column < 9; column++)
+                {
+                    int columnTemp = column; // if row, column directly used, OnSelected(9,9) would be called
+                    int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
+                    <button class="sudoku-cell-default" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="custom-btn-container">
+        <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
+        <button class="btn-primary" @onclick=NavigateToDifficulty>New Game</button>
+        <button class="btn-primary" @onclick=Reset>Reset Board</button>
+    </div>
+
+    <div class="right-text-container">
+        @if (solvable == false)
+        {
+            <h3>Unsolvable Board Input</h3>
+        }
+    </div>
+
+    <div class="number-buttons-container-low">
+        @for (int i = 1; i < 10; i++)
+        {
+            int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
+            <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
+        }
+    </div>
+}
 
 @code {
+    private int[,] sketch = new int[9, 9];  // using array instead of board to create initial board sketch (from user input) to be solved
+    private Board? board;
+    private (int, int) selectedSquare;
+    private ForwardChecker? solver { get; set; }
+    private bool solvable = true;
 
+    protected override void OnInitialized()
+    {
+        int[,] sketch = new int[9, 9];
+        for (int i=0; i<9; i++)
+        {
+            for (int j=0; j<9; j++)
+            {
+                sketch[i, j] = 0;   // initialises board sketch to an empty board
+            }
+        }
+    }
+
+    private void NavigateToDifficulty()
+    {
+        NavigationManager.NavigateTo("/difficulty");
+    }
+
+    private string DisplayCell(int row, int column)
+    {
+        if (sketch![row,column] != 0)
+        {
+            return sketch[row,column].ToString();
+        }
+        return "";
+        throw new InvalidOperationException("Cell does not exist");
+    }
+
+    private void OnCellSelected(int row, int column)
+    {
+        selectedSquare = ((row, column));   // selects location
+    }
+
+    private void ChangeCellValue(int number)
+    {
+        sketch![selectedSquare.Item1, selectedSquare.Item2] = number;   // sets the value of a given board location to the desired number
+    }
+
+    private void SolveBoard()
+    {
+        board = new Board("", sketch);
+        board.InitialiseGraph();   // initialises the board, using the altered sketch, and solves
+        board!.SetQueue();
+        solver = new ForwardChecker(board);
+        if (solver.CheckInvalid())
+        {
+            solvable = false;
+        }
+        else
+        {
+            solvable = true;
+            solver!.Solve();
+        }
+    }
+
+    private void Reset()
+    {
+        for (int i=0; i<9; i++)
+        {
+            for (int j=0; j<9; j++)
+            {
+                sketch[i, j] = 0;  // sketch not directly bound to board object - board can be reset 
+            }                      // and a completely new one can be input + solved as required
+        }
+    }
 }
