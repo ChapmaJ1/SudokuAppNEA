@@ -46,7 +46,7 @@ namespace Sudoku_Solver_NEA
                     return true;
                 }
             }
-            node.Entry = 0;
+            node.Entry = 0;  // moving back up the tree - resetting the most recently edited cell
             return false;
         }
 
@@ -91,6 +91,7 @@ namespace Sudoku_Solver_NEA
                 }
                 Console.WriteLine();
             }
+            Console.WriteLine();
         }
     }
 }

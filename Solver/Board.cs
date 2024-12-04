@@ -9,7 +9,8 @@ namespace Sudoku_Solver_NEA
     public class Board
     {
         public string Difficulty { get; private set; }
-        public List<Board> Solutions { get; private set; }
+        public List<Board> Solutions { get; set; }
+        public int SolutionCount { get; set; }
         public int[,] BoardSketch { get; private set; }
         public List<Cell> VariableNodes { get; private set; }
         public Dictionary<Cell, List<Cell>> AdjacencyList { get; private set; }
@@ -86,7 +87,7 @@ namespace Sudoku_Solver_NEA
             }
         }
 
-        private Cell GetCellLocation(int x, int y)
+        public Cell GetCellLocation(int x, int y)
         {
             foreach (Cell cell in AdjacencyList.Keys)
             {
@@ -98,7 +99,7 @@ namespace Sudoku_Solver_NEA
             throw new InvalidOperationException("Cell does not exist");
         }
 
-        private List<Cell> GetFixedNodes()
+        public List<Cell> GetFixedNodes()
         {
             List<Cell> fixedNodes = new List<Cell>();
             foreach (Cell cell in AdjacencyList.Keys)
@@ -122,7 +123,7 @@ namespace Sudoku_Solver_NEA
             }
         }
 
-        private void InitialiseRemainingNumbers(List<Cell> fixedNodes)
+        public void InitialiseRemainingNumbers(List<Cell> fixedNodes)
         {
             for (int i = 0; i < fixedNodes.Count; i++)
             {

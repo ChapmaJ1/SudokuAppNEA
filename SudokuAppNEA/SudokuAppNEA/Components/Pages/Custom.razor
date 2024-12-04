@@ -27,6 +27,7 @@ else
         <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
         <button class="btn-primary" @onclick=NavigateToDifficulty>New Game</button>
         <button class="btn-primary" @onclick=Reset>Reset Board</button>
+        <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
     </div>
 
     <div class="right-text-container">
@@ -67,6 +68,11 @@ else
     private void NavigateToDifficulty()
     {
         NavigationManager.NavigateTo("/difficulty");
+    }
+
+    private void NavigateToMenu()
+    {
+        NavigationManager.NavigateTo("/menu");
     }
 
     private string DisplayCell(int row, int column)

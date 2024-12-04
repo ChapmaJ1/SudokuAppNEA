@@ -58,6 +58,14 @@ h1{
     width: 300px;
 }
 
+.menu-text {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    min-height: 50vh;
+    text-align: center;
+}
+
 
 strong {
     margin-right: 200px;
@@ -175,7 +183,7 @@ strong {
     transform: translate(0px,-540px);
     display: flex;
     flex-direction: column;
-    gap: 50px;
+    gap: 10px;
     max-width: 150px;
     text-align: center;
     margin-left: 5em;
@@ -186,4 +194,11 @@ strong {
     margin-left: 60em;
     transform: translate(0px,-800px);
     text-align: center;
+}
+
+.leaderboard-text{
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    gap: 220px;
 }

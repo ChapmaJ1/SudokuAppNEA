@@ -9,11 +9,9 @@ namespace Sudoku_Solver_NEA
     public class ForwardChecker : BacktrackingSolver
     {
         public List<Cell> VisitedNodes { get; private set; }
-        public HeapPriorityQueue Queue { get; private set; }
         public ForwardChecker(Board board) : base(board)
         {
             VisitedNodes = new();
-            Queue = board.Queue;
         }
         public override bool Solve()
         {
@@ -24,7 +22,7 @@ namespace Sudoku_Solver_NEA
             if (CheckFinished())
             {
                 PrintBoard(Board);
-                Board tempBoard = Board.Clone(Board);
+                Board tempBoard = Board.Clone(Board);  // objects passed by reference not value, clone needed to store the actual values                 
                 Board.Solutions.Add(tempBoard);
                 return true;
             }
@@ -50,7 +48,7 @@ namespace Sudoku_Solver_NEA
             }
             VisitedNodes.Remove(node);  // backtrack when a node in VisitedNodes has 0 remaining nodes
             node.Entry = 0;
-            Queue.Enqueue(node);
+            Board.Queue.Enqueue(node);
             return false;
         }
 
@@ -83,7 +81,7 @@ namespace Sudoku_Solver_NEA
 
         private Cell GetMRV()
         {
-            Cell MRVCell = Queue.Dequeue();
+            Cell MRVCell = Board.Queue.Dequeue();
             return MRVCell;
         }
         /*private List<Cell> GetMRV()    // change to calculation algorithm using priority queue, updating it each iteration
@@ -142,7 +140,7 @@ namespace Sudoku_Solver_NEA
             return false;
         }
 
-        public void HasUniqueSolution()
+        public void HasUniqueSolution()  // does not use a queue as the queue would have to be reset every time the board is checked
         {
             if (CheckInvalid())
             {
@@ -150,23 +148,37 @@ namespace Sudoku_Solver_NEA
             }
             if (CheckFinished())
             {
-                Board tempBoard = Board.Clone(Board);   // objects passed by reference not value, clone needed to store the actual values                 
+                Board.SolutionCount++;
+                PrintBoard(Board);
+                Board tempBoard = Board.Clone(Board);  // objects passed by reference not value, clone needed to store the actual values                 
                 Board.Solutions.Add(tempBoard);
                 return;
             }
-            Cell node = GetMRV();
+            Cell node = new Cell((9, 9), -1);  // arbitrary cell to be assigned to
+            for (int i=0; i<Board.VariableNodes.Count; i++)
+            {
+                if (Board.VariableNodes[i].Entry == 0)
+                {
+                    node = Board.VariableNodes[i];
+                    break;
+                }
+            }
             VisitedNodes.Add(node);
-            List<(int, int)> orderedDomain = SortByLCV(node);
             for (int i = 0; i < node.Domain.Count; i++)
             {
                 node.Entry = node.Domain[i];
-                Dictionary<Cell, List<int>> removed = RemoveRemainingNumbers(node.Entry, node);
+                //Dictionary<Cell, List<int>> removed = RemoveRemainingNumbers(node.Entry, node);   // incorrectly removing + adding back - RETURN TO THIS LATER
                 HasUniqueSolution();
-                AddBackRemainingNumbers(removed);
+                //AddBackRemainingNumbers(removed);
+                if (Board.SolutionCount >= 2)
+                {
+                    node.Entry = 0;
+                    VisitedNodes.Remove(node);
+                    return;
+                }
             }
             VisitedNodes.Remove(node);  // backtrack when a node in VisitedNodes has 0 remaining nodes - come back
-            Queue.Enqueue(node);
-            node.Entry = 0;
+            node.Entry = 0;  
             return;
         }
     }

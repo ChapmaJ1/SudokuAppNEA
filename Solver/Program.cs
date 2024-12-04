@@ -18,18 +18,17 @@ namespace Sudoku_Solver_NEA
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());*/
 
-            int[,] boardSketch = { {7,1,0,0,0,0,2,9,0},
-                            { 0,0,0,0,0,0,0,5,6 },
-                            { 9,0,0,0,0,8,0,0,3 },
-                            { 0,5,0,8,0,0,0,0,0 },
-                            { 8,0,0,0,0,0,5,0,2 },
-                            { 6,0,0,0,0,0,8,0,0 },
-                            { 0,0,0,9,0,0,6,0,0 },
-                            { 4,6,0,0,0,0,0,0,0 },
-                            { 0,0,9,6,8,0,0,0,0} };
+            int[,] boardSketch = { {8,0,0,0,2,0,0,6,0},
+                            { 2,0,0,0,3,8,5,1,4 },
+                            { 0,0,0,6,0,0,3,8,0 },
+                            { 0,7,0,5,0,2,1,0,0 },
+                            { 0,0,6,0,4,1,0,9,0 },
+                            { 0,0,8,0,0,0,2,5,6 },
+                            { 6,0,2,4,5,0,8,7,9 },
+                            { 0,0,0,7,0,0,4,2,1 },
+                            { 7,8,0,2,1,0,6,0,0} };
             Board board = new Board("Hard", boardSketch);
             board.InitialiseGraph();
-            board.SetQueue();
 
             /*foreach (KeyValuePair<Cell, List<Cell>> pair in board.AdjacencyList)
             {
@@ -49,33 +48,61 @@ namespace Sudoku_Solver_NEA
             }
             Console.WriteLine(string.Join(",", board.GetVariableNodes()));*/
             //solver.Solve();
-            ForwardChecker solver2 = new ForwardChecker(board);
-            solver2.Solve();
-            //Console.WriteLine($"{board.Solutions.Count} solutions");
-            board.Reset();
-            Board boardTemp = board.Solutions[0];
-            Console.WriteLine($"{board.Solutions.Count} solutions");
-            Console.WriteLine("Solved");
-          
-            
-            
-            
-            
-           /* BoardGeneratorAPI generator = new BoardGeneratorAPI();
+            /* ForwardChecker solver2 = new ForwardChecker(board);
+             solver2.Solve();
+             //Console.WriteLine($"{board.Solutions.Count} solutions");
+             board.Reset();
+             Board boardTemp = board.Solutions[0];
+             Console.WriteLine($"{board.Solutions.Count} solutions");
+             Console.WriteLine("Solved"); */
+
+
+
+
+
+            /*BoardGeneratorAPI generator = new BoardGeneratorAPI();
             
             ResponseData response = await generator.GenerateBoard();
-            Board board2 = generator.ConvertToBoard(response);
+            Board board2 = generator.ConvertToBoard(response, 0);
             board2.InitialiseGraph();
-            HeapPriorityQueue queue2 = new HeapPriorityQueue(board2.VariableNodes, 9);
-            foreach (Cell node in board2.VariableNodes)
+            ForwardChecker solver3 = new ForwardChecker(board2);*/
+            ForwardChecker solver = new ForwardChecker(board);
+            bool unique = false;
+            while (unique == false)
             {
-                queue2.Enqueue(node);
+                solver!.HasUniqueSolution();
+                if (board.SolutionCount >= 2)
+                {
+                    for (int i = 0; i < 9; i++)
+                    {
+                        for (int j = 0; j < 9; j++)
+                        {
+                            if (board.Solutions[0].BoardSketch[i, j] != board.Solutions[1].BoardSketch[i, j])
+                            {
+                                Cell cell = board.GetCellLocation(i, j);
+                                cell.Entry = board.Solutions[0].BoardSketch[i, j];
+                                i = 9;
+                                j = 9;
+                                board.VariableNodes.Remove(cell);
+                                board.Reset();
+                            }
+                        }
+                    }
+                    board.Solutions = new List<Board>();
+                    board.SolutionCount = 0;
+                }
+                else  // solutions = 0 for some reason
+                {
+                    unique = true;
+                }
             }
-            ForwardChecker solver3 = new ForwardChecker(board2, board2.VariableNodes, queue2);
-            //solver3.Solve();
-            solver3.HasUniqueSolution();
-            Console.WriteLine(board2.Solutions.Count);
-            Console.ReadLine(); */
+            // board2.SetQueue();
+            // solver3.Solve();
+            // Console.WriteLine(board2.Solutions);
+            board.SetQueue();
+            solver.Solve();
+            Console.WriteLine(board.Solutions);
+            Console.ReadLine(); 
         }
     }
 }

@@ -4,23 +4,41 @@
 
 <h1 style="font-size: 50px; text-align: center">Leaderboard</h1>
 
-<div style="margin-left: 100px; margin-top: 50px">
-    <strong><u>Name</u></strong>
-    <strong><u>Score</u></strong>
-    <strong><u>Date</u></strong>
-    <div>
-        <a type="button" class="btn-leaderboard" href="/menu">Main Menu</a>
-        <button class="btn-leaderboard">Next Page</button>
-        <button class="btn-leaderboard">Previous Page</button>
+@if (dataEntries == null)
+{
+    <h1 style="margin-top: 100px">Loading</h1>
+}
+else
+{
+    <div style="margin-left: 100px; margin-top: 50px">
+        <strong><u>Name</u></strong>
+        <strong><u>Score</u></strong>
+        <strong><u>Date</u></strong>
+        @foreach (LeaderboardEntry entry in dataEntries)
+        {
+            <div class="leaderboard-text">
+                <h3>@entry.Username</h3>
+                <h3>@entry.Score</h3>
+                <h3>@entry.Date</h3>
+            </div>
+        }
+        <button class="btn-leaderboard" @onclick=NavigateToMenu>Main Menu</button>
     </div>
-</div>
+}
 
 
 @code {
     private List<LeaderboardEntry>? dataEntries { get; set; }
+    private string menuUrl = "/menu";
 
     protected override void OnInitialized()
     {
         dataEntries = DatabaseCaller.GetLeaderboardEntries();
+        // sort leaderboard entries - consider??
+    }
+
+    private void NavigateToMenu()
+    {
+        NavigationManager.NavigateTo(menuUrl);
     }
 }
