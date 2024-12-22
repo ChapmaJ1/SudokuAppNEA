@@ -66,13 +66,13 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "select * from Boards b, GameSessions s, Users u on s.UserId = u.UserID";
+                command.CommandText = "select Username, Score, CalendarDay from Boards b, GameSessions s, Users u on s.UserId = u.UserID ORDER BY b.Score DESC";
                 var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     LeaderboardEntry entry = new LeaderboardEntry
                     {
-                        Username = reader.GetString(15),
+                        Username = reader.GetString(0),
                         Score = reader.GetString(1),
                         Date = reader.GetString(2)
                     };
@@ -80,6 +80,22 @@ namespace CommonLibrary
                 }
             }
             return data;
+        }
+
+        public string GetRecommendedDifficulty(int userID)
+        {
+            string difficulty;
+            using (SqliteConnection connection = new())
+            {
+                connection.ConnectionString = _connectionString;
+                connection.Open();
+                SqliteCommand command = connection.CreateCommand();
+                command.CommandText = $"select Difficulty, CompletionTime from Boards b, GameSessions s, Users u on b.SessionID = s.SessionID and s.UserID = {userID} ORDER BY b.Score DESC";
+                var reader = command.ExecuteReader();
+                //perform difficulty calculation
+                difficulty = "Easy";  // example
+            }
+            return difficulty;
         }
     }
 }

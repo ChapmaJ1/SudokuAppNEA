@@ -1,6 +1,5 @@
 ﻿@page "/menu"
 @inject NavigationManager NavigationManager
-@inject IJSRuntime JSRuntime 
 @inject UserClient UserClient
 
 <h1 style="text-align: center; margin-bottom: 50px">Welcome @UserClient.User!.Username</h1>
@@ -18,9 +17,6 @@
     <div>
         <a type="button" class="btn-primary" href="/settings">Settings</a>
     </div>
-    <div>
-        <button class="btn-primary" @onclick=SaveSession>Save Session</button>
-    </div>
 </div>
 
 @code {
@@ -28,10 +24,5 @@
     private void Navigate()
     {
         NavigationManager.NavigateTo("/difficulty");
-    }
-
-    private void SaveSession()
-    {
-        
     }
 }

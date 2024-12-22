@@ -1,6 +1,7 @@
 ﻿@page "/game/{difficulty}"
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
+@inject UserClient UserClient
 
 <h1>Game</h1>
 
@@ -12,6 +13,7 @@ else
 {
     TimeSpan timer = DateTime.Now - launchTime;
     <h3 style="margin-left: 100px">Timer: @timer.Minutes:@timer.Seconds</h3>
+    <h3 style="margin-left: 100px">Mistakes: @mistakeCount</h3>
     CheckBoard();
     @if (userCompleted == true)
     {
@@ -24,7 +26,7 @@ else
             <div class="sudoku-column">
                 @for (int column = 0; column < 9; column++)
                 {
-                    int columnTemp = column; // if row, column directly used, OnSelected(9,9) would be called
+                    int columnTemp = column; // if row and column directly used, OnSelected(9,9) would be called
                     int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
                     string backgroundColour = GetBackgroundColour(rowTemp, columnTemp);
                    <button class="sudoku-cell-default" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
@@ -51,6 +53,7 @@ else
             int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
             <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
         }
+        <button class="button-cell" @onclick="() => EraseValue()">Erase</button>
     </div>
 }
 
@@ -66,6 +69,7 @@ else
     private bool solved;
     private bool userCompleted = false;
     private DateTime launchTime;
+    private int mistakeCount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -211,15 +215,40 @@ else
         if (!solved)
         {
             selectedCell!.Entry = number;
+            if (number != correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2])
+            {
+                mistakeCount++;
+            }
         }
     }
 
     private void CheckBoard()
     {
-        if (solver!.CheckInvalid() == false && solver!.CheckFinished() == true /*&& solved == false*/)
+        if (solver!.CheckInvalid() == false && solver!.CheckFinished() == true && solved == false)
         {
             userCompleted = true;
             solved = true;
+            int score = GenerateScore();
+            UserClient.Entry = new()
+            {
+                Username = UserClient.User!.Username,
+                Score = score.ToString(),
+                Date = DateTime.Today.ToString()
+            };
+        }
+    }
+
+    private int GenerateScore()
+    {
+        TimeSpan completionTime = DateTime.Now - launchTime;
+        
+    }
+
+    private void EraseValue()
+    {
+        if (!solved)
+        {
+            selectedCell!.Entry = 0;
         }
     }
 

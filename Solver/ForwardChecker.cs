@@ -8,10 +8,8 @@ namespace Sudoku_Solver_NEA
 {
     public class ForwardChecker : BacktrackingSolver
     {
-        public List<Cell> VisitedNodes { get; private set; }
         public ForwardChecker(Board board) : base(board)
         {
-            VisitedNodes = new();
         }
         public override bool Solve()
         {
@@ -27,26 +25,22 @@ namespace Sudoku_Solver_NEA
                 return true;
             }
             Cell node = GetMRV();
-            VisitedNodes.Add(node);
             List<(int,int)> orderedDomain = SortByLCV(node);
             for (int i = 0; i < orderedDomain.Count; i++)
             {
                 node.Entry = orderedDomain[i].Item2;
-                //PrintBoard(Board);
-                //Console.WriteLine("\n");
                 Dictionary<Cell, List<int>> removed = RemoveRemainingNumbers(node.Entry, node);   // forward check, pruning the domain early
-                /*if (HasEmptyDomains())  // invalid board in the current state, so no point going deeper into backtracking
+                if (HasEmptyDomains())  // invalid board in the current state, so no point going deeper into backtracking
                 {
                     AddBackRemainingNumbers(removed);
-                    continue;
-                }*/
+                    continue;   // moves onto the next number in the iteration (the "branch" of the tree to the side)
+                }
                 if (Solve())
                 {
                     return true;
                 }
                 AddBackRemainingNumbers(removed);   // backtrack from forward checking, removing the domain restrictions of the invalid board
             }
-            VisitedNodes.Remove(node);  // backtrack when a node in VisitedNodes has 0 remaining nodes
             node.Entry = 0;
             Board.Queue.Enqueue(node);
             return false;
@@ -58,11 +52,14 @@ namespace Sudoku_Solver_NEA
             List<Cell> changeNodes = Board.AdjacencyList[node];   // all cells that the given node is linked to
             foreach (Cell changeNode in changeNodes)
             {
-                removedNumbers[changeNode] = new();
-                if (changeNode.Domain.Contains(number))   // if the current value of the node is in the domain of a connected cell
+                if (Board.VariableNodes.Contains(changeNode))
                 {
-                    changeNode.Domain.Remove(number);
-                    removedNumbers[changeNode].Add(number);
+                    removedNumbers[changeNode] = new();
+                    if (changeNode.Domain.Contains(number))   // if the current value of the node is in the domain of a connected cell
+                    {
+                        changeNode.Domain.Remove(number);
+                        removedNumbers[changeNode].Add(number);
+                    }
                 }
             }
             return removedNumbers;
@@ -74,7 +71,10 @@ namespace Sudoku_Solver_NEA
             {
                 foreach (int number in pair.Value)
                 {
-                    pair.Key.Domain.Add(number);
+                    if (!pair.Key.Domain.Contains(number))
+                    {
+                        pair.Key.Domain.Add(number);
+                    }
                 }
             }
         }
@@ -84,29 +84,6 @@ namespace Sudoku_Solver_NEA
             Cell MRVCell = Board.Queue.Dequeue();
             return MRVCell;
         }
-        /*private List<Cell> GetMRV()    // change to calculation algorithm using priority queue, updating it each iteration
-        {
-            Dictionary<int, List<Cell>> domainCounts = new Dictionary<int, List<Cell>>();
-            for (int i=1; i<10; i++)
-            {
-                domainCounts[i] = new List<Cell>();
-            }
-            foreach (Cell cell in Board.VariableNodes)
-            {
-                if (cell.Domain.Count != 0)
-                {
-                    domainCounts[cell.Domain.Count].Add(cell);
-                }
-            }
-            foreach (int number in domainCounts.Keys)
-            {
-                if (domainCounts[number].Count != 0)
-                {
-                    return domainCounts[number];
-                }
-            }
-            return new List<Cell>();
-        }*/
 
         private List<(int,int)> SortByLCV(Cell cell)    // if MRV is not 1, run LCV
         {
@@ -134,6 +111,7 @@ namespace Sudoku_Solver_NEA
             {
                 if (cell.Domain.Count == 0)
                 {
+                    Console.WriteLine($"{cell.Position.Item1},{cell.Position.Item2}");
                     return true;
                 }
             }
@@ -157,28 +135,30 @@ namespace Sudoku_Solver_NEA
             Cell node = new Cell((9, 9), -1);  // arbitrary cell to be assigned to
             for (int i=0; i<Board.VariableNodes.Count; i++)
             {
-                if (Board.VariableNodes[i].Entry == 0)
+                if (Board.VariableNodes[i].Entry == 0)  // if cell currently has no value
                 {
                     node = Board.VariableNodes[i];
                     break;
                 }
             }
-            VisitedNodes.Add(node);
             for (int i = 0; i < node.Domain.Count; i++)
             {
                 node.Entry = node.Domain[i];
-                //Dictionary<Cell, List<int>> removed = RemoveRemainingNumbers(node.Entry, node);   // incorrectly removing + adding back - RETURN TO THIS LATER
+                Dictionary<Cell, List<int>> removed = RemoveRemainingNumbers(node.Entry, node);   // incorrectly removing + adding back - RETURN TO THIS LATER
+                if (HasEmptyDomains())
+                {
+                    AddBackRemainingNumbers(removed);
+                    continue;
+                }
                 HasUniqueSolution();
                 //AddBackRemainingNumbers(removed);
-                if (Board.SolutionCount >= 2)
+                if (Board.SolutionCount >= 2)   // if multiple solutions have already been found, stop early
                 {
                     node.Entry = 0;
-                    VisitedNodes.Remove(node);
                     return;
                 }
             }
-            VisitedNodes.Remove(node);  // backtrack when a node in VisitedNodes has 0 remaining nodes - come back
-            node.Entry = 0;  
+            node.Entry = 0;
             return;
         }
     }

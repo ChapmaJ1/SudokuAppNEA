@@ -1,9 +1,12 @@
-﻿using SudokuAppNEA.Components.Models;
+﻿using CommonLibrary;
+using SudokuAppNEA.Components.Models;
 
 namespace SudokuAppNEA.Components.Clients
 {
     public class UserClient
     {
         public User? User { get; set; }
+        public LeaderboardEntry? Entry { get; set; }
+        
     }
 }
