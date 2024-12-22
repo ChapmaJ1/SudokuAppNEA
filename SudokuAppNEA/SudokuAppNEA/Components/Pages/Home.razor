@@ -1,6 +1,7 @@
 ﻿@page "/"
 @inject NavigationManager NavigationManager
 @inject UserClient UserClient
+@inject DBCaller DatabaseCaller
 
 <PageTitle>Home</PageTitle>
 
@@ -32,6 +33,7 @@
     {
         // find user in database if record exists, otherwise add a new user
         UserClient.User = user!;
+        UserClient.User!.Id = DatabaseCaller.FindUser(user!.Username, user.Password);
         NavigationManager.NavigateTo($"/menu");
     }
 }

@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 @inject UserClient UserClient
+@inject DBCaller DatabaseCaller
 
 <h1>Game</h1>
 
@@ -228,20 +229,45 @@ else
         {
             userCompleted = true;
             solved = true;
-            int score = GenerateScore();
             UserClient.Entry = new()
             {
-                Username = UserClient.User!.Username,
-                Score = score.ToString(),
-                Date = DateTime.Today.ToString()
+                Score = GenerateScore(difficulty!),
+                CalendarDay = DateOnly.FromDateTime(DateTime.Now).ToString(),
+                Difficulty = difficulty!,
+                CompletionTime = FormatTime(),
+                UserId = UserClient.User!.Id
             };
+            DatabaseCaller.AddEntry(UserClient.Entry);
         }
     }
+    public required int BoardID { get; set; }
+    public required int Score { get; set; }
+    public required string CalendarDay { get; set; }
+    public required string Difficulty { get; set; }
+    public required string CompletionTime { get; set; }
+    public required int SessionID { get; set; }
 
-    private int GenerateScore()
+    private int GenerateScore(string difficulty)
     {
         TimeSpan completionTime = DateTime.Now - launchTime;
-        
+        int timeScoreSubtraction = (completionTime.Minutes * 60 + completionTime.Seconds);
+        int mistakeScoreSubtraction = mistakeCount * 100;
+        int difficultyBonus = 0;
+        if (difficulty == "Medium")
+        {
+            difficultyBonus = 500;
+        }
+        else if (difficulty == "Hard")
+        {
+            difficultyBonus = 1000;
+        }
+        return 5000 - timeScoreSubtraction - mistakeScoreSubtraction + difficultyBonus;
+    }
+
+    private string FormatTime()
+    {
+        TimeSpan completionTime = DateTime.Now - launchTime;
+        return $"{completionTime.Minutes}:{completionTime.Seconds}";
     }
 
     private void EraseValue()
