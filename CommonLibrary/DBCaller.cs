@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore.Sqlite.Query.Internal;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using SQLDatabase;
 using SQLDatabase.Models;
 using SudokuAppNEA.Components.Models;
@@ -52,7 +54,7 @@ namespace CommonLibrary
             return id;
         } */
 
-        public int FindUser(string username, string password)
+        public (int,bool) FindUser(string username, string password)
         {
             using (SqliteConnection connection = new SqliteConnection())
             {
@@ -67,11 +69,11 @@ namespace CommonLibrary
                     var dataReader = command.ExecuteReader();
                     if (dataReader.Read())
                     {
-                        return dataReader.GetInt32(0);
+                        return (dataReader.GetInt32(0),false);
                     }
                 }
             }
-            return AddUser(username, password);
+            return (AddUser(username, password),true);
         }
 
         public int GetTableCount(string parameter)
@@ -96,11 +98,12 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "insert into Boards (Score, CalendarDay, Difficulty, CompletionTime, UserID) VALUES (@Score, @CalendarDay, @Difficulty, @CompletionTime, @UserID)";
+                command.CommandText = "insert into Boards (Score, CalendarDay, Difficulty, CompletionTime, Mistakes, UserID) VALUES (@Score, @CalendarDay, @Difficulty, @CompletionTime, @Mistakes, @UserID)";
                 command.Parameters.Add("@Score", SqliteType.Integer).Value = entry.Score;
                 command.Parameters.Add("@CalendarDay", SqliteType.Text).Value = entry.CalendarDay;
                 command.Parameters.Add("@Difficulty", SqliteType.Text).Value = entry.Difficulty;
                 command.Parameters.Add("@CompletionTime", SqliteType.Text).Value = entry.CompletionTime;
+                command.Parameters.Add("@Mistakes", SqliteType.Integer).Value = entry.Mistakes;
                 command.Parameters.Add("@UserID", SqliteType.Integer).Value = entry.UserId;
                 command.ExecuteNonQuery();
             }
@@ -141,7 +144,7 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "select Username, Score, CompletionTime, Difficulty, CalendarDay from Boards b, GameSessions s, Users u on s.UserId = u.UserID ORDER BY b.Score DESC";
+                command.CommandText = "select Username, Score, CompletionTime, Difficulty, CalendarDay from Boards b, Users u on b.UserId = u.UserID ORDER BY b.Score DESC";
                 var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -173,6 +176,50 @@ namespace CommonLibrary
                 difficulty = "Easy";  // example
             }
             return difficulty;
+        }
+
+        public List<string> GetUserStats(int userID)
+        {
+            List<string> stats = new List<string>();
+            using (SqliteConnection connection = new())
+            {
+                connection.ConnectionString = _connectionString;
+                connection.Open();
+                SqliteCommand command = connection.CreateCommand();
+                command.CommandText = $"select avg(mistakes), avg(score) from boards where userid = @UserID";
+                command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
+                var dataReader = command.ExecuteReader();
+                if (dataReader.Read())
+                {
+                    stats.Add(dataReader.GetInt32(0).ToString());
+                    stats.Add(dataReader.GetInt32(1).ToString());
+                    stats.Add(GetAverageTime(userID));
+                }
+            }
+            return stats;
+        }
+
+        public string GetAverageTime(int userID)
+        {
+            int totalSeconds = 0;
+            int boards = 0;
+            using (SqliteConnection connection = new())
+            {
+                connection.ConnectionString = _connectionString;
+                connection.Open();
+                SqliteCommand command = connection.CreateCommand();
+                command.CommandText = $"select CompletionTime from boards where userid = @UserID";
+                command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
+                var dataReader = command.ExecuteReader();
+                while (dataReader.Read())
+                {
+                    string[] timeSplit = dataReader.GetString(0).Split(':');
+                    totalSeconds += Convert.ToInt32(timeSplit[0]) * 60 + Convert.ToInt32(timeSplit[1]);
+                    boards++;
+                }
+            }
+            int averageSeconds = totalSeconds / boards;
+            return $"{averageSeconds / 60}:{averageSeconds % 60}";
         }
     }
 }

@@ -1,0 +1,74 @@
+﻿@page "/settings"
+@inject NavigationManager NavigationManager
+@inject UserClient UserClient
+@inject DBCaller DatabaseCaller
+
+<div class="form-container">
+    <button class="btn-primary" @onclick=ChangeMistakeDetection>Mistake Detection: @mistakeDetection</button>
+    <button class="btn-primary" @onclick=ChangeScoreSaving>Save Scores To Leaderboard: @saveScores</button>
+    <button class="btn-primary" @onclick=SaveSettings>Save Settings</button>
+</div>
+
+<div class="stats-container">
+    <h2>Average Mistakes: @stats![0]</h2>
+    <h2>Average Score: @stats![1]</h2>
+    <h2>Average Time: @stats![2]</h2>
+    <button class="btn-primary" @onclick=GoToMenu>Return To Menu</button>
+</div>
+
+@code {
+    // add settings checkbox/typebox
+    // call getuserstats method
+    private List<string>? stats;
+    private string? mistakeDetection = "On";
+    private string? saveScores = "On";
+
+    protected override void OnInitialized()
+    {
+        // get user settings from database - set mistake detection + save scores to on/off
+        // if user.NewUser == true - default both settings to on
+        GetUserStats();
+        if (stats == new List<string>())
+        {
+            stats = new List<string>() { "", "", "" };
+        }
+    }
+
+    private void ChangeMistakeDetection()
+    {
+        if (mistakeDetection == "On")
+        {
+            mistakeDetection = "Off";
+        }
+        else
+        {
+            mistakeDetection = "On";
+        }
+    }
+
+    private void ChangeScoreSaving()
+    {
+        if (saveScores == "On")
+        {
+            saveScores = "Off";
+        }
+        else{
+            saveScores = "On";
+        }
+    }
+
+    private void SaveSettings()
+    {
+        
+    }
+
+    private void GoToMenu()
+    {
+        NavigationManager.NavigateTo("/menu");
+    }
+
+    private void GetUserStats()
+    {
+        stats = DatabaseCaller.GetUserStats(UserClient.User!.Id);
+    }
+}

@@ -33,7 +33,9 @@
     {
         // find user in database if record exists, otherwise add a new user
         UserClient.User = user!;
-        UserClient.User!.Id = DatabaseCaller.FindUser(user!.Username, user.Password);
+        (int, bool) userDetails = DatabaseCaller.FindUser(user!.Username, user.Password);
+        UserClient.User!.Id = userDetails.Item1;
+        UserClient.NewUser = userDetails.Item2;
         NavigationManager.NavigateTo($"/menu");
     }
 }

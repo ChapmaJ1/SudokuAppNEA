@@ -13,13 +13,13 @@
 else
 {
     TimeSpan timer = DateTime.Now - launchTime;
-    <h3 style="margin-left: 100px">Timer: @timer.Minutes:@timer.Seconds</h3>
+    <h3 style="margin-left: 100px">Timer: @FormatTime()</h3>
     <h3 style="margin-left: 100px">Mistakes: @mistakeCount</h3>
+    <h3 style="margin-left: 100px">Hints: @hintCount</h3>
     CheckBoard();
     @if (userCompleted == true)
     {
         <h3>Board Completed!</h3>
-        SaveBoardData();
     }
     <div class="sudoku-container">
         @for (int row = 0; row < 9; row++)
@@ -71,6 +71,7 @@ else
     private bool userCompleted = false;
     private DateTime launchTime;
     private int mistakeCount;
+    private int hintCount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -166,11 +167,6 @@ else
         board.SetQueue();
     }
 
-    private void SaveBoardData()
-    {
-        // ADD AFTER SCORING SYSTEM ADDED
-    }
-
     private string GetBackgroundColour(int column, int row)
     {
         string cellValue = DisplayCell(column, row);
@@ -235,23 +231,19 @@ else
                 CalendarDay = DateOnly.FromDateTime(DateTime.Now).ToString(),
                 Difficulty = difficulty!,
                 CompletionTime = FormatTime(),
+                Mistakes = mistakeCount,
                 UserId = UserClient.User!.Id
             };
             DatabaseCaller.AddEntry(UserClient.Entry);
         }
     }
-    public required int BoardID { get; set; }
-    public required int Score { get; set; }
-    public required string CalendarDay { get; set; }
-    public required string Difficulty { get; set; }
-    public required string CompletionTime { get; set; }
-    public required int SessionID { get; set; }
 
     private int GenerateScore(string difficulty)
     {
         TimeSpan completionTime = DateTime.Now - launchTime;
         int timeScoreSubtraction = (completionTime.Minutes * 60 + completionTime.Seconds);
         int mistakeScoreSubtraction = mistakeCount * 100;
+        int hintScoreSubtraction = hintCount * 150;
         int difficultyBonus = 0;
         if (difficulty == "Medium")
         {
@@ -261,12 +253,21 @@ else
         {
             difficultyBonus = 1000;
         }
-        return 5000 - timeScoreSubtraction - mistakeScoreSubtraction + difficultyBonus;
+        int score = 5000 - timeScoreSubtraction - mistakeScoreSubtraction - hintScoreSubtraction + difficultyBonus;
+        if (score < 0)
+        {
+            return 0;
+        }
+        return score;
     }
 
     private string FormatTime()
     {
         TimeSpan completionTime = DateTime.Now - launchTime;
+        if (completionTime.Seconds < 10)
+        {
+            return $"{completionTime.Minutes}:0{completionTime.Seconds}";
+        }
         return $"{completionTime.Minutes}:{completionTime.Seconds}";
     }
 
@@ -300,7 +301,19 @@ else
 
     private void GetHint()
     {
-
+        hintCount++;
+        List<Cell> emptyCells = new();
+        foreach (Cell cell in board!.VariableNodes)
+        {
+            if (cell.Entry == 0)
+            {
+                emptyCells.Add(cell);
+            }
+        }
+        Random random = new Random();
+        int randomIndex = random.Next(emptyCells.Count);
+        Cell selectedCell = emptyCells[randomIndex];
+        selectedCell.Entry = correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2];
     }
 
     private void ChangeNotesFunctionality()

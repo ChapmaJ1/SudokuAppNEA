@@ -13,6 +13,7 @@ namespace SQLDatabase
         public required string CalendarDay { get; set; }
         public required string Difficulty { get; set; }
         public required string CompletionTime { get; set; }
+        public required int Mistakes { get; set; }
         public required int UserId { get; set; }
     }
 }

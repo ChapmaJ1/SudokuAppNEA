@@ -37,6 +37,10 @@ h1{
     font-size: 50px;
 }
 
+h2{
+    text-align: center;
+}
+
 .form-label {
     font-size: 30px;
     margin-bottom: 10px;
@@ -201,4 +205,13 @@ strong {
     display: flex;
     flex-direction: row;
     gap: 220px;
+}
+
+.stats-container{
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }

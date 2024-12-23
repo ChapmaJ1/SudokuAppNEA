@@ -144,14 +144,14 @@ namespace Sudoku_Solver_NEA
             for (int i = 0; i < node.Domain.Count; i++)
             {
                 node.Entry = node.Domain[i];
-                Dictionary<Cell, List<int>> removed = RemoveRemainingNumbers(node.Entry, node);   // incorrectly removing + adding back - RETURN TO THIS LATER
+                /*Dictionary<Cell, List<int>> removed = RemoveRemainingNumbers(node.Entry, node);   // incorrectly removing + adding back - RETURN TO THIS LATER
                 if (HasEmptyDomains())
                 {
                     AddBackRemainingNumbers(removed);
                     continue;
                 }
                 HasUniqueSolution();
-                //AddBackRemainingNumbers(removed);
+                AddBackRemainingNumbers(removed);*/
                 if (Board.SolutionCount >= 2)   // if multiple solutions have already been found, stop early
                 {
                     node.Entry = 0;
