@@ -52,7 +52,7 @@ namespace Sudoku_Solver_NEA
             List<Cell> changeNodes = Board.AdjacencyList[node];   // all cells that the given node is linked to
             foreach (Cell changeNode in changeNodes)
             {
-                if (Board.VariableNodes.Contains(changeNode))
+                if (Board.VariableNodes.Contains(changeNode))  // does not unnecessarily remove from the domain of fixed nodes
                 {
                     removedNumbers[changeNode] = new();
                     if (changeNode.Domain.Contains(number))   // if the current value of the node is in the domain of a connected cell
@@ -118,11 +118,11 @@ namespace Sudoku_Solver_NEA
             return false;
         }
 
-        public void HasUniqueSolution()  // does not use a queue as the queue would have to be reset every time the board is checked
+        public bool HasUniqueSolution()  // does not use a queue as the queue would have to be reset every time the board is checked
         {
             if (CheckInvalid())
             {
-                return;
+                return false;
             }
             if (CheckFinished())
             {
@@ -130,7 +130,7 @@ namespace Sudoku_Solver_NEA
                 PrintBoard(Board);
                 Board tempBoard = Board.Clone(Board);  // objects passed by reference not value, clone needed to store the actual values                 
                 Board.Solutions.Add(tempBoard);
-                return;
+                return true;
             }
             Cell node = new Cell((9, 9), -1);  // arbitrary cell to be assigned to
             for (int i=0; i<Board.VariableNodes.Count; i++)
@@ -141,25 +141,29 @@ namespace Sudoku_Solver_NEA
                     break;
                 }
             }
-            for (int i = 0; i < node.Domain.Count; i++)
+            List<(int, int)> orderedDomain = SortByLCV(node);
+            for (int i = 0; i < orderedDomain.Count; i++)
             {
-                node.Entry = node.Domain[i];
-                /*Dictionary<Cell, List<int>> removed = RemoveRemainingNumbers(node.Entry, node);   // incorrectly removing + adding back - RETURN TO THIS LATER
+                node.Entry = orderedDomain[i].Item2;
+                Dictionary<Cell, List<int>> removed = RemoveRemainingNumbers(node.Entry, node);   // incorrectly removing + adding back - RETURN TO THIS LATER
                 if (HasEmptyDomains())
                 {
                     AddBackRemainingNumbers(removed);
                     continue;
                 }
-                HasUniqueSolution();
-                AddBackRemainingNumbers(removed);*/
-                if (Board.SolutionCount >= 2)   // if multiple solutions have already been found, stop early
+                if (HasUniqueSolution())
                 {
-                    node.Entry = 0;
-                    return;
+                    AddBackRemainingNumbers(removed);
+                    if (Board.SolutionCount >= 2)   // if multiple solutions have already been found, stop early
+                    {
+                        return true;
+                    }
+                    continue;
                 }
+                AddBackRemainingNumbers(removed);
             }
             node.Entry = 0;
-            return;
+            return false;
         }
     }
 }

@@ -221,5 +221,10 @@ namespace CommonLibrary
             int averageSeconds = totalSeconds / boards;
             return $"{averageSeconds / 60}:{averageSeconds % 60}";
         }
+
+        public (string,string) GetUserSettings()
+        {
+
+        }
     }
 }

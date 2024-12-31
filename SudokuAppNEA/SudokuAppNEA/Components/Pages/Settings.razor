@@ -13,7 +13,7 @@
     <h2>Average Mistakes: @stats![0]</h2>
     <h2>Average Score: @stats![1]</h2>
     <h2>Average Time: @stats![2]</h2>
-    <button class="btn-primary" @onclick=GoToMenu>Return To Menu</button>
+    <button class="btn-primary" @onclick=SaveSettings>Save And Return To Menu</button>
 </div>
 
 @code {
@@ -24,13 +24,17 @@
     private string? saveScores = "On";
 
     protected override void OnInitialized()
-    {
-        // get user settings from database - set mistake detection + save scores to on/off
-        // if user.NewUser == true - default both settings to on
+    {   
+        if (!UserClient.NewUser)
+        {
+            (string, string) settings = DatabaseCaller.GetUserSettings();
+            mistakeDetection = settings.Item1;
+            saveScores = settings.Item2;
+        }
         GetUserStats();
         if (stats == new List<string>())
         {
-            stats = new List<string>() { "", "", "" };
+            stats = new List<string>() { "N/A", "N/A", "N/A" };
         }
     }
 
@@ -59,11 +63,7 @@
 
     private void SaveSettings()
     {
-        
-    }
-
-    private void GoToMenu()
-    {
+        DatabaseCaller.SaveUserSettings();
         NavigationManager.NavigateTo("/menu");
     }
 
