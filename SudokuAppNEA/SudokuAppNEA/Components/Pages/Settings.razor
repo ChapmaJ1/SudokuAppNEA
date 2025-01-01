@@ -27,12 +27,12 @@
     {   
         if (!UserClient.NewUser)
         {
-            (string, string) settings = DatabaseCaller.GetUserSettings();
+            (string, string) settings = DatabaseCaller.GetUserSettings(UserClient.User!.Id);
             mistakeDetection = settings.Item1;
             saveScores = settings.Item2;
         }
         GetUserStats();
-        if (stats == new List<string>())
+        if (stats!.Count == 0)
         {
             stats = new List<string>() { "N/A", "N/A", "N/A" };
         }
@@ -63,7 +63,7 @@
 
     private void SaveSettings()
     {
-        DatabaseCaller.SaveUserSettings();
+        DatabaseCaller.SaveUserSettings(mistakeDetection!, saveScores!, UserClient.User!.Id);
         NavigationManager.NavigateTo("/menu");
     }
 

@@ -36,6 +36,15 @@
         (int, bool) userDetails = DatabaseCaller.FindUser(user!.Username, user.Password);
         UserClient.User!.Id = userDetails.Item1;
         UserClient.NewUser = userDetails.Item2;
+        SetUserSettings();
         NavigationManager.NavigateTo($"/menu");
+    }
+
+    private void SetUserSettings()
+    {
+        if (UserClient.NewUser)
+        {
+            DatabaseCaller.SetUserSettings(UserClient.User!.Id);
+        }
     }
 }

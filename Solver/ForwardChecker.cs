@@ -158,7 +158,7 @@ namespace Sudoku_Solver_NEA
                     {
                         return true;
                     }
-                    continue;
+                    continue;  // if this is the first solution to be found, continue iterating through the for loop
                 }
                 AddBackRemainingNumbers(removed);
             }

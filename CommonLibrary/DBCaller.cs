@@ -17,6 +17,7 @@ namespace CommonLibrary
     public class DBCaller
     {
         private string _connectionString = @"Data Source=C:\Users\jchap\NEA.db;Mode=ReadWrite";
+
         public int AddUser(string username, string password)
         {
             using (SqliteConnection connection = new SqliteConnection())
@@ -34,25 +35,6 @@ namespace CommonLibrary
             }
             return GetTableCount("users");
         }
-        
-       /* private int GetID(string username, string password)
-        {
-            int id = 0;
-            using (SqliteConnection connection = new SqliteConnection())
-            {
-                connection.ConnectionString = _connectionString;
-                connection.Open();
-                using (SqliteCommand command = connection.CreateCommand())
-                {
-                    command.CommandText = $"select UserID from users where username = @Username and password = @Password";
-                    command.Parameters.Add("@Username", SqliteType.Text).Value = username;
-                    command.Parameters.Add("@Password", SqliteType.Text).Value = password;
-                    var dataReader = command.ExecuteReader();
-                    id = dataReader.GetInt32(0);
-                }
-            }
-            return id;
-        } */
 
         public (int,bool) FindUser(string username, string password)
         {
@@ -65,11 +47,12 @@ namespace CommonLibrary
                     command.CommandText = $"select * from users where username = @Username and password = @Password";
                     command.Parameters.Add("@Username", SqliteType.Text).Value = username;
                     command.Parameters.Add("@Password", SqliteType.Text).Value = password;
-                    Console.WriteLine($"Username: {username} Password: {password}");
-                    var dataReader = command.ExecuteReader();
-                    if (dataReader.Read())
+                    using (SqliteDataReader dataReader = command.ExecuteReader())
                     {
-                        return (dataReader.GetInt32(0),false);
+                        if (dataReader.Read())
+                        {
+                            return (dataReader.GetInt32(0), false);
+                        }
                     }
                 }
             }
@@ -83,10 +66,11 @@ namespace CommonLibrary
             {
                 connection.ConnectionString = _connectionString;
                 connection.Open();
-                SqliteCommand command = connection.CreateCommand();
-                command.CommandText = $"select Count(*) from {parameter}";
-                var dataReader = command.ExecuteReader();
-                count = Convert.ToInt32(dataReader.GetString(0));
+                using (SqliteCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"select Count(*) from {parameter}";
+                    count = Convert.ToInt32(command.ExecuteScalar());
+                }
             }
             return count;
         }
@@ -189,7 +173,7 @@ namespace CommonLibrary
                 command.CommandText = $"select avg(mistakes), avg(score) from boards where userid = @UserID";
                 command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
                 var dataReader = command.ExecuteReader();
-                if (dataReader.Read())
+                if (dataReader.Read() && !dataReader.IsDBNull(0))   // not working AGAIN??
                 {
                     stats.Add(dataReader.GetInt32(0).ToString());
                     stats.Add(dataReader.GetInt32(1).ToString());
@@ -222,9 +206,51 @@ namespace CommonLibrary
             return $"{averageSeconds / 60}:{averageSeconds % 60}";
         }
 
-        public (string,string) GetUserSettings()
+        public void SetUserSettings(int userID)
         {
+            using (SqliteConnection connection = new())
+            {
+                connection.ConnectionString = _connectionString;
+                connection.Open();
+                SqliteCommand command = connection.CreateCommand();
+                command.CommandText = $"insert into UserSettings (MistakeDetection, SaveScores, UserID) VALUES(@MistakeDetection, @SaveScores, @UserID)";
+                command.Parameters.Add("@MistakeDetection", SqliteType.Text).Value = "On";
+                command.Parameters.Add("@SaveScores", SqliteType.Text).Value = "On";
+                command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
+                command.ExecuteNonQuery();
+            }
+        }
 
+        public (string,string) GetUserSettings(int userID)
+        {
+            (string, string) settings = ("", "");
+            using (SqliteConnection connection = new())
+            {
+                connection.ConnectionString = _connectionString;
+                connection.Open();
+                SqliteCommand command = connection.CreateCommand();
+                command.CommandText = $"select MistakeDetection, SaveScores from UserSettings where UserID = @UserID";
+                command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
+                var dataReader = command.ExecuteReader();
+                dataReader.Read();
+                settings = (dataReader.GetString(0), dataReader.GetString(1));
+            }
+            return settings;
+        }
+
+        public void SaveUserSettings(string mistakeDetection, string saveScores, int userID)
+        {
+            using (SqliteConnection connection = new())
+            {
+                connection.ConnectionString = _connectionString;
+                connection.Open();
+                SqliteCommand command = connection.CreateCommand();
+                command.CommandText = $"update UserSettings set MistakeDetection = @MistakeDetection, SaveScores = @SaveScores where UserID = @UserID";
+                command.Parameters.Add("@MistakeDetection", SqliteType.Text).Value = mistakeDetection;
+                command.Parameters.Add("@SaveScores", SqliteType.Text).Value = saveScores;
+                command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
+                command.ExecuteNonQuery();
+            }
         }
     }
 }
