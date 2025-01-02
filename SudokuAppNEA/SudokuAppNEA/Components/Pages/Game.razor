@@ -14,7 +14,10 @@ else
 {
     TimeSpan timer = DateTime.Now - launchTime;
     <h3 style="margin-left: 100px">Timer: @FormatTime()</h3>
-    <h3 style="margin-left: 100px">Mistakes: @mistakeCount</h3>
+    @if (UserClient.MistakeDetection == "On")
+    {
+        <h3 style="margin-left: 100px">Mistakes: @mistakeCount</h3>
+    }
     <h3 style="margin-left: 100px">Hints: @hintCount</h3>
     CheckBoard();
     @if (userCompleted == true)
@@ -29,7 +32,11 @@ else
                 {
                     int columnTemp = column; // if row and column directly used, OnSelected(9,9) would be called
                     int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
-                    string backgroundColour = GetBackgroundColour(rowTemp, columnTemp);
+                    string backgroundColour = "white";
+                    @if (UserClient.MistakeDetection == "On")
+                    {
+                        backgroundColour = GetBackgroundColour(rowTemp, columnTemp);
+                    }
                    <button class="sudoku-cell-default" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
                 }
             </div>
@@ -45,7 +52,7 @@ else
     <div class="game-btn-container-right">
         <button class="btn-primary" @onclick=Reset>Reset Board</button>
         <button class="btn-primary" @onclick=GetHint>Get Hint</button>
-        <button class="btn-primary" @onclick=ChangeNotesFunctionality>Notes: Off</button>
+        <button class="btn-primary" @onclick=ChangeNotesFunctionality>Notes: @noteTaking</button>
     </div>
 
     <div class="number-buttons-container">
@@ -72,6 +79,7 @@ else
     private DateTime launchTime;
     private int mistakeCount;
     private int hintCount;
+    private string noteTaking = "Off";
 
     protected override async Task OnInitializedAsync()
     {
@@ -185,9 +193,9 @@ else
             {
                 if (cell.Entry != 0)
                 {
-                    return cell.Entry.ToString();
+                    return $"{cell.Entry.ToString()}  ({string.Join(",",cell.NoteEntries)})";
                 }
-                return "";  // displays the cell value if it is non-empty, otherwise displays nothing
+                return $"({string.Join(",",cell.NoteEntries)})";  // displays the cell value if it is non-empty, otherwise displays nothing
             }
         }
         throw new InvalidOperationException("Cell does not exist");
@@ -211,10 +219,24 @@ else
     {
         if (!solved)
         {
-            selectedCell!.Entry = number;
-            if (number != correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2])
+            if (noteTaking == "Off")
             {
-                mistakeCount++;
+                selectedCell!.Entry = number;
+                if (number != correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2])
+                {
+                    mistakeCount++;
+                }
+            }
+            else
+            {
+                if (selectedCell!.NoteEntries.Contains(number))
+                {
+                    selectedCell.NoteEntries.Remove(number);
+                }
+                else
+                {
+                    selectedCell.NoteEntries.Add(number);
+                }
             }
         }
     }
@@ -225,16 +247,19 @@ else
         {
             userCompleted = true;
             solved = true;
-            UserClient.Entry = new()
+            if (UserClient.SaveScores == "On")
             {
-                Score = GenerateScore(difficulty!),
-                CalendarDay = DateOnly.FromDateTime(DateTime.Now).ToString(),
-                Difficulty = difficulty!,
-                CompletionTime = FormatTime(),
-                Mistakes = mistakeCount,
-                UserId = UserClient.User!.Id
-            };
-            DatabaseCaller.AddEntry(UserClient.Entry);
+                UserClient.Entry = new()
+                {
+                    Score = GenerateScore(difficulty!),
+                    CalendarDay = DateOnly.FromDateTime(DateTime.Now).ToString(),
+                    Difficulty = difficulty!,
+                    CompletionTime = FormatTime(),
+                    Mistakes = mistakeCount,
+                    UserId = UserClient.User!.Id
+                    };
+                DatabaseCaller.AddEntry(UserClient.Entry);
+            }
         }
     }
 
@@ -318,6 +343,13 @@ else
 
     private void ChangeNotesFunctionality()
     {
-        
+        if (noteTaking == "Off")
+        {
+            noteTaking = "On";
+        }
+        else
+        {
+            noteTaking = "Off";
+        }
     }
 }

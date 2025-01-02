@@ -45,6 +45,8 @@
         if (UserClient.NewUser)
         {
             DatabaseCaller.SetUserSettings(UserClient.User!.Id);
+            UserClient.MistakeDetection = "On";
+            UserClient.SaveScores = "On";
         }
     }
 }

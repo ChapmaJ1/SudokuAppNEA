@@ -1,6 +1,7 @@
 ﻿@page "/menu"
 @inject NavigationManager NavigationManager
 @inject UserClient UserClient
+@inject DBCaller DatabaseCaller
 
 <h1 style="text-align: center; margin-bottom: 50px">Welcome @UserClient.User!.Username</h1>
 
@@ -20,6 +21,18 @@
 </div>
 
 @code {
+
+    protected override void OnInitialized()
+    {
+
+    }
+
+    private void LoadUserSettings()
+    {
+        (string, string) settings = DatabaseCaller.GetUserSettings(UserClient.User!.Id);
+        UserClient.MistakeDetection = settings.Item1;
+        UserClient.SaveScores = settings.Item2;
+    }
 
     private void Navigate()
     {

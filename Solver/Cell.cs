@@ -11,12 +11,14 @@ namespace Sudoku_Solver_NEA
         public (int, int) Position { get; private set; }
         public int Entry { get; set; }
         public List<int> Domain { get; private set; }
+        public List<int> NoteEntries { get; private set; }
 
         public Cell((int,int) position, int entry)
         {
             Position = position;
             Entry = entry;
             Domain = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+            NoteEntries = new List<int>();
         }
 
         public void ChangeValue(int value)

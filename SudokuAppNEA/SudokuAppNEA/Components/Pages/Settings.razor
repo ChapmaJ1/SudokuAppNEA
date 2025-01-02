@@ -20,17 +20,13 @@
     // add settings checkbox/typebox
     // call getuserstats method
     private List<string>? stats;
-    private string? mistakeDetection = "On";
-    private string? saveScores = "On";
+    private string? mistakeDetection;
+    private string? saveScores;
 
     protected override void OnInitialized()
-    {   
-        if (!UserClient.NewUser)
-        {
-            (string, string) settings = DatabaseCaller.GetUserSettings(UserClient.User!.Id);
-            mistakeDetection = settings.Item1;
-            saveScores = settings.Item2;
-        }
+    {
+        mistakeDetection = UserClient.MistakeDetection;
+        saveScores = UserClient.SaveScores;
         GetUserStats();
         if (stats!.Count == 0)
         {

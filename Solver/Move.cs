@@ -11,13 +11,11 @@ namespace Sudoku_Solver_NEA
         public Cell Cell { get; private set; }
         public int NewEntry { get; private set; }
         public int OldEntry { get; private set; }
-        public Stack<Move> Stack { get; private set; }
-        public Move(Cell cell, int newEntry, int oldEntry, Stack<Move> stack)
+        public Move(Cell cell, int newEntry, int oldEntry)
         {
             Cell = cell;
             NewEntry = newEntry;
             OldEntry = oldEntry;
-            Stack = stack;
         }
     }
 }
