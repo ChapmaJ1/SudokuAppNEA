@@ -52,6 +52,7 @@ else
     <div class="game-btn-container-right">
         <button class="btn-primary" @onclick=Reset>Reset Board</button>
         <button class="btn-primary" @onclick=GetHint>Get Hint</button>
+        <button class="btn-primary" @onclick=Undo>Undo</button>
         <button class="btn-primary" @onclick=ChangeNotesFunctionality>Notes: @noteTaking</button>
     </div>
 
@@ -80,6 +81,7 @@ else
     private int mistakeCount;
     private int hintCount;
     private string noteTaking = "Off";
+    private MoveStack stack = new MoveStack();
 
     protected override async Task OnInitializedAsync()
     {
@@ -221,7 +223,9 @@ else
         {
             if (noteTaking == "Off")
             {
-                selectedCell!.Entry = number;
+                Move move = new Move(selectedCell, number, selectedCell!.Entry);
+                stack.Push(move);
+                selectedCell.Entry = number;
                 if (number != correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2])
                 {
                     mistakeCount++;
@@ -350,6 +354,18 @@ else
         else
         {
             noteTaking = "Off";
+        }
+    }
+
+    private void Undo()
+    {
+        try
+        {
+            Move move = stack.Pop();
+            move.Cell.Entry = move.OldEntry;
+        }
+        catch (IndexOutOfRangeException)
+        {           
         }
     }
 }
