@@ -4,9 +4,9 @@
 
 <h1 style="font-size: 50px; text-align: center">Leaderboard</h1>
 
-@if (dataEntries == null)
+@if (dataEntries == null)  // database records in the process of being fetched
 {
-    <h1 style="margin-top: 100px">Loading</h1>
+    <h1 style="margin-top: 100px">Loading...</h1>
 }
 else
 {
@@ -14,7 +14,7 @@ else
         <strong><u>Name</u></strong>
         <strong><u>Score</u></strong>
         <strong><u>Date</u></strong>
-        @foreach (LeaderboardEntry entry in dataEntries)
+        @foreach (LeaderboardEntry entry in dataEntries)  // displays each leaderboard entry in a suitable format
         {
             <div class="leaderboard-text">
                 <h3>@entry.Username</h3>
@@ -35,8 +35,7 @@ else
 
     protected override void OnInitialized()
     {
-        dataEntries = DatabaseCaller.GetLeaderboardEntries();
-        // sort leaderboard entries - consider??
+        dataEntries = DatabaseCaller.GetLeaderboardEntries();  // gets leaderboard entries from database
     }
 
     private void NavigateToMenu()

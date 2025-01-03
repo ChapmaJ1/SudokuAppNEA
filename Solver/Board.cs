@@ -31,13 +31,13 @@ namespace Sudoku_Solver_NEA
             {
                 for (int j = 0; j < 9; j++)
                 {
-                    Cell cell = new Cell((i, j), BoardSketch[i, j]);
-                    AdjacencyList.Add(cell, new List<Cell>());
+                    Cell cell = new Cell((i, j), BoardSketch[i, j]);  // initialise all cells with their location and initial entry
+                    AdjacencyList.Add(cell, new List<Cell>());  // creates dictionary entry for every cell on the board
                 }
             }
             foreach (Cell cell in AdjacencyList.Keys)
             {
-                AddEdges(cell);
+                AddEdges(cell);  // adds the cells which each node links to to the dictionary
             }
             InitialiseRemainingNumbers(GetFixedNodes());
             SetVariableNodes();
@@ -78,8 +78,8 @@ namespace Sudoku_Solver_NEA
                 for (int j = 0; j <= 2; j++)
                 {
                     int addI = i + boxI * 3;
-                    int addJ = j + boxJ * 3;  // finds which box the square lies in, and the corresponding nodes it must be joined to
-                    if (!(addI == iDimension && addJ == jDimension) && !AdjacencyList[cell].Contains(GetCellLocation(addI, addJ)))
+                    int addJ = j + boxJ * 3;  // finds which box the square lies in, and the corresponding nodes it must be linked to
+                    if (!(addI == iDimension && addJ == jDimension) && !AdjacencyList[cell].Contains(GetCellLocation(addI, addJ)))  // prevents the cell linking to itself + duplicate linking (linking to the same cell twice)
                     {
                         AdjacencyList[cell].Add(GetCellLocation(addI, addJ));
                     }
@@ -104,7 +104,7 @@ namespace Sudoku_Solver_NEA
             List<Cell> fixedNodes = new List<Cell>();
             foreach (Cell cell in AdjacencyList.Keys)
             {
-                if (cell.Entry != 0)    // assigned in the starting board - cannot be changed during solving process
+                if (cell.Entry != 0)    // assigned in the starting board - cannot be changed during solving process. Call this a "fixed node"
                 {
                     fixedNodes.Add(cell);
                 }
@@ -116,7 +116,7 @@ namespace Sudoku_Solver_NEA
         {
             foreach (Cell cell in AdjacencyList.Keys)
             {
-                if (cell.Entry == 0)  // not part of the fixed starting nodes
+                if (cell.Entry == 0)  // not assigned in the starting board - can be changed during solving process. Call this a "variable node"
                 {
                     VariableNodes.Add(cell);
                 }
@@ -142,12 +142,12 @@ namespace Sudoku_Solver_NEA
 
         public Board Clone(Board inputBoard)
         {
-            Board newBoard = new Board("", new int[inputBoard.BoardSketch.GetLength(1), inputBoard.BoardSketch.GetLength(0)]);
+            Board newBoard = new Board("", new int[inputBoard.BoardSketch.GetLength(1), inputBoard.BoardSketch.GetLength(0)]);  // creates a new board with identical structure
             for (int i=0; i<newBoard.BoardSketch.GetLength(0); i++)
             {
                 for (int j=0; j<newBoard.BoardSketch.GetLength(1); j++)
                 {
-                    newBoard.BoardSketch[i, j] = inputBoard.BoardSketch[i, j];
+                    newBoard.BoardSketch[i, j] = inputBoard.BoardSketch[i, j];  // clones the board sketch of the original input board
                 }
             }
             return newBoard;

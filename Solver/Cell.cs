@@ -15,19 +15,10 @@ namespace Sudoku_Solver_NEA
 
         public Cell((int,int) position, int entry)
         {
-            Position = position;
-            Entry = entry;
-            Domain = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            NoteEntries = new List<int>();
-        }
-
-        public void ChangeValue(int value)
-        {
-            Entry = value;
-        }
-        public bool IsEmpty()
-        {
-            return Entry == 0;
+            Position = position;  // location (i,j) of the cell
+            Entry = entry;  // the value of the cell at any given moment
+            Domain = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9 };  // potential values that the cell could take without violating constraints. initially every number is possible
+            NoteEntries = new List<int>();  // the "note" values of the cell assigned by the user while playing
         }
     }
 }

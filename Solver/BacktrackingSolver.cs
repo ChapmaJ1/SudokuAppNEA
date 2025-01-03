@@ -30,7 +30,7 @@ namespace Sudoku_Solver_NEA
             Cell node = new Cell((9, 9), -1);   // new arbitrary cell to be assigned to
             for (int i = 0; i < Board.VariableNodes.Count; i++)
             {
-                if (Board.VariableNodes[i].Entry == 0)   // unassigned cell
+                if (Board.VariableNodes[i].Entry == 0)   // cell which is currently empty + has no value
                 {
                     node = Board.VariableNodes[i];
                     break;
@@ -39,14 +39,14 @@ namespace Sudoku_Solver_NEA
             for (int i=1; i<10; i++)
             {
                 Console.WriteLine("\n");
-                node.Entry = i;   // set board cell equal to a value and backtrack with this value
+                node.Entry = i;   // sets board cell equal to a value and performs backtracking tree traversal with this value
                 PrintBoard(Board);
-                if (Solve())
+                if (Solve())  // recursive loop - if the series of board cell changes leads to a solution, return true
                 {
                     return true;
                 }
             }
-            node.Entry = 0;  // moving back up the tree - resetting the most recently edited cell
+            node.Entry = 0;  // backtracking back up the tree - resetting the most recently edited cell
             return false;
         }
 
@@ -54,8 +54,8 @@ namespace Sudoku_Solver_NEA
         {
             foreach (Cell node in Board.AdjacencyList.Keys)
             {
-                if (node.Entry == 0)  // no empty values and board is valid (guaranteed by CheckInvalid() function)
-                {
+                if (node.Entry == 0)  // checks that the board has no empty values
+                {                     // validity of the board in terms of Sudoku constraints is guaranteed by the CheckInvalid() function
                     return false;
                 }
             }
@@ -68,7 +68,7 @@ namespace Sudoku_Solver_NEA
             {
                 foreach (Cell node in link.Value)
                 {
-                    if (link.Key.Entry == node.Entry && link.Key.Entry != 0)   // 2 linked nodes share the same, non-empty value
+                    if (link.Key.Entry == node.Entry && link.Key.Entry != 0)   // 2 linked nodes share the same, non-empty value, hence violating the Sudoku constraint
                     {
                         return true;
                     }
@@ -81,8 +81,8 @@ namespace Sudoku_Solver_NEA
         {
             foreach (Cell cell in board.AdjacencyList.Keys)
             {
-                board.BoardSketch[cell.Position.Item1, cell.Position.Item2] = cell.Entry;   // update board sketch to reflect the numerical entries of the cell objects
-            }
+                board.BoardSketch[cell.Position.Item1, cell.Position.Item2] = cell.Entry;   // updates board sketch to reflect the numerical entries of the cell objects
+            }                                                                               // board sketch can then be used for output
             for (int i=0; i<board.BoardSketch.GetLength(0); i++)
             {
                 for (int j=0; j<board.BoardSketch.GetLength(0); j++)

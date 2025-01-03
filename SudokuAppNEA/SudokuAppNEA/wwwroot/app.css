@@ -65,8 +65,8 @@ h2{
 .menu-text {
     display: flex;
     flex-direction: column;
-    gap: 50px;
-    min-height: 50vh;
+    gap: 10px;
+    min-height: 30vh;
     text-align: center;
 }
 

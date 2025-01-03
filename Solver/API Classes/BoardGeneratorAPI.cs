@@ -21,7 +21,7 @@ namespace Sudoku_Solver_NEA
         public async Task<ResponseData> GenerateBoard()
         {
             string url = "https://sudoku-api.vercel.app/api/dosuku?query={newboard(limit:10){grids{value,difficulty}}}";
-            HttpResponseMessage response = await client.GetAsync(url);    // sends GET request
+            HttpResponseMessage response = await client.GetAsync(url);    // sends GET request, fetching 10 boards along with their associated difficulties
             while (!response.IsSuccessStatusCode)   // until request is successful + response is received
             {
                 response = await client.GetAsync(url);
@@ -39,10 +39,10 @@ namespace Sudoku_Solver_NEA
             {
                 for (int j = 0; j < 9; j++)
                 {
-                    boardSketch[i, j] = twoDimensionalSketch[i][j];
+                    boardSketch[i, j] = twoDimensionalSketch[i][j];  // converts the jagged array API output into a 2D array
                 }
             }
-            return new Board(data.NewBoard.Grids[index].Difficulty, boardSketch);
+            return new Board(data.NewBoard.Grids[index].Difficulty, boardSketch);  // creates a board object using the API data
         }
     }
 }   

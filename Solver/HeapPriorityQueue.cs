@@ -19,7 +19,7 @@ namespace Sudoku_Solver_NEA
 
         private void SwapIndexes(int index1, int index2)
         {
-            Cell temp = NodeArray[index1];
+            Cell temp = NodeArray[index1];  // creates temporary storage cell, then swaps the values at each index
             NodeArray[index1] = NodeArray[index2];
             NodeArray[index2] = temp;
         }
@@ -32,7 +32,7 @@ namespace Sudoku_Solver_NEA
             }
             else
             {
-                NodeArray[Occupied] = cell;
+                NodeArray[Occupied] = cell;  // inserts the cell at the bottom of the heap
                 PushUp(Occupied);
                 Occupied++;
             }
@@ -40,8 +40,8 @@ namespace Sudoku_Solver_NEA
 
         public Cell Dequeue()
         {
-            Cell topCell = NodeArray[0];
-            NodeArray[0] = NodeArray[Occupied-1];
+            Cell topCell = NodeArray[0];  // returns the cell at the top of the heap (front of the queue)
+            NodeArray[0] = NodeArray[Occupied-1];  // highest priority cell replace by the cell at the bottom of the heap
             Occupied--;
             PushDown(0);
             return topCell;
@@ -49,13 +49,13 @@ namespace Sudoku_Solver_NEA
 
         private void PushUp(int childIndex)
         {
-            if (childIndex != 0)
+            if (childIndex != 0)  // if not already at the top of the heap
             {
                 int parentIndex = Convert.ToInt32(Math.Ceiling((decimal)childIndex / 2) - 1);
-                if (NodeArray[parentIndex].Domain.Count > NodeArray[childIndex].Domain.Count)
+                if (NodeArray[parentIndex].Domain.Count > NodeArray[childIndex].Domain.Count)  // if the domain of the child cell is smaller than the domain of the parent cell
                 {
-                    SwapIndexes(parentIndex, childIndex);
-                    PushUp(parentIndex);
+                    SwapIndexes(parentIndex, childIndex);  // swap the parent and child cell elements
+                    PushUp(parentIndex);  // continue the process with the child cell (which is now at the parent index)
                 }
             }
         }
@@ -64,9 +64,9 @@ namespace Sudoku_Solver_NEA
         {
             int leftChildIndex = parentIndex * 2 + 1;
             int rightChildIndex = parentIndex * 2 + 2;
-            if (!(leftChildIndex > Occupied && rightChildIndex > Occupied))
+            if (!(leftChildIndex > Occupied && rightChildIndex > Occupied))  // if both child indexes are out of range
             {
-                if (rightChildIndex > Occupied)
+                if (rightChildIndex > Occupied)  // if left child index in range, right child index out of range
                 {
                     if (NodeArray[parentIndex].Domain.Count > NodeArray[leftChildIndex].Domain.Count)
                     {
@@ -75,15 +75,18 @@ namespace Sudoku_Solver_NEA
                 }
                 else
                 {
-                    if (NodeArray[leftChildIndex].Domain.Count < NodeArray[rightChildIndex].Domain.Count)
+                    if (!(NodeArray[parentIndex].Domain.Count < NodeArray[leftChildIndex].Domain.Count && NodeArray[parentIndex].Domain.Count < NodeArray[rightChildIndex].Domain.Count))  // if the domain of the parent cell is bigger than at least one of the child cell domains
                     {
-                        SwapIndexes(parentIndex, leftChildIndex);
-                        PushDown(leftChildIndex);
-                    }
-                    else
-                    {
-                        SwapIndexes(parentIndex, rightChildIndex);
-                        PushDown(rightChildIndex);
+                        if (NodeArray[leftChildIndex].Domain.Count < NodeArray[rightChildIndex].Domain.Count)
+                        {
+                            SwapIndexes(parentIndex, leftChildIndex);  // if left child domain is smaller than right child domain, swap with left child
+                            PushDown(leftChildIndex);  // continue process with paret cell (now at left child index)
+                        }
+                        else
+                        {
+                            SwapIndexes(parentIndex, rightChildIndex); // if right child domain is smaller than left child domain, swap with right child
+                            PushDown(rightChildIndex);
+                        }
                     }
                 }
             }

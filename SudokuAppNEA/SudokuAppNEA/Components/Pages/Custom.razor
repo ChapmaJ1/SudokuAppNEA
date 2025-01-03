@@ -101,7 +101,7 @@ else
         board.InitialiseGraph();   // initialises the board, using the altered sketch, and solves
         board!.SetQueue();
         solver = new ForwardChecker(board);
-        if (solver.CheckInvalid())
+        if (solver.CheckInvalid())  // if the board input by the user violates a constraint, and is hence unsolvable
         {
             solvable = false;
         }

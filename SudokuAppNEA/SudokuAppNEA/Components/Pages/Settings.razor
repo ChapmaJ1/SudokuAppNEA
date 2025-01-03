@@ -6,7 +6,6 @@
 <div class="form-container">
     <button class="btn-primary" @onclick=ChangeMistakeDetection>Mistake Detection: @mistakeDetection</button>
     <button class="btn-primary" @onclick=ChangeScoreSaving>Save Scores To Leaderboard: @saveScores</button>
-    <button class="btn-primary" @onclick=SaveSettings>Save Settings</button>
 </div>
 
 <div class="stats-container">
@@ -17,8 +16,6 @@
 </div>
 
 @code {
-    // add settings checkbox/typebox
-    // call getuserstats method
     private List<string>? stats;
     private string? mistakeDetection;
     private string? saveScores;
@@ -27,14 +24,14 @@
     {
         mistakeDetection = UserClient.MistakeDetection;
         saveScores = UserClient.SaveScores;
-        GetUserStats();
-        if (stats!.Count == 0)
+        GetUserStats();  // fetches user stats
+        if (stats!.Count == 0)  // if user has no previously played boards
         {
             stats = new List<string>() { "N/A", "N/A", "N/A" };
         }
     }
 
-    private void ChangeMistakeDetection()
+    private void ChangeMistakeDetection() // changes frontend display for mistake detection
     {
         if (mistakeDetection == "On")
         {
@@ -46,21 +43,22 @@
         }
     }
 
-    private void ChangeScoreSaving()
+    private void ChangeScoreSaving() // changes frontend display for score saving
     {
         if (saveScores == "On")
         {
             saveScores = "Off";
         }
-        else{
+        else
+        {
             saveScores = "On";
         }
     }
 
     private void SaveSettings()
     {
-        DatabaseCaller.SaveUserSettings(mistakeDetection!, saveScores!, UserClient.User!.Id);
-        NavigationManager.NavigateTo("/menu");
+        DatabaseCaller.SaveUserSettings(mistakeDetection!, saveScores!, UserClient.User!.Id);  // updates user settings according to their final choices
+        NavigationManager.NavigateTo("/menu");  // takes user back to menu
     }
 
     private void GetUserStats()

@@ -24,13 +24,13 @@
 
     protected override void OnInitialized()
     {
-
+        LoadUserSettings();
     }
 
     private void LoadUserSettings()
     {
-        (string, string) settings = DatabaseCaller.GetUserSettings(UserClient.User!.Id);
-        UserClient.MistakeDetection = settings.Item1;
+        (string, string) settings = DatabaseCaller.GetUserSettings(UserClient.User!.Id);  // gets user settings from database
+        UserClient.MistakeDetection = settings.Item1;  // records settings in userclient object
         UserClient.SaveScores = settings.Item2;
     }
 

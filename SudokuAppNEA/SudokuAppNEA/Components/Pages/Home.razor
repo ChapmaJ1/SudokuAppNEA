@@ -31,18 +31,17 @@
 
     private void HandleSubmit()
     {
-        // find user in database if record exists, otherwise add a new user
         UserClient.User = user!;
-        (int, bool) userDetails = DatabaseCaller.FindUser(user!.Username, user.Password);
-        UserClient.User!.Id = userDetails.Item1;
-        UserClient.NewUser = userDetails.Item2;
+        (int, bool) userDetails = DatabaseCaller.FindUser(user!.Username, user.Password);  // find user in database if record exists, otherwise add a new user
+        UserClient.User!.Id = userDetails.Item1;  // user ID
+        UserClient.NewUser = userDetails.Item2;  // whether or not the user is new or not
         SetUserSettings();
         NavigationManager.NavigateTo($"/menu");
     }
 
     private void SetUserSettings()
     {
-        if (UserClient.NewUser)
+        if (UserClient.NewUser)  // settings need to be initialised - there is not yet a database record of their settings
         {
             DatabaseCaller.SetUserSettings(UserClient.User!.Id);
             UserClient.MistakeDetection = "On";
