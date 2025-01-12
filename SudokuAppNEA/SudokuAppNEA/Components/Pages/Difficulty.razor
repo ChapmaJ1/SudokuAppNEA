@@ -1,14 +1,15 @@
 ﻿@page "/difficulty"
 @inject NavigationManager NavigationManager
 
-<h1>Select Difficulty</h1>
+<h1>Select Difficulty (9x9 boards)</h1>
 
 <div class="difficulty-container">
         <a type="button" class="btn-primary" href="/game/Easy" style="color: lawngreen">Easy</a>
         <a type="button" class="btn-primary" href="/game/Medium" style="color: yellow">Medium</a>
         <a type="button" class="btn-primary" href="/game/Hard" style="color: lightcoral">Hard</a>
         <a type="button" class="btn-primary" href="/game/Adaptive">Adaptive</a>
-        <a type="button" class="btn-primary" href="/custom">Custom Game</a>
+        <a type="button" class="btn-primary" href="/custom/9">Custom Game</a>
+        <a type="button" class="btn-primary" href="/largerselect">Larger Boards</a>
 </div>
 
 @code

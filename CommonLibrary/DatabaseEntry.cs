@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SQLDatabase
 {
-    public class BoardEntry
+    public class DatabaseEntry
     {
         public required int Score { get; set; }
         public required string CalendarDay { get; set; }

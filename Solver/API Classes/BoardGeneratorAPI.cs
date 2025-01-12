@@ -42,7 +42,7 @@ namespace Sudoku_Solver_NEA
                     boardSketch[i, j] = twoDimensionalSketch[i][j];  // converts the jagged array API output into a 2D array
                 }
             }
-            return new Board(data.NewBoard.Grids[index].Difficulty, boardSketch);  // creates a board object using the API data
+            return new Board(data.NewBoard.Grids[index].Difficulty, boardSketch, 9);  // creates a board object using the API data
         }
     }
 }   

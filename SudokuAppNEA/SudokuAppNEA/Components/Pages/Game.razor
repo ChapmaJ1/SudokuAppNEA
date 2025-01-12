@@ -13,7 +13,7 @@
 else
 {
     TimeSpan timer = DateTime.Now - launchTime; // 
-    <h3 style="margin-left: 100px">Timer: @FormatTime()</h3>
+    <h3 style="margin-left: 100px">Time: @FormatTime()</h3>
     @if (UserClient.MistakeDetection == "On")
     {
         <h3 style="margin-left: 100px">Mistakes: @mistakeCount</h3>
@@ -22,7 +22,7 @@ else
     CheckBoard();
     @if (userCompleted == true)
     {
-        <h3>Board Completed!</h3>
+        <h3>Board Completed!          Your Score: @GenerateScore(difficulty!)</h3>
     }
     <div class="sudoku-container">
         @for (int row = 0; row < 9; row++)  // prints 81 square buttons in a 9x9 format
@@ -243,12 +243,15 @@ else
         {
             if (noteTaking == "Off") 
             {
-                Move move = new Move(selectedCell, number, selectedCell!.Entry);
-                stack.Push(move);  // records move + pushes it onto move stack
-                selectedCell.Entry = number;
-                if (number != correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2])  // if the input number is incorrect
+                if (!(selectedCell == null))
                 {
-                    mistakeCount++;
+                    Move move = new Move(selectedCell, number, selectedCell!.Entry);
+                    stack.Push(move);  // records move + pushes it onto move stack
+                    selectedCell.Entry = number;
+                    if (number != correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2])  // if the input number is incorrect
+                    {
+                        mistakeCount++;
+                    }
                 }
             }
             else  // note taking mode is on
@@ -381,7 +384,7 @@ else
     {
         try
         {
-            Move move = stack.Pop(); // takes the move at the top of the stack
+            Move move = stack.Pop();
             move.Cell.Entry = move.OldEntry;  // sets the given cell to its original entry before being changed
         }
         catch (IndexOutOfRangeException)

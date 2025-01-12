@@ -15,23 +15,27 @@ namespace Sudoku_Solver_NEA
         public List<Cell> VariableNodes { get; private set; }
         public Dictionary<Cell, List<Cell>> AdjacencyList { get; private set; }
         public HeapPriorityQueue Queue { get; private set; }
+        public int Dimensions { get; private set; }
 
-        public Board(string difficulty, int[,] boardSketch)
+        public Board(string difficulty, int[,] boardSketch, int dimensions)
         {
             Difficulty = difficulty;
             Solutions = new List<Board>();
             BoardSketch = boardSketch;
             AdjacencyList = new Dictionary<Cell, List<Cell>>();  // a dictionary of nodes (key) and the cells which the node links to via an edge (value)
             VariableNodes = new List<Cell>();
+            Dimensions = dimensions;
         }
 
         public void InitialiseGraph()
         {
-            for (int i = 0; i < 9; i++)
+            int squareDimensions = Convert.ToInt32(Math.Sqrt(Dimensions));
+            for (int i = 0; i < Dimensions; i++)
             {
-                for (int j = 0; j < 9; j++)
+                for (int j = 0; j < Dimensions; j++)
                 {
                     Cell cell = new Cell((i, j), BoardSketch[i, j]);  // initialise all cells with their location and initial entry
+                    cell.InitialiseDomain(Dimensions);
                     AdjacencyList.Add(cell, new List<Cell>());  // creates dictionary entry for every cell on the board
                 }
             }
@@ -54,31 +58,32 @@ namespace Sudoku_Solver_NEA
 
         private void AddEdges(Cell cell)
         {
+            int squareDimensions = Convert.ToInt32(Math.Sqrt(Dimensions));
             int iDimension = cell.Position.Item1;
             int jDimension = cell.Position.Item2;   // correspond to the "first" and "second" dimensions of a typical array
-            int boxI = iDimension / 3;
-            int boxJ = jDimension / 3;   // correspond to different boxes, in terms of the "first" and "second" dimensions
+            int boxI = iDimension / squareDimensions;
+            int boxJ = jDimension / squareDimensions;   // correspond to different boxes, in terms of the "first" and "second" dimensions
 
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < Dimensions; i++)
             {
                 if (i != jDimension)  // ensures that a cell is not shown to link to itself
                 {
                     AdjacencyList[cell].Add(GetCellLocation(iDimension, i));   // finds all the squares in the same row
                 }
             }
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < Dimensions; i++)
             {
                 if (i != iDimension)
                 {
                     AdjacencyList[cell].Add(GetCellLocation(i, jDimension));  // finds all the squares in the same column
                 }
             }
-            for (int i = 0; i <= 2; i++)
+            for (int i = 0; i < squareDimensions; i++)
             {
-                for (int j = 0; j <= 2; j++)
+                for (int j = 0; j < squareDimensions; j++)
                 {
-                    int addI = i + boxI * 3;
-                    int addJ = j + boxJ * 3;  // finds which box the square lies in, and the corresponding nodes it must be linked to
+                    int addI = i + boxI * squareDimensions;
+                    int addJ = j + boxJ * squareDimensions;  // finds which box the square lies in, and the corresponding nodes it must be linked to
                     if (!(addI == iDimension && addJ == jDimension) && !AdjacencyList[cell].Contains(GetCellLocation(addI, addJ)))  // prevents the cell linking to itself + duplicate linking (linking to the same cell twice)
                     {
                         AdjacencyList[cell].Add(GetCellLocation(addI, addJ));
@@ -142,7 +147,7 @@ namespace Sudoku_Solver_NEA
 
         public Board Clone(Board inputBoard)
         {
-            Board newBoard = new Board("", new int[inputBoard.BoardSketch.GetLength(1), inputBoard.BoardSketch.GetLength(0)]);  // creates a new board with identical structure
+            Board newBoard = new Board("", new int[inputBoard.BoardSketch.GetLength(1), inputBoard.BoardSketch.GetLength(0)], inputBoard.Dimensions);  // creates a new board with identical structure
             for (int i=0; i<newBoard.BoardSketch.GetLength(0); i++)
             {
                 for (int j=0; j<newBoard.BoardSketch.GetLength(1); j++)

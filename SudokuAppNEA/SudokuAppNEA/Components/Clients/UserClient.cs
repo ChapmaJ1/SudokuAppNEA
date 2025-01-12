@@ -12,6 +12,6 @@ namespace SudokuAppNEA.Components.Clients
 
         public string? MistakeDetection { get; set; }
         public string? SaveScores { get; set; }
-        public BoardEntry? Entry { get; set; }
+        public DatabaseEntry? Entry { get; set; }
     }
 }

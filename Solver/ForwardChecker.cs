@@ -29,24 +29,25 @@ namespace Sudoku_Solver_NEA
             for (int i = 0; i < orderedDomain.Count; i++)
             {
                 node.Entry = orderedDomain[i].Item2;
-                Dictionary<Cell, List<int>> removed = RemoveRemainingNumbers(node.Entry, node);   // forward check, pruning the domain early
+                Dictionary<Cell, List<int>> removed = PruneValues(node.Entry, node);   // forward check, pruning the domain early
                 if (HasEmptyDomains())  // invalid board in the current state, so no point going deeper into backtracking
                 {
-                    AddBackRemainingNumbers(removed);  // reverts domain restrictions
+                    PrintBoard(Board); // remove
+                    RestorePrunedValues(removed);  // reverts domain restrictions
                     continue;   // moves onto the next number in the iteration (the "branch" of the tree to the side)
                 }
                 if (Solve())
                 {
                     return true;
                 }
-                AddBackRemainingNumbers(removed);   // backtrack from forward checking, removing the domain restrictions of the invalid board
+                RestorePrunedValues(removed);   // backtrack from forward checking, removing the domain restrictions of the invalid board
             }
             node.Entry = 0;  // backtracking up the tree - resetting the most recently edited cell
             Board.Queue.Enqueue(node);  // adding the reset node back into the priority queue
             return false;
         }
 
-        private Dictionary<Cell, List<int>> RemoveRemainingNumbers(int number, Cell node)
+        private Dictionary<Cell, List<int>> PruneValues(int number, Cell node)
         {
             Dictionary<Cell, List<int>> removedNumbers = new();
             List<Cell> changeNodes = Board.AdjacencyList[node];   // all cells that the given node is linked to
@@ -65,7 +66,7 @@ namespace Sudoku_Solver_NEA
             return removedNumbers;
         }
 
-        private void AddBackRemainingNumbers(Dictionary<Cell, List<int>> removedNumbers)
+        private void RestorePrunedValues(Dictionary<Cell, List<int>> removedNumbers)
         {
             foreach (KeyValuePair<Cell, List<int>> pair in removedNumbers)  // recorded cell + number combination
             {
@@ -85,7 +86,7 @@ namespace Sudoku_Solver_NEA
             return MRVCell;
         }
 
-        private List<(int,int)> SortByLCV(Cell cell)    // if MRV is not 1, run LCV
+        private List<(int,int)> SortByLCV(Cell cell)  
         {
             List<(int,int)> orderedDomain = new();
             foreach (int number in cell.Domain)
@@ -131,7 +132,7 @@ namespace Sudoku_Solver_NEA
                 Board.Solutions.Add(tempBoard);
                 return true;
             }
-            Cell node = new Cell((9, 9), -1);  // arbitrary cell to be assigned to
+            Cell node = new Cell((-1, -1), -1);  // arbitrary cell to be assigned to
             for (int i=0; i<Board.VariableNodes.Count; i++)
             {
                 if (Board.VariableNodes[i].Entry == 0)  // if cell currently has no value
@@ -144,22 +145,22 @@ namespace Sudoku_Solver_NEA
             for (int i = 0; i < orderedDomain.Count; i++)
             {
                 node.Entry = orderedDomain[i].Item2;
-                Dictionary<Cell, List<int>> removed = RemoveRemainingNumbers(node.Entry, node); 
+                Dictionary<Cell, List<int>> removed = PruneValues(node.Entry, node); 
                 if (HasEmptyDomains())
                 {
-                    AddBackRemainingNumbers(removed);
+                    RestorePrunedValues(removed);
                     continue;
                 }
                 if (HasUniqueSolution())
                 {
-                    AddBackRemainingNumbers(removed);  // reverts domain restrictions to allow exploration of a different tree branch
+                    RestorePrunedValues(removed);  // reverts domain restrictions to allow exploration of a different tree branch
                     if (Board.SolutionCount >= 2)   // if multiple solutions have already been found, stop early
                     {
                         return true;
                     }
                     continue;  // if this is the first solution to be found, continue iterating through the for loop
                 }
-                AddBackRemainingNumbers(removed);
+                RestorePrunedValues(removed);
             }
             node.Entry = 0;
             return false;

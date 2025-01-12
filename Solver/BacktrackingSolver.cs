@@ -27,7 +27,7 @@ namespace Sudoku_Solver_NEA
                 PrintBoard(Board);
                 return true;
             }
-            Cell node = new Cell((9, 9), -1);   // new arbitrary cell to be assigned to
+            Cell node = new Cell((-1, -1), -1);   // new arbitrary cell to be assigned to
             for (int i = 0; i < Board.VariableNodes.Count; i++)
             {
                 if (Board.VariableNodes[i].Entry == 0)   // cell which is currently empty + has no value
@@ -36,7 +36,7 @@ namespace Sudoku_Solver_NEA
                     break;
                 }
             }
-            for (int i=1; i<10; i++)
+            for (int i=1; i<=Board.Dimensions; i++)
             {
                 Console.WriteLine("\n");
                 node.Entry = i;   // sets board cell equal to a value and performs backtracking tree traversal with this value

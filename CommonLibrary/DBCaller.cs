@@ -74,7 +74,7 @@ namespace CommonLibrary
             return count;
         }
 
-        public void AddEntry(BoardEntry entry)
+        public void AddEntry(DatabaseEntry entry)
         {
             using (SqliteConnection connection = new SqliteConnection())
             {

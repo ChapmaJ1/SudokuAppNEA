@@ -27,7 +27,7 @@ namespace Sudoku_Solver_NEA
                             { 6,0,2,4,5,0,8,7,9 },
                             { 0,0,0,7,0,0,4,2,1 },
                             { 7,8,0,2,1,0,6,0,0} };
-            Board board = new Board("Hard", boardSketch);
+            Board board = new Board("Hard", boardSketch, 3);
             board.InitialiseGraph();
 
             /*foreach (KeyValuePair<Cell, List<Cell>> pair in board.AdjacencyList)
