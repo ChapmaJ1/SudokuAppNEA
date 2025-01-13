@@ -20,8 +20,6 @@ namespace Sudoku_Solver_NEA
             if (CheckFinished())
             {
                 PrintBoard(Board);
-                Board tempBoard = Board.Clone(Board);  // objects passed by reference not value, clone needed to store the actual values                 
-                Board.Solutions.Add(tempBoard);
                 return true;
             }
             Cell node = GetMRV();
@@ -32,7 +30,6 @@ namespace Sudoku_Solver_NEA
                 Dictionary<Cell, List<int>> removed = PruneValues(node.Entry, node);   // forward check, pruning the domain early
                 if (HasEmptyDomains())  // invalid board in the current state, so no point going deeper into backtracking
                 {
-                    PrintBoard(Board); // remove
                     RestorePrunedValues(removed);  // reverts domain restrictions
                     continue;   // moves onto the next number in the iteration (the "branch" of the tree to the side)
                 }

@@ -9,12 +9,10 @@ namespace Sudoku_Solver_NEA
     public class Move
     {
         public Cell Cell { get; private set; }
-        public int NewEntry { get; private set; }
         public int OldEntry { get; private set; }
-        public Move(Cell cell, int newEntry, int oldEntry)
+        public Move(Cell cell, int oldEntry)
         {
             Cell = cell;
-            NewEntry = newEntry;
             OldEntry = oldEntry;
         }
     }

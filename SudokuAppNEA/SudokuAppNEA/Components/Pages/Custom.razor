@@ -112,8 +112,8 @@ else
         }
         else
         {
-            solvable = true;
-            solver!.Solve();
+            Annealer annealer = new Annealer(board, dimensions);
+            annealer.Solve();
         }
     }
 

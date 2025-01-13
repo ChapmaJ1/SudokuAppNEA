@@ -161,7 +161,7 @@ else
                         }
                     }
                 }
-                board.Solutions = new List<Board>();
+                board.Solutions.Clear();
                 board.SolutionCount = 0;
             }
             else
@@ -245,7 +245,7 @@ else
             {
                 if (!(selectedCell == null))
                 {
-                    Move move = new Move(selectedCell, number, selectedCell!.Entry);
+                    Move move = new Move(selectedCell, selectedCell!.Entry);
                     stack.Push(move);  // records move + pushes it onto move stack
                     selectedCell.Entry = number;
                     if (number != correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2])  // if the input number is incorrect
