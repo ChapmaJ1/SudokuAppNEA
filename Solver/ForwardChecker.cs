@@ -98,7 +98,7 @@ namespace Sudoku_Solver_NEA
                 }
                 orderedDomain.Add((impact, number));
             }
-            orderedDomain.Sort();    // sorts by increasing impact - lowest impact tested first IMPLEMENT SORTING ALGORITHM?????????
+            orderedDomain.Sort();    // sorts by increasing impact - lowest impact tested first
             return orderedDomain;
         }
         

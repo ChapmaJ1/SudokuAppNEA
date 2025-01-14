@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ namespace Sudoku_Solver_NEA
         public Annealer(Board board, int dimensions)
         {
             Board = board;
-            MoveStack = new MoveStack();
+            MoveStack = new MoveStack(30);
             Dimensions = dimensions;
         }
 
@@ -22,112 +23,215 @@ namespace Sudoku_Solver_NEA
         {
             InitialiseBoard();
             Random random = new Random();
-            double initialTemperature = 50;   // JUSTIFY LATER
-            (List<Cell>, int) initialConflictData = GetConflicts(); 
-            for (int i = 0; i < 2000; i++)
+            double initialTemperature = 60;   // JUSTIFY LATER
+            (Dictionary<Cell, List<Cell>>, int) conflictData = GetConflicts();
+            for (int i = 0; i < 10000; i++)
             {
-                ChangeRandomCell(initialConflictData.Item1);
-                //double temperature = initialTemperature / Math.Log(1+i); // temperature calculation, logarithmic decay
-                // double temperature = initialTemperature - 0.05 * i;
-                 double temperature = initialTemperature * Math.Pow(Math.E, -0.2 * i);
-                (List<Cell>, int) newConflictData = GetConflicts();
-                Console.WriteLine(newConflictData.Item2);
-                if (newConflictData.Item2 == 0)
+                int cellsToRemove;
+                if (i < 1000)
                 {
-                    initialConflictData = newConflictData;
-                    break;
+                    cellsToRemove = 30;
                 }
-                int deltaConflicts = newConflictData.Item2 - initialConflictData.Item2;
-                if (deltaConflicts > 0)  // if less than 0, always accept change
+                else if (i > 6000)
                 {
-                    double acceptanceProbability = CalculateAcceptanceProbability(deltaConflicts, temperature);
-                    int number = random.Next(1000);
-                    if (number > acceptanceProbability * 1000)  // if new number not accepted, do not update conflict data
-                    {
-                        Move move = MoveStack.Pop();
-                        move.Cell.Entry = move.OldEntry;
-                    }
-                    else
-                    {
-                        initialConflictData = newConflictData;
-                    }
+                    cellsToRemove = 5;
                 }
                 else
                 {
-                    initialConflictData = newConflictData;
+                    cellsToRemove = 20;
+                }
+                List<Cell> changedCells = ChangeRandomCells(conflictData.Item1, cellsToRemove);
+                double temperature = initialTemperature / Math.Log(2 + i); // temperature calculation, logarithmic decay
+                                                                           //double temperature = initialTemperature - 0.01 * i;
+                                                                           // double temperature = initialTemperature * Math.Pow(Math.E, -0.3 * i);
+                (List<(Cell, Cell, int)>, int) changedConflicts = UpdateConflicts(conflictData, changedCells);
+                conflictData.Item2 += changedConflicts.Item2;  // REMOVE LATER
+                if (conflictData.Item2 == 0)
+                {
+                    break;
+                }
+                if (changedConflicts.Item2 > 0)  // if less than 0, always accept change
+                {
+                    double acceptanceProbability = CalculateAcceptanceProbability(changedConflicts.Item2, temperature);
+                    int number = random.Next(1000);
+                    if (number > acceptanceProbability * 1000)  // if new number not accepted, revert conflict data to previous state
+                    {
+                        conflictData.Item2 -= changedConflicts.Item2;
+                        for (int j = 0; j < cellsToRemove; j++)
+                        {
+                            Move move = MoveStack.Pop();
+                            move.Cell.Entry = move.OldEntry;
+                        }
+                        ReinstateConflicts(changedConflicts.Item1, conflictData.Item1);
+                    }
                 }
             }
-            Console.WriteLine(initialConflictData.Item2);
+            Console.WriteLine(conflictData.Item2);
             Board.VariableNodes.Clear();
-            ForwardChecker solver = new(Board);
-            foreach (Cell cell in initialConflictData.Item1)
+            BacktrackingSolver solver = new(Board);
+            //      ForwardChecker solver = new(Board);
+            foreach (KeyValuePair<Cell, List<Cell>> pair in conflictData.Item1)
             {
-                cell.Entry = 0;
-                Board.VariableNodes.Add(cell);
+                if (pair.Value.Count != 0)
+                {
+                    pair.Key.Entry = 0;
+                    Board.VariableNodes.Add(pair.Key);
+                }
             }
-             solver.Solve();
+            //   Board.SetQueue();
+            solver.Solve(); // most cells have 0, 1 or 2 conflicts by the end of the procedure (25x25)
         }
 
-        private void InitialiseBoard()
+        private void InitialiseBoard()   // greedy initialisation
         {
-            Random random = new Random();
             foreach (Cell cell in Board.VariableNodes)
             {
-                cell.Entry = random.Next(1, Dimensions+1);
+                cell.Entry = GetLCVNumber(cell);
             }
         }
 
         private int CalculateAcceptanceProbability(int change, double temperature)  // uses Metropolis criterion
         {
-            double probability = Math.Pow(Math.E, -(change/temperature));
-            if (probability > 1)
+            double probability = Math.Pow(Math.E, -(change / temperature));
+            if (probability > 1)  // overflow
             {
                 return 0;
             }
             return Convert.ToInt32(Math.Round(probability, 3));
         }
 
-        private void ChangeRandomCell(List<Cell> conflictCells)
+        private List<Cell> ChangeRandomCells(Dictionary<Cell, List<Cell>> conflictCells, int cellsToRemove)
         {
+            List<Cell> cells = conflictCells.Select(kvp => kvp.Key).ToList();
+            List<Cell> changedCells = new();
             Random random = new Random();
-            int randomIndex = random.Next(conflictCells.Count);
-            Cell chosenCell = conflictCells[randomIndex];
-            List<int> potentialChangeNumbers = new List<int>();
-            for (int i=1; i<=Dimensions; i++)
+            List<int> randomIndexes = new();
+            while (randomIndexes.Count < cellsToRemove)
             {
-                if (i != chosenCell.Entry)
+                int randomIndex = random.Next(conflictCells.Count);
+                if (!(randomIndexes.Contains(randomIndex)))
                 {
-                    potentialChangeNumbers.Add(i);
+                    randomIndexes.Add(randomIndex);
                 }
             }
-            MoveStack.Push(new Move(chosenCell, chosenCell.Entry));
-            int randomNumber = random.Next(Dimensions-1);
-            chosenCell.Entry = potentialChangeNumbers[randomNumber];
+
+            foreach (int index in randomIndexes)
+            {
+                Cell chosenCell = cells[index];
+                changedCells.Add(chosenCell);
+                MoveStack.Push(new Move(chosenCell, chosenCell.Entry));
+                chosenCell.Entry = GetLCVNumber(chosenCell);  // biased towards improvement - picking entry that is likely to result in the fewest new conflicts
+            }
+            /*
+            foreach (int index in randomIndexes)
+            {
+                Cell chosenCell = cells[index];
+                changedCells.Add(chosenCell);
+                MoveStack.Push(new Move(chosenCell, chosenCell.Entry));
+                chosenCell.Entry = random.Next(Dimensions + 1);
+            }*/
+            return changedCells;
         }
 
-        private (List<Cell>, int) GetConflicts()
+        private int GetLCVNumber(Cell cell)
         {
-            List<Cell> conflictedCells = new();
-            int conflicts = 0;
+            int minConflicts = int.MaxValue;
+            int lcvValue = 0;
+            for (int i = 1; i <= Dimensions; i++)
+            {
+                int conflicts = Board.AdjacencyList[cell].Count(node => node.Entry == i);
+                if (conflicts < minConflicts)
+                {
+                    minConflicts = conflicts;
+                    lcvValue = i;
+                }
+            }
+            return lcvValue;
+        }
+
+        private (Dictionary<Cell, List<Cell>>, int) GetConflicts()
+        {
+            Dictionary<Cell, List<Cell>> conflictedCells = new();
             foreach (KeyValuePair<Cell, List<Cell>> pair in Board.AdjacencyList)
             {
+                conflictedCells.Add(pair.Key, new());
                 foreach (Cell cell in pair.Value)
                 {
                     if (pair.Key.Entry == cell.Entry)
                     {
-                        conflicts++;
-                        if (!conflictedCells.Contains(pair.Key))
+                        conflictedCells[pair.Key].Add(cell);
+                    }
+                }
+            }
+            return (conflictedCells, conflictedCells.Values.Sum(l => l.Count));  // undirected graph, therefore each conflict will be counted twice: (cell1, cell2) and (cell2, cell1)
+        }
+
+        private (List<(Cell, Cell, int)>, int) UpdateConflicts((Dictionary<Cell, List<Cell>>, int) oldConflictData, List<Cell> changedCells)
+        {
+            List<(Cell, Cell, int)> changedConflicts = new();
+            int deltaConflicts = 0;
+            List<(Cell, Cell)> tempAddValues = new();
+            List<(Cell, Cell)> tempRemoveValues = new();
+            foreach (Cell cell in changedCells)
+            {
+                List<Cell> cells = oldConflictData.Item1[cell];
+                foreach (Cell conflictCell in oldConflictData.Item1[cell])
+                {
+                    if (cell.Entry != conflictCell.Entry)
+                    {
+                        if (!tempRemoveValues.Contains((conflictCell, cell)))
                         {
-                            conflictedCells.Add(pair.Key);
+                            deltaConflicts -= 2;
+                            tempRemoveValues.Add((cell, conflictCell));
+                            changedConflicts.Add((cell, conflictCell, 0));  // 0 represents removed conflict (add back)
                         }
-                        if (!conflictedCells.Contains(cell))
+                    }
+                }
+                foreach (Cell neighbour in Board.AdjacencyList[cell])
+                {
+                    if (cell.Entry == neighbour.Entry)
+                    {
+                        if (!oldConflictData.Item1[cell].Contains(neighbour))
                         {
-                            conflictedCells.Add(cell);
+                            if (!tempAddValues.Contains((neighbour, cell)))
+                            {
+                                deltaConflicts += 2;
+                                tempAddValues.Add((cell, neighbour));
+                                changedConflicts.Add((cell, neighbour, 1));  // 1 represents added conflict (remove)
+                            }
                         }
                     }
                 }
             }
-            return (conflictedCells, conflicts/2);  // undirected graph, therefore each conflict will be counted twice: (cell1, cell2) and (cell2, cell1)
+            foreach ((Cell, Cell) pair in tempRemoveValues)   // why are tempAddValues and tempRemoveValues so small
+            {
+                oldConflictData.Item1[pair.Item1].Remove(pair.Item2);
+                oldConflictData.Item1[pair.Item2].Remove(pair.Item1);
+            }
+            foreach ((Cell, Cell) pair in tempAddValues)
+            {
+                oldConflictData.Item1[pair.Item1].Add(pair.Item2);
+                oldConflictData.Item1[pair.Item2].Add(pair.Item1);
+            }
+            return (changedConflicts, deltaConflicts);
+        }
+
+        private void ReinstateConflicts(List<(Cell, Cell, int)> changedConflicts, Dictionary<Cell, List<Cell>> conflictData)
+        {
+            foreach ((Cell, Cell, int) conflictChange in changedConflicts)
+            {
+                if (conflictChange.Item3 == 0)
+                {
+                    conflictData[conflictChange.Item1].Add(conflictChange.Item2);
+                    conflictData[conflictChange.Item2].Add(conflictChange.Item1);
+                }
+                else
+                {
+                    conflictData[conflictChange.Item1].Remove(conflictChange.Item2);
+                    conflictData[conflictChange.Item2].Remove(conflictChange.Item1);
+                }
+            }
         }
     }
 }
+

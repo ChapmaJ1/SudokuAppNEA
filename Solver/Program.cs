@@ -108,7 +108,6 @@ namespace Sudoku_Solver_NEA
             // board2.SetQueue();
             // solver3.Solve();
             // Console.WriteLine(board2.Solutions);
-            board.SetQueue();
             Annealer annealer = new Annealer(board, 25);
             annealer.Solve();
             //solver.Solve();

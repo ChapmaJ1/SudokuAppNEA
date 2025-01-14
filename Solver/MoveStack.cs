@@ -11,18 +11,20 @@ namespace Sudoku_Solver_NEA
         public Move[] StackArray { get; private set; }
         public int FrontPointer { get; private set; }
         public int Count { get; private set; }
-        public MoveStack()
+        public int Capacity { get; private set; }
+        public MoveStack(int capacity)
         {
-            StackArray = new Move[5];  // maximum 5 most recent moves are stored
+            StackArray = new Move[capacity];  // maximum "capacity" most recent moves are stored
             FrontPointer = -1;
             Count = 0;
+            Capacity = capacity;
         }
 
         public void Push(Move move)
         {
             FrontPointer = (FrontPointer + 1) % 5; // increments front pointer, bringing it back to the start of the array if index gets too large
             StackArray[FrontPointer] = move;
-            if (Count < 5)  // if stack is not full, record the increase in moves being stored
+            if (Count < Capacity)  // if stack is not full, record the increase in moves being stored
             {
                 Count++;
             }
@@ -33,7 +35,7 @@ namespace Sudoku_Solver_NEA
             if (Count > 0)  // if stack is not empty - there is a move that can be popped
             {
                 Move move = StackArray[FrontPointer];  // returns the move at the top of the stack, indicated by the pointer
-                FrontPointer = (FrontPointer - 1) % 5;  
+                FrontPointer = (FrontPointer + 4) % 5;  
                 Count--;  // records the decrease in moves being stored
                 return move;
             }

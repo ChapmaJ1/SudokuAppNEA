@@ -40,7 +40,7 @@ namespace Sudoku_Solver_NEA
             {
                 Console.WriteLine("\n");
                 node.Entry = i;   // sets board cell equal to a value and performs backtracking tree traversal with this value
-                PrintBoard(Board);
+               // PrintBoard(Board);
                 if (Solve())  // recursive loop - if the series of board cell changes leads to a solution, return true
                 {
                     return true;
@@ -83,7 +83,7 @@ namespace Sudoku_Solver_NEA
             {
                 board.BoardSketch[cell.Position.Item1, cell.Position.Item2] = cell.Entry;   // updates board sketch to reflect the numerical entries of the cell objects
             }                                                                               // board sketch can then be used for output
-            for (int i=0; i<board.BoardSketch.GetLength(0); i++)
+   /*         for (int i=0; i<board.BoardSketch.GetLength(0); i++)
             {
                 for (int j=0; j<board.BoardSketch.GetLength(0); j++)
                 {
@@ -91,7 +91,7 @@ namespace Sudoku_Solver_NEA
                 }
                 Console.WriteLine();
             }
-            Console.WriteLine();
+            Console.WriteLine(); */
         }
     }
 }
