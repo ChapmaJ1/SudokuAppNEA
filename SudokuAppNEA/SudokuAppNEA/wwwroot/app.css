@@ -45,6 +45,7 @@ h2{
     font-size: 30px;
     margin-bottom: 10px;
     margin-top: 20px;
+    max-width: 250px;
 }
 
 .form-container {
@@ -85,6 +86,15 @@ strong {
     border-color: #007bff;
     padding: 20px;
     border-radius: 10px
+}
+
+.center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
 
 .btn-primary {

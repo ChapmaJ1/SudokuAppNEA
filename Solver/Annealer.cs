@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Query;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -23,31 +24,38 @@ namespace Sudoku_Solver_NEA
         {
             InitialiseBoard();
             Random random = new Random();
-            double initialTemperature = 60;   // JUSTIFY LATER
+            double initialTemperature = 200;   // JUSTIFY LATER
+            BacktrackingSolver solver = new(Board);
             (Dictionary<Cell, List<Cell>>, int) conflictData = GetConflicts();
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 100000; i++)
             {
+                double temperature;
                 int cellsToRemove;
-                if (i < 1000)
+                if (i < 3000)
                 {
                     cellsToRemove = 30;
+                    temperature = initialTemperature / Math.Log(3 + i);
                 }
-                else if (i > 6000)
+                else if (i > 7000)
                 {
-                    cellsToRemove = 5;
+                    cellsToRemove = 1;
+                    temperature = initialTemperature * Math.Pow(Math.E, -0.01 * i);
                 }
                 else
                 {
                     cellsToRemove = 20;
+                    temperature = initialTemperature / Math.Pow(i, 0.5);
                 }
                 List<Cell> changedCells = ChangeRandomCells(conflictData.Item1, cellsToRemove);
-                double temperature = initialTemperature / Math.Log(2 + i); // temperature calculation, logarithmic decay
-                                                                           //double temperature = initialTemperature - 0.01 * i;
-                                                                           // double temperature = initialTemperature * Math.Pow(Math.E, -0.3 * i);
+                // double temperature = initialTemperature / Math.Log(2 + i); // temperature calculation, logarithmic decay
+                // double temperature = initialTemperature - 0.01 * i;
+                // double temperature = initialTemperature * Math.Pow(Math.E, -0.3 * i);
                 (List<(Cell, Cell, int)>, int) changedConflicts = UpdateConflicts(conflictData, changedCells);
                 conflictData.Item2 += changedConflicts.Item2;  // REMOVE LATER
+                //Console.WriteLine(conflictData.Item2);
                 if (conflictData.Item2 == 0)
                 {
+                    solver.PrintBoard(Board);
                     break;
                 }
                 if (changedConflicts.Item2 > 0)  // if less than 0, always accept change
@@ -68,26 +76,34 @@ namespace Sudoku_Solver_NEA
             }
             Console.WriteLine(conflictData.Item2);
             Board.VariableNodes.Clear();
-            BacktrackingSolver solver = new(Board);
-            //      ForwardChecker solver = new(Board);
             foreach (KeyValuePair<Cell, List<Cell>> pair in conflictData.Item1)
             {
                 if (pair.Value.Count != 0)
                 {
+                    pair.Key.Entry = GetLCVNumber(pair.Key);
                     pair.Key.Entry = 0;
                     Board.VariableNodes.Add(pair.Key);
                 }
             }
-            //   Board.SetQueue();
+          //   Board.SetQueue();
             solver.Solve(); // most cells have 0, 1 or 2 conflicts by the end of the procedure (25x25)
         }
 
         private void InitialiseBoard()   // greedy initialisation
         {
-            foreach (Cell cell in Board.VariableNodes)
-            {
-                cell.Entry = GetLCVNumber(cell);
-            }
+
+           foreach (Cell cell in Board.VariableNodes)
+           {
+               cell.Entry = GetLCVNumber(cell);
+           }   
+         /*  Random random = new Random();
+            
+           foreach (Cell cell in Board.VariableNodes)
+           {
+               int randomNum = random.Next(Dimensions + 1);
+               cell.Entry = randomNum;
+           } 
+            */
         }
 
         private int CalculateAcceptanceProbability(int change, double temperature)  // uses Metropolis criterion
@@ -102,9 +118,10 @@ namespace Sudoku_Solver_NEA
 
         private List<Cell> ChangeRandomCells(Dictionary<Cell, List<Cell>> conflictCells, int cellsToRemove)
         {
-            List<Cell> cells = conflictCells.Select(kvp => kvp.Key).ToList();
+          //  List<Cell> cells = conflictCells.Select(kvp => kvp.Key).ToList();
+            List<Cell> cells = conflictCells.OrderByDescending(kvp => kvp.Value.Count).Select(kvp => kvp.Key).ToList();
             List<Cell> changedCells = new();
-            Random random = new Random();
+         /*   Random random = new Random();
             List<int> randomIndexes = new();
             while (randomIndexes.Count < cellsToRemove)
             {
@@ -113,15 +130,16 @@ namespace Sudoku_Solver_NEA
                 {
                     randomIndexes.Add(randomIndex);
                 }
-            }
+            } */
 
-            foreach (int index in randomIndexes)
+            for (int i=0; i<cellsToRemove; i++)
             {
-                Cell chosenCell = cells[index];
+                Cell chosenCell = cells[i];
                 changedCells.Add(chosenCell);
                 MoveStack.Push(new Move(chosenCell, chosenCell.Entry));
                 chosenCell.Entry = GetLCVNumber(chosenCell);  // biased towards improvement - picking entry that is likely to result in the fewest new conflicts
-            }
+            } 
+            
             /*
             foreach (int index in randomIndexes)
             {
@@ -129,7 +147,8 @@ namespace Sudoku_Solver_NEA
                 changedCells.Add(chosenCell);
                 MoveStack.Push(new Move(chosenCell, chosenCell.Entry));
                 chosenCell.Entry = random.Next(Dimensions + 1);
-            }*/
+            }
+            */
             return changedCells;
         }
 

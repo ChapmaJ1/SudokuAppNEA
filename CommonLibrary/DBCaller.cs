@@ -35,7 +35,7 @@ namespace CommonLibrary
             return GetTableCount("users");
         }
 
-        public (int,bool) FindUser(string username, string password)
+        public int FindUser(string username, string password)
         {
             using (SqliteConnection connection = new SqliteConnection())
             {
@@ -50,12 +50,12 @@ namespace CommonLibrary
                     {
                         if (dataReader.Read())  // if a user with the input username and password exists in the database
                         {
-                            return (dataReader.GetInt32(0), false);  // returns the user ID, with false representing the fact that the user is not new
+                            return dataReader.GetInt32(0);  // returns the user ID, with false representing the fact that the user is not new
                         }
                     }
                 }
             }
-            return (AddUser(username, password),true);  // adds a new user with the given details to the database, with true representing the fact that the user is new
+            return 0;  // adds a new user with the given details to the database, with true representing the fact that the user is new
         }
 
         public int GetTableCount(string parameter)

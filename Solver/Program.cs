@@ -19,7 +19,7 @@ namespace Sudoku_Solver_NEA
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());*/
 
-            /* int[,] boardSketch = { {8,0,0,0,2,0,0,6,0},
+            int[,] boardSketch = { {8,0,0,0,2,0,0,6,0},
                              { 2,0,0,0,3,8,5,1,4 },
                              { 0,0,0,6,0,0,3,8,0 },
                              { 0,7,0,5,0,2,1,0,0 },
@@ -27,16 +27,16 @@ namespace Sudoku_Solver_NEA
                              { 0,0,8,0,0,0,2,5,6 },
                              { 6,0,2,4,5,0,8,7,9 },
                              { 0,0,0,7,0,0,4,2,1 },
-                             { 7,8,0,2,1,0,6,0,0} };*/
-            int[,] boardSketch = new int[25, 25];
-            for (int i = 0; i<25; i++)
+                             { 7,8,0,2,1,0,6,0,0} };
+           // int[,] boardSketch = new int[25, 25];
+            for (int i = 0; i<boardSketch.GetLength(0); i++)
             {
-                for (int j=0; j<25; j++)
+                for (int j=0; j<boardSketch.GetLength(0); j++)
                 {
                     boardSketch[i, j] = 0;
                 }
             }
-            Board board = new Board("Hard", boardSketch, 25);
+            Board board = new Board("Hard", boardSketch, boardSketch.GetLength(0));
             board.InitialiseGraph();
 
             /*foreach (KeyValuePair<Cell, List<Cell>> pair in board.AdjacencyList)
@@ -108,7 +108,7 @@ namespace Sudoku_Solver_NEA
             // board2.SetQueue();
             // solver3.Solve();
             // Console.WriteLine(board2.Solutions);
-            Annealer annealer = new Annealer(board, 25);
+            Annealer annealer = new Annealer(board, boardSketch.GetLength(0));
             annealer.Solve();
             //solver.Solve();
             Console.WriteLine(board.Solutions);

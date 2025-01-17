@@ -8,8 +8,6 @@ namespace SudokuAppNEA.Components.Clients
     {
         public User? User { get; set; }
 
-        public bool NewUser { get; set; }
-
         public string? MistakeDetection { get; set; }
         public string? SaveScores { get; set; }
         public DatabaseEntry? Entry { get; set; }

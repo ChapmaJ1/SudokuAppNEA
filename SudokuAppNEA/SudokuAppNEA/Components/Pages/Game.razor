@@ -81,7 +81,7 @@ else
     private int mistakeCount;
     private int hintCount;
     private string noteTaking = "Off";
-    private MoveStack stack = new MoveStack();
+    private MoveStack stack = new MoveStack(5);
 
     protected override async Task OnInitializedAsync()
     {
