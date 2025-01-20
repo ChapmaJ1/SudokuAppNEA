@@ -22,7 +22,7 @@ namespace Sudoku_Solver_NEA
 
         public void Push(Move move)
         {
-            FrontPointer = (FrontPointer + 1) % 5; // increments front pointer, bringing it back to the start of the array if index gets too large
+            FrontPointer = (FrontPointer + 1) % Capacity; // increments front pointer, bringing it back to the start of the array if index gets too large
             StackArray[FrontPointer] = move;
             if (Count < Capacity)  // if stack is not full, record the increase in moves being stored
             {
@@ -35,7 +35,7 @@ namespace Sudoku_Solver_NEA
             if (Count > 0)  // if stack is not empty - there is a move that can be popped
             {
                 Move move = StackArray[FrontPointer];  // returns the move at the top of the stack, indicated by the pointer
-                FrontPointer = (FrontPointer + 4) % 5;  
+                FrontPointer = (FrontPointer + (Capacity - 1)) % Capacity;  
                 Count--;  // records the decrease in moves being stored
                 return move;
             }
