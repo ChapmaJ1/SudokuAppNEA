@@ -9,39 +9,112 @@
 }
 else
 {
-    <div class="sudoku-container">
-        @for (int row = 0; row < dimensions; row++)
-        {
-            <div class="sudoku-column">
-                @for (int column = 0; column < dimensions; column++)
-                {
-                    int columnTemp = column; // if row, column directly used, OnSelected) would be called
-                    int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
-                    <button class="sudoku-cell-default" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
-                }
-            </div>
-        }
-    </div>
+    if (dimensions == 25)
+    {
+        <div class="sudoku-container-large">
+            @for (int row = 0; row < dimensions; row++)
+            {
+                <div class="sudoku-column-large">
+                    @for (int column = 0; column < dimensions; column++)
+                    {
+                        int columnTemp = column; // if row, column directly used, OnSelected) would be called
+                        int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
+                        <button class="sudoku-cell-large" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else if (dimensions == 16)
+    {
+        <div class="sudoku-container-large">
+            @for (int row = 0; row < dimensions; row++)
+            {
+                <div class="sudoku-column">
+                    @for (int column = 0; column < dimensions; column++)
+                    {
+                        int columnTemp = column; // if row, column directly used, OnSelected) would be called
+                        int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
+                        <button class="sudoku-cell-medium" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="sudoku-container">
+            @for (int row = 0; row < 9; row++)  // prints 81 square buttons in a 9x9 format
+            {
+                <div class="sudoku-column">
+                    @for (int column = 0; column < 9; column++)
+                    {
+                        int columnTemp = column; // if row and column directly used, OnSelected(9,9) would be called
+                        int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
+                        <button class="sudoku-cell-default" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
+                    }
+                </div>
+            }
+        </div>
+    }
 
-    <div class="custom-btn-container">
-        <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
-        <button class="btn-primary" @onclick=NavigateToDifficulty>New Game</button>
-        <button class="btn-primary" @onclick=Reset>Reset Board</button>
-        <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
-    </div>
+    if (dimensions == 25)
+    {
+        <div class="custom-btn-container-large">
+            <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
+            <button class="btn-primary" @onclick=NavigateToDifficulty>New Game</button>
+            <button class="btn-primary" @onclick=Reset>Reset Board</button>
+            <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
+        </div>
+    }
+    else
+    {
+        <div class="custom-btn-container">
+            <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
+            <button class="btn-primary" @onclick=NavigateToDifficulty>New Game</button>
+            <button class="btn-primary" @onclick=Reset>Reset Board</button>
+            <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
+        </div>
+    }
 
-    <div class="right-text-container">
+    if (dimensions == 25)
+    {
+        <div class="number-buttons-container-large">
+            @for (int i = 1; i <= dimensions; i++)
+            {
+                int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
+                <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
+            }
+            <button class="button-cell" @onclick="() => EraseValue()">Erase</button>
+        </div>
+    }
+    else if (dimensions == 16)
+    {
+        <div class="number-buttons-container-medium">
+            @for (int i = 1; i <= dimensions; i++)
+            {
+                int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
+                <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
+            }
+            <button class="button-cell" @onclick="() => EraseValue()">Erase</button>
+        </div>
+    }
+    else
+    {
+        <div class="number-buttons-container-low">
+            @for (int i = 1; i <= dimensions; i++)
+            {
+                int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
+                <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
+            }
+            <button class="button-cell" @onclick="() => EraseValue()">Erase</button>
+        </div>
+    }
+
+    <div class="center-text-container">
         @if (solvable == false)
         {
             <h3>Unsolvable Board Input</h3>
-        }
-    </div>
-
-    <div class="number-buttons-container-low">
-        @for (int i = 1; i <= dimensions; i++)
-        {
-            int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
-            <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
         }
     </div>
 }
@@ -126,5 +199,10 @@ else
                 sketch![i, j] = 0;  // sketch not directly bound to board object - board can be reset 
             }                      // and a completely new one can be input + solved as required
         }
+    }
+
+    private void EraseValue()
+    {
+        sketch![selectedSquare.Item1, selectedSquare.Item2] = 0;
     }
 }

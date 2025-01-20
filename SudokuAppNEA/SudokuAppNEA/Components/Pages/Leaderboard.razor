@@ -10,10 +10,14 @@
 }
 else
 {
-    <div style="margin-left: 100px; margin-top: 50px">
-        <strong><u>Name</u></strong>
-        <strong><u>Score</u></strong>
-        <strong><u>Date</u></strong>
+    <div class="leaderboard-container">
+        <div class="leaderboard-header">
+            <strong><u>Name</u></strong>
+            <strong><u>Score</u></strong>
+            <strong><u>Time</u></strong>
+            <strong><u>Difficulty</u></strong>
+            <strong><u>Date</u></strong>
+        </div>
         @foreach (LeaderboardEntry entry in dataEntries)  // displays each leaderboard entry in a suitable format
         {
             <div class="leaderboard-text">

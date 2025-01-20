@@ -52,6 +52,7 @@ h2{
     font-size: 50px;
     display: flex;
     flex-direction: column;
+    gap: 30px;
     align-items: center;
     justify-content: center;
     min-height: 50vh;
@@ -66,26 +67,30 @@ h2{
 .menu-text {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 50px;
     min-height: 30vh;
     text-align: center;
+    margin-top: 50px;
+    max-width: 250px;
+    margin-left: 35em;
 }
 
 
 strong {
-    margin-right: 200px;
+    margin-right: 140px;
     font-size: 40px;
 }
 
 .btn-leaderboard {
     background-color: #007bff;
     font-size: 25px;
-    margin-top: 30px;
-    margin-left: 950px;
+    margin-top: 50px;
+    margin-left: 23em;
     color: white;
     border-color: #007bff;
     padding: 20px;
-    border-radius: 10px
+    border-radius: 10px;
+    width: 250px;
 }
 
 .center {
@@ -111,7 +116,7 @@ strong {
 .difficulty-container {
     display: flex;
     flex-direction: column;
-    gap: 100px;
+    gap: 20px;
     min-height: 50vh;
     text-align: center;
     margin-top: 50px;
@@ -135,7 +140,7 @@ strong {
     color: black;
     border-color: black;
     padding: 2px;
-    font-size: 15px;
+    font-size: 25px;
 }
 
 .sudoku-cell-incorrect {
@@ -149,34 +154,35 @@ strong {
 }
 
 .number-buttons-container {
-    margin-left: 16em;
+    margin-left: 12em;
     display: flex;
     flex-direction: row;
     gap: 20px;
-    transform: translate(0,-800px)
+    transform: translate(0,-830px)
 }
 
 .number-buttons-container-low {
-    margin-left: 16em;
+    margin-left: 17em;
     display: flex;
     flex-direction: row;
     gap: 20px;
-    transform: translate(0,-400px)
+    transform: translate(0,-450px)
 }
 
 .button-cell{
-    width: 80px;
-    height: 80px;
+    min-width: 60px;
+    min-height: 60px;
     border-color: black;
-    font-size: 50px;
+    font-size: 40px;
     text-align: center;
+    align-content: center;
 }
 
 .game-btn-container-left {
     transform: translate(0px,-540px);
     display: flex;
     flex-direction: column;
-    gap: 50px;
+    gap: 30px;
     max-width: 150px;
     text-align: center;
     margin-left: 5em;
@@ -184,37 +190,29 @@ strong {
 }
 
 .game-btn-container-right {
-    transform: translate(0px,-890px);
+    transform: translate(0px,-880px);
     display: flex;
     flex-direction: column;
-    gap: 50px;
+    gap: 25px;
     max-width: 150px;
     text-align: center;
     margin-left: 65em;
 }
 
 .custom-btn-container {
-    transform: translate(0px,-540px);
+    transform: translate(50px,-550px);
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    max-width: 150px;
+    gap: 20px;
+    width: 150px;
     text-align: center;
-    margin-left: 5em;
-    margin-top: 8em;
+    margin-left: 1em;
+    margin-top: 7em;
 }
 
-.right-text-container{
-    margin-left: 60em;
-    transform: translate(0px,-800px);
+.right-text-container{  
+    transform: translate(0px,-470px);
     text-align: center;
-}
-
-.leaderboard-text{
-    margin-top: 20px;
-    display: flex;
-    flex-direction: row;
-    gap: 220px;
 }
 
 .stats-container{
@@ -223,5 +221,88 @@ strong {
     justify-content: center;
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 20px;
+}
+
+.sudoku-container-large{
+    margin-top: 3em;
+    transform: translateX(-100px);
+}
+
+.sudoku-column-large {
+    margin-left: 25em;
+    display: flex;
+    flex-direction: row;
+}
+
+.sudoku-cell-large {
+    width: 25px;
+    height: 25px;
+    color: black;
+    border-color: black;
+    padding: 2px;
+    font-size: 12.5px;
+}
+
+.sudoku-cell-medium {
+    width: 35px;
+    height: 35px;
+    color: black;
+    border-color: black;
+    padding: 2px;
+    font-size: 20px;
+}
+
+.number-buttons-container-large {
+    margin-left: 5em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 30%;
+    margin-left: 100px;
+    transform: translate(850px,-1080px)
+}
+
+.number-buttons-container-medium {
+    margin-left: 5em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 30%;
+    margin-left: 100px;
+    transform: translate(850px,-1020px)
+}
+
+.custom-btn-container-large {
+    transform: translate(50px,-600px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 150px;
+    text-align: center;
+    margin-left: 1em;
+    margin-top: 7em;
+}
+
+.leaderboard-text{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr; /* Equal width for each column */
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+}
+
+.leaderboard-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr; /* Equal width for each column */
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    transform: translateX(80px)
+}
+
+.leaderboard-container{
+    display: flex;
+    flex-direction: column;
+    margin-top: 2em;
 }

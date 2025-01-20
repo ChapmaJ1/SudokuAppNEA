@@ -62,7 +62,7 @@ else
             int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
             <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
         }
-        <button class="button-cell" @onclick="() => EraseValue()">Erase</button>
+        <button class="button-cell" style="font-size: 25px" @onclick="() => EraseValue()">Erase</button>
     </div>
 }
 
@@ -114,7 +114,7 @@ else
     private async Task GetBoard()
     {
         bool generated = false;
-        BoardGeneratorAPI generator = new BoardGeneratorAPI();
+        BoardGeneratorAPI generator = new BoardGeneratorAPI();    // SAVE UNUSED BOARDS TO LIST FOR POTENTIAL LATER USE
         while (generated == false)
         {
             ResponseData responseData = await generator.GenerateBoard();  // fetch board from API
