@@ -43,8 +43,8 @@ else
     }
     else
     {
-        <div class="sudoku-container">
-            @for (int row = 0; row < 9; row++)  // prints 81 square buttons in a 9x9 format
+        <div class="sudoku-container-custom">
+            @for (int row = 0; row < dimensions; row++)  // prints 81 square buttons in a 9x9 format
             {
                 <div class="sudoku-column">
                     @for (int column = 0; column < 9; column++)
@@ -185,8 +185,15 @@ else
         }   
         else
         {
-            Annealer annealer = new Annealer(board, dimensions);
-            annealer.Solve();
+            if (dimensions == 25)
+            {
+                Annealer annealer = new Annealer(board, dimensions);
+                annealer.Solve();
+            }
+            else
+            {
+                solver.Solve();
+            }
         }
     }
 

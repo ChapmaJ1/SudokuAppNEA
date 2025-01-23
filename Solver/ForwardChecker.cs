@@ -26,7 +26,7 @@ namespace Sudoku_Solver_NEA
             List<(int,int)> orderedDomain = SortByLCV(node);
             for (int i = 0; i < orderedDomain.Count; i++)
             {
-                node.Entry = orderedDomain[i].Item2;
+                node.ChangeCellValue(orderedDomain[i].Item2);
                 Dictionary<Cell, List<int>> removed = PruneValues(node.Entry, node);   // forward check, pruning the domain early
                 if (HasEmptyDomains())  // invalid board in the current state, so no point going deeper into backtracking
                 {
@@ -39,7 +39,7 @@ namespace Sudoku_Solver_NEA
                 }
                 RestorePrunedValues(removed);   // backtrack from forward checking, removing the domain restrictions of the invalid board
             }
-            node.Entry = 0;  // backtracking up the tree - resetting the most recently edited cell
+            node.ChangeCellValue(0);  // backtracking up the tree - resetting the most recently edited cell
             Board.Queue.Enqueue(node);  // adding the reset node back into the priority queue
             return false;
         }
@@ -50,15 +50,15 @@ namespace Sudoku_Solver_NEA
             List<Cell> changeNodes = Board.AdjacencyList[node];   // all cells that the given node is linked to
             foreach (Cell changeNode in changeNodes)
             {
-                if (Board.VariableNodes.Contains(changeNode))  // does not unnecessarily remove from the domain of fixed nodes
-                {
+              //  if (Board.VariableNodes.Contains(changeNode))  // does not unnecessarily remove from the domain of fixed nodes
+               // {
                     removedNumbers[changeNode] = new();
                     if (changeNode.Domain.Contains(number))   // if the current value of the node is in the domain of a connected cell
                     {
                         changeNode.Domain.Remove(number);  // remove the value of the connected node from the cell
                         removedNumbers[changeNode].Add(number);  // records the cell which the number has been removed from for later use
                     }
-                }
+               // }
             }
             return removedNumbers;
         }
@@ -103,7 +103,7 @@ namespace Sudoku_Solver_NEA
         }
         
 
-        private bool HasEmptyDomains()
+        internal bool HasEmptyDomains()
         {
             foreach (Cell cell in Board.AdjacencyList.Keys)
             {
@@ -123,7 +123,7 @@ namespace Sudoku_Solver_NEA
             }
             if (CheckFinished())
             {
-                Board.SolutionCount++; 
+                Board.SetSolutionCount(Board.SolutionCount + 1);
                 PrintBoard(Board);
                 Board tempBoard = Board.Clone(Board);  // objects passed by reference not value, clone needed to store the actual values                 
                 Board.Solutions.Add(tempBoard);
@@ -141,7 +141,7 @@ namespace Sudoku_Solver_NEA
             List<(int, int)> orderedDomain = SortByLCV(node);  // iterates through domains by increasing impact
             for (int i = 0; i < orderedDomain.Count; i++)
             {
-                node.Entry = orderedDomain[i].Item2;
+                node.ChangeCellValue(orderedDomain[i].Item2);
                 Dictionary<Cell, List<int>> removed = PruneValues(node.Entry, node); 
                 if (HasEmptyDomains())
                 {
@@ -159,7 +159,7 @@ namespace Sudoku_Solver_NEA
                 }
                 RestorePrunedValues(removed);
             }
-            node.Entry = 0;
+            node.ChangeCellValue(0);
             return false;
         }
     }

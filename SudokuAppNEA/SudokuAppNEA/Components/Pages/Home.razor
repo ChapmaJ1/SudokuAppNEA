@@ -1,7 +1,6 @@
 ﻿@page "/"
 @inject NavigationManager NavigationManager
 @inject UserClient UserClient
-@inject DBCaller DatabaseCaller
 
 <PageTitle>Home</PageTitle>
 
@@ -29,14 +28,15 @@
     [SupplyParameterFromForm]
     private User? user { get; set; } = new User();
     private string? message;
+    private DBCaller DatabaseCaller = new DBCaller();
 
     private void HandleSubmit()
     {
-        UserClient.User = user!;
+        UserClient.SetUser(user!);
         int userId = DatabaseCaller.FindUser(user!.Username, user.Password);  // find user in database if record exists, otherwise add a new user
         if (userId != 0)
         {
-            UserClient.User!.Id = userId;  // user ID
+            user.SetId(userId);
             GetUserSettings();
             NavigationManager.NavigateTo($"/menu");
         }
@@ -49,8 +49,8 @@
     private void GetUserSettings()
     {
         (string, string) settingsData = DatabaseCaller.GetUserSettings(UserClient.User!.Id);
-        UserClient.MistakeDetection = settingsData.Item1;
-        UserClient.SaveScores = settingsData.Item2;
+        UserClient.SetMistakeDetection(settingsData.Item1);
+        UserClient.SetSaveScores(settingsData.Item2);
     }
 
     private void CreateAccount()

@@ -9,8 +9,8 @@ namespace Sudoku_Solver_NEA
     public class Board
     {
         public string Difficulty { get; private set; }
-        public List<Board> Solutions { get; set; }
-        public int SolutionCount { get; set; }
+        public List<Board> Solutions { get; private set; }
+        public int SolutionCount { get; private set; }
         public int[,] BoardSketch { get; private set; }
         public List<Cell> VariableNodes { get; private set; }
         public Dictionary<Cell, List<Cell>> AdjacencyList { get; private set; }
@@ -162,8 +162,13 @@ namespace Sudoku_Solver_NEA
         {
             foreach (Cell cell in VariableNodes)
             {
-                cell.Entry = 0;   // sets all cells that were not part of the fixed starting arrangement to empty
+                cell.ChangeCellValue(0);   // sets all cells that were not part of the fixed starting arrangement to empty
             } 
+        }
+
+        public void SetSolutionCount(int count)
+        {
+            SolutionCount = count;
         }
     }
 }

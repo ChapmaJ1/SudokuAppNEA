@@ -1,7 +1,6 @@
 ﻿@page "/settings"
 @inject NavigationManager NavigationManager
 @inject UserClient UserClient
-@inject DBCaller DatabaseCaller
 
 <h1>Settings + Personal Statistics</h1>
 
@@ -21,6 +20,7 @@
     private List<string>? stats;
     private string? mistakeDetection;
     private string? saveScores;
+    private DBCaller? DatabaseCaller = new DBCaller();
 
     protected override void OnInitialized()
     {
@@ -59,12 +59,12 @@
 
     private void SaveSettings()
     {
-        DatabaseCaller.SaveUserSettings(mistakeDetection!, saveScores!, UserClient.User!.Id);  // updates user settings according to their final choices
+        DatabaseCaller!.SaveUserSettings(mistakeDetection!, saveScores!, UserClient.User!.Id);  // updates user settings according to their final choices
         NavigationManager.NavigateTo("/menu");  // takes user back to menu
     }
 
     private void GetUserStats()
     {
-        stats = DatabaseCaller.GetUserStats(UserClient.User!.Id);
+        stats = DatabaseCaller!.GetUserStats(UserClient.User!.Id);
     }
 }

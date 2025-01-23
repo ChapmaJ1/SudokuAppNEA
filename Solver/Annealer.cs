@@ -70,7 +70,7 @@ namespace Sudoku_Solver_NEA
                         for (int j = 0; j < swapNumber * 2; j++)
                         {
                             Move move = MoveStack.Pop();
-                            move.Cell.Entry = move.OldEntry;
+                            move.Cell.ChangeCellValue(move.OldEntry);
                         }
                         ReinstateConflicts(changedConflicts.Item1, conflictData.Item1);
                     }
@@ -81,7 +81,7 @@ namespace Sudoku_Solver_NEA
             {
                 if (pair.Value.Count != 0)
                 {
-                    pair.Key.Entry = 0;
+                    pair.Key.ChangeCellValue(0);
                     Board.VariableNodes.Add(pair.Key);
                 }
             }
@@ -124,7 +124,7 @@ namespace Sudoku_Solver_NEA
                     foreach (Cell cell in cellsInSquare)
                     {
                         int indexToRemove = random.Next(remainingNumbersInSquare.Count);
-                        cell.Entry = remainingNumbersInSquare[indexToRemove];
+                        cell.ChangeCellValue(remainingNumbersInSquare[indexToRemove]);
                         remainingNumbersInSquare.RemoveAt(indexToRemove);
                     }
                 }
@@ -185,8 +185,8 @@ namespace Sudoku_Solver_NEA
                     Console.WriteLine("Test");
                 }
                 int tempEntry = boxCells[firstRandomCell].Entry;
-                boxCells[firstRandomCell].Entry = boxCells[secondRandomCell].Entry;
-                boxCells[secondRandomCell].Entry = tempEntry;
+                boxCells[firstRandomCell].ChangeCellValue(boxCells[secondRandomCell].Entry);
+                boxCells[secondRandomCell].ChangeCellValue(tempEntry);
                 swappedCells.Add(boxCells[firstRandomCell]);
                 swappedCells.Add(boxCells[secondRandomCell]);
             }

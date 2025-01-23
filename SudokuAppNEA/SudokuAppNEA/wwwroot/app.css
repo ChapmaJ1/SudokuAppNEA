@@ -125,7 +125,7 @@ strong {
 }
 
 .sudoku-container{
-    margin-top: 5em;
+    margin-top: 1em;
 }
 
 .sudoku-column{
@@ -154,7 +154,7 @@ strong {
 }
 
 .number-buttons-container {
-    margin-left: 12em;
+    margin-left: 17em;
     display: flex;
     flex-direction: row;
     gap: 20px;
@@ -225,6 +225,11 @@ strong {
 }
 
 .sudoku-container-large{
+    margin-top: 3em;
+    transform: translateX(-50px);
+}
+
+.sudoku-container-custom {
     margin-top: 3em;
     transform: translateX(-100px);
 }

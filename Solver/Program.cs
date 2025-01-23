@@ -27,16 +27,15 @@ namespace Sudoku_Solver_NEA
                              { 0,0,8,0,0,0,2,5,6 },
                              { 6,0,2,4,5,0,8,7,9 },
                              { 0,0,0,7,0,0,4,2,1 },
-                             { 7,8,0,2,1,0,6,0,0} }; */
-            int[,] boardSketch = new int[25, 25];
+                             { 7,8,0,2,1,0,6,0,0} };  */
+            int[,] boardSketch = new int[16, 16];
             for (int i = 0; i<boardSketch.GetLength(0); i++)
             {
                 for (int j=0; j<boardSketch.GetLength(0); j++)
                 {
                     boardSketch[i, j] = 0;
                 }
-            }
-            boardSketch[23, 24] = 2;
+            } 
             Board board = new Board("Hard", boardSketch, boardSketch.GetLength(0));
             board.InitialiseGraph();
 
@@ -51,7 +50,6 @@ namespace Sudoku_Solver_NEA
             }
             Console.ReadLine();*/
 
-            //BacktrackingSolver solver = new BacktrackingSolver(board, board.GetVariableNodes());
             /*foreach (KeyValuePair<(int,int), List<int>> pair in board.RemainingNumbers)
             {
                 Console.WriteLine($"{pair.Key}:   {string.Join(",", pair.Value)}");
@@ -76,43 +74,22 @@ namespace Sudoku_Solver_NEA
             Board board2 = generator.ConvertToBoard(response, 0);
             board2.InitialiseGraph();
             ForwardChecker solver3 = new ForwardChecker(board2);*/
-            ForwardChecker solver = new ForwardChecker(board);
-           /* bool unique = false;
-            while (unique == false)
-            {
-                solver!.HasUniqueSolution();
-                if (board.SolutionCount >= 2)
-                {
-                    for (int i = 0; i < 9; i++)
-                    {
-                        for (int j = 0; j < 9; j++)
-                        {
-                            if (board.Solutions[0].BoardSketch[i, j] != board.Solutions[1].BoardSketch[i, j])
-                            {
-                                Cell cell = board.GetCellLocation(i, j);
-                                cell.Entry = board.Solutions[0].BoardSketch[i, j];
-                                i = 9;
-                                j = 9;
-                                board.VariableNodes.Remove(cell);
-                                board.Reset();
-                            }
-                        }
-                    }
-                    board.Solutions = new List<Board>();
-                    board.SolutionCount = 0;
-                }
-                else  // solutions = 0 for some reason
-                {
-                    unique = true;
-                }
-            } */
+            // ForwardChecker solver = new ForwardChecker(board);
             // board2.SetQueue();
             // solver3.Solve();
             // Console.WriteLine(board2.Solutions);
-            Annealer annealer = new Annealer(board, boardSketch.GetLength(0));
-            annealer.Solve();
-            //solver.Solve();
-            Console.WriteLine(board.Solutions);
+            // Annealer annealer = new Annealer(board, boardSketch.GetLength(0));
+            // annealer.Solve();
+            DateTime launchTime = DateTime.Now;
+           /* BacktrackingSolver solver = new BacktrackingSolver(board);
+            solver.Solve(); */
+            ForwardChecker solver2 = new(board);
+            UniqueBoardGenerator generator = new UniqueBoardGenerator(board);
+            generator.GenerateUniqueSolution(16);
+           // board.SetQueue();
+           // solver2.Solve();
+            Console.WriteLine($"{(DateTime.Now - launchTime).Seconds} seconds {(DateTime.Now - launchTime).Milliseconds} milliseconds");
+            solver2.PrintBoard(board);
             Console.ReadLine(); 
         }
     }

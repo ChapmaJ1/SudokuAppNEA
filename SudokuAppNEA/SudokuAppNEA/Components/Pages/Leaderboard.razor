@@ -1,6 +1,5 @@
 ﻿@page "/leaderboard"
 @inject NavigationManager NavigationManager
-@inject DBCaller DatabaseCaller
 
 <h1 style="font-size: 50px; text-align: center">Leaderboard</h1>
 
@@ -39,6 +38,7 @@ else
 
     protected override void OnInitialized()
     {
+        DBCaller DatabaseCaller = new DBCaller();
         dataEntries = DatabaseCaller.GetLeaderboardEntries();  // gets leaderboard entries from database
     }
 

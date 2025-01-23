@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 @inject UserClient UserClient
-@inject DBCaller DatabaseCaller
 
 <h1>Game</h1>
 
@@ -82,11 +81,14 @@ else
     private int hintCount;
     private string noteTaking = "Off";
     private MoveStack stack = new MoveStack(5);
+    private DBCaller DatabaseCaller = new();
+    private GameWrapper? GameWrapper;
 
     protected override async Task OnInitializedAsync()
     {
         GetDifficulty();
         await InitialiseBoardAndSolver();  // asynchronous method for API call
+        GameWrapper = new GameWrapper(board!, correctNumbers!);
         launchTime = DateTime.Now;
         while (solved == false)  // re-render the page every second while the board is not solved
         {                        // this is required to update the timer to reflect real-time
@@ -104,8 +106,8 @@ else
     {
         await GetBoard();
         board!.InitialiseGraph();
-        solver = new ForwardChecker(board);
         MakeUniqueSolution(board);
+        solver = new ForwardChecker(board);
         board.SetQueue();  // initialise the board ready for solving
         InitialiseCorrectNumbers(); 
         solved = false;
@@ -115,16 +117,29 @@ else
     {
         bool generated = false;
         BoardGeneratorAPI generator = new BoardGeneratorAPI();    // SAVE UNUSED BOARDS TO LIST FOR POTENTIAL LATER USE
+        foreach (Board savedBoard in UserClient!.FetchedBoards)
+        {
+            if (savedBoard.Difficulty == difficulty)
+            {
+                board = savedBoard;
+                generated = true;
+            }
+        }
         while (generated == false)
         {
             ResponseData responseData = await generator.GenerateBoard();  // fetch board from API
+            bool found = false;
             for (int i=0; i<10; i++)  // 10 boards fetched to minimise the number of fetches needed, while also preventing fetching from taking too long
             {
-                if (responseData.NewBoard.Grids[i].Difficulty == difficulty)
+                if (responseData.NewBoard.Grids[i].Difficulty == difficulty && found == false)
                 {
                     board = generator.ConvertToBoard(responseData, i);     // no way of fetching board from API by difficulty, so this is checking whether
                     generated = true;                                   // the difficulty of the fetched board matches the desired difficulty
-                    i = 10;
+                    found = true;
+                }
+                else
+                {
+                    UserClient!.FetchedBoards.Add(generator.ConvertToBoard(responseData, i));
                 }
             }
         }
@@ -141,7 +156,7 @@ else
     private void MakeUniqueSolution(Board board)
     {
         UniqueBoardGenerator generator = new UniqueBoardGenerator(board); 
-        generator.GenerateUniqueSolution();
+        generator.GenerateUniqueSolution(9);
         board.InitialiseRemainingNumbers(board.GetFixedNodes());  // initialises unique board
     }
 
@@ -159,84 +174,31 @@ else
         board.SetQueue();
     }
 
-    private string GetBackgroundColour(int column, int row)
+    private string GetBackgroundColour(int row, int column)
     {
-        string cellValue = DisplayCell(column, row);
-        if (cellValue[0].ToString() != " " && cellValue[0].ToString() != correctNumbers![column, row].ToString())  // if cell is non-empty and is filled with an incorrect value
-        {
-            return "red";
-        }
-        return "white";
+        return GameWrapper!.GetBackgroundColour(row, column);
     }
 
     private string DisplayCell(int row, int column)    // change to array method for linear time rendering?
     {
-        foreach (Cell cell in board!.AdjacencyList.Keys)
-        {
-            if (cell.Position.Item1 == row && cell.Position.Item2 == column)
-            {
-                if (cell.NoteEntries.Count != 0)
-                {
-                    if (cell.Entry != 0)
-                    {
-                        return $"{cell.Entry.ToString()}  ({string.Join(",", cell.NoteEntries)})";
-                    }
-                    return $" ({string.Join(",", cell.NoteEntries)})";  // displays cell value if applicable + note entries
-                }
-                else
-                {
-                    if (cell.Entry != 0)
-                    {
-                        return cell.Entry.ToString();
-                    }
-                    return $" ";  // displays the cell value if it is non-empty, otherwise displays nothing
-                }
-            }
-        }
-        throw new InvalidOperationException("Cell does not exist");
+        return GameWrapper!.DisplayCell(row, column);
     }
 
     private void OnCellSelected(int row, int column)   // also change to array method?
     {
         if (!solved)
         {
-            foreach (Cell cell in board!.VariableNodes)  // finds the cell selected by the user
-            {
-                if (cell.Position.Item1 == row && cell.Position.Item2 == column)
-                {
-                    selectedCell = cell;
-                }
-            }
+            selectedCell = GameWrapper!.OnCellSelected(row, column);
         }
     }
 
     private void ChangeCellValue(int number)
     {
-        if (!solved)
+        if (!(selectedCell!.Position.Item1 == 100))
         {
-            if (noteTaking == "Off") 
+            if (!solved)
             {
-                if (!(selectedCell == null))
-                {
-                    Move move = new Move(selectedCell, selectedCell!.Entry);
-                    stack.Push(move);  // records move + pushes it onto move stack
-                    selectedCell.Entry = number;
-                    if (number != correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2])  // if the input number is incorrect
-                    {
-                        mistakeCount++;
-                    }
-                }
-            }
-            else  // note taking mode is on
-            {
-                if (selectedCell!.NoteEntries.Contains(number))  // if number already noted, remove it from the list
-                {
-                    selectedCell.NoteEntries.Remove(number);
-                }
-                else
-                {
-                    selectedCell.NoteEntries.Add(number);  // if number not already noted, add it to the list
-                }
+                mistakeCount += GameWrapper!.ChangeCellValue(number, stack, selectedCell!, noteTaking);
             }
         }
     }
@@ -249,21 +211,13 @@ else
             solved = true;
             if (UserClient.SaveScores == "On")  // if the user's settings indicate that the score should be saved to the database
             {
-                UserClient.Entry = new()
-                {
-                    Score = GenerateScore(difficulty!),
-                    CalendarDay = DateOnly.FromDateTime(DateTime.Now).ToString(),
-                    Difficulty = difficulty!,
-                    CompletionTime = FormatTime(),
-                    Mistakes = mistakeCount,
-                    UserId = UserClient.User!.Id
-                    };
-                DatabaseCaller.AddEntry(UserClient.Entry);  // creates a new record for the board entry + adds it to the database
+                UserClient.AddEntry(difficulty!, mistakeCount, FormatTime());
+                DatabaseCaller.AddEntry(UserClient.Entry!);  // creates a new record for the board entry + adds it to the database
             }
         }
     }
 
-    private int GenerateScore(string difficulty)
+    internal int GenerateScore(string difficulty)
     {
         TimeSpan completionTime = DateTime.Now - launchTime;
         int timeScoreSubtraction = (completionTime.Minutes * 60 + completionTime.Seconds);  // 1 score subtracted per second
@@ -288,19 +242,14 @@ else
 
     private string FormatTime()
     {
-        TimeSpan currentTime = DateTime.Now - launchTime;
-        if (currentTime.Seconds < 10)
-        {
-            return $"{currentTime.Minutes}:0{currentTime.Seconds}";  // eg formats as 7:06 instead of 7:6
-        }
-        return $"{currentTime.Minutes}:{currentTime.Seconds}";
+        return GameWrapper!.FormatTime(launchTime);
     }
 
     private void EraseValue()
     {
         if (!solved)
         {
-            selectedCell!.Entry = 0;  
+            selectedCell!.ChangeCellValue(0); 
         }
     }
 
@@ -308,10 +257,7 @@ else
     {
         if (!solved)
         {
-            foreach (Cell cell in board!.VariableNodes)
-            {
-                cell.Entry = correctNumbers![cell.Position.Item1, cell.Position.Item2];  // sets the value of all cells to the correct value, ensuring they are rendered correctly 
-            }
+            GameWrapper!.SolveBoard();
         }
         solved = true;
     }
@@ -327,41 +273,16 @@ else
     private void GetHint()
     {
         hintCount++;
-        List<Cell> emptyCells = new();
-        foreach (Cell cell in board!.VariableNodes)
-        {
-            if (cell.Entry == 0)
-            {
-                emptyCells.Add(cell);  // adds all cells that currently have no value to a list
-            }
-        }
-        Random random = new Random();
-        int randomIndex = random.Next(emptyCells.Count);
-        Cell selectedCell = emptyCells[randomIndex];  // selects a random empty cell
-        selectedCell.Entry = correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2];  // fills the random cell with its correct value
+        GameWrapper!.GetHint();
     }
 
-    private void ChangeNotesFunctionality()  // changes frontend display + functionality when changing cell values
+    internal void ChangeNotesFunctionality()  // changes frontend display + functionality when changing cell values
     {
-        if (noteTaking == "Off")
-        {
-            noteTaking = "On";
-        }
-        else
-        {
-            noteTaking = "Off";
-        }
+        noteTaking = GameWrapper!.ChangeNotesFunctionality(noteTaking);
     }
 
     private void Undo()
     {
-        try
-        {
-            Move move = stack.Pop();
-            move.Cell.Entry = move.OldEntry;  // sets the given cell to its original entry before being changed
-        }
-        catch (IndexOutOfRangeException)
-        {           
-        }
+        GameWrapper!.Undo(stack);
     }
 }

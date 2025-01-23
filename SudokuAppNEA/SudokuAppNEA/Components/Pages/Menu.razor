@@ -1,7 +1,6 @@
 ﻿@page "/menu"
 @inject NavigationManager NavigationManager
 @inject UserClient UserClient
-@inject DBCaller DatabaseCaller
 
 <h1 style="text-align: center; margin-bottom: 50px">Welcome @UserClient.User!.Username</h1>
 
@@ -13,6 +12,7 @@
 </div>
 
 @code {
+    private DBCaller? DatabaseCaller = new DBCaller();
 
     protected override void OnInitialized()
     {
@@ -21,9 +21,9 @@
 
     private void LoadUserSettings()
     {
-        (string, string) settings = DatabaseCaller.GetUserSettings(UserClient.User!.Id);  // gets user settings from database
-        UserClient.MistakeDetection = settings.Item1;  // records settings in userclient object
-        UserClient.SaveScores = settings.Item2;
+        (string, string) settings = DatabaseCaller!.GetUserSettings(UserClient.User!.Id);  // gets user settings from database
+        UserClient.SetMistakeDetection(settings.Item1);
+        UserClient.SetSaveScores(settings.Item2);   // records settings in UserClient object
     }
 
     private void Navigate()

@@ -38,15 +38,13 @@ namespace Sudoku_Solver_NEA
             }
             for (int i=1; i<=Board.Dimensions; i++)
             {
-                Console.WriteLine("\n");
-                node.Entry = i;   // sets board cell equal to a value and performs backtracking tree traversal with this value
-               // PrintBoard(Board);
+                node.ChangeCellValue(i);   // sets board cell equal to a value and performs backtracking tree traversal with this value
                 if (Solve())  // recursive loop - if the series of board cell changes leads to a solution, return true
                 {
                     return true;
                 }
             }
-            node.Entry = 0;  // backtracking back up the tree - resetting the most recently edited cell
+            node.ChangeCellValue(0);  // backtracking back up the tree - resetting the most recently edited cell
             return false;
         }
 
