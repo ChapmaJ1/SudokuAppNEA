@@ -5,10 +5,10 @@
 <h1 style="text-align: center; margin-bottom: 50px">Welcome @UserClient.User!.Username</h1>
 
 <div class="menu-text">
-        <a type="button" class="btn-primary" href="/difficulty">New Game</a>
-        <a type="button" class="btn-primary" href="/continue">Continue Game</a>
-        <a type="button" class="btn-primary" href="/leaderboard" >Leaderboard</a>
-        <a type="button" class="btn-primary" href="/settings">Settings/Stats</a>
+    <button class="btn-primary" @onclick=GoToDifficulty>New Game</button>
+    <button class="btn-primary" @onclick=GoToDifficulty>Continue Game</button>
+    <button class="btn-primary" @onclick=GoToLeaderboard>Leaderboard</button>
+    <button class="btn-primary" @onclick=GoToSettings>Settings/Stats</button>
 </div>
 
 @code {
@@ -26,8 +26,18 @@
         UserClient.SetSaveScores(settings.Item2);   // records settings in UserClient object
     }
 
-    private void Navigate()
+    private void GoToDifficulty()
     {
         NavigationManager.NavigateTo("/difficulty");
+    }
+
+    private void GoToLeaderboard()
+    {
+        NavigationManager.NavigateTo("/leaderboard");
+    }
+
+    private void GoToSettings()
+    {
+        NavigationManager.NavigateTo("/settings");
     }
 }

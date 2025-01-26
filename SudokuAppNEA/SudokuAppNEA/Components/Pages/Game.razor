@@ -11,8 +11,7 @@
 }
 else
 {
-    TimeSpan timer = DateTime.Now - launchTime; // time since user started board
-    <h3 style="margin-left: 100px">Time: @FormatTime()</h3>
+    <h3 style="margin-left: 100px">Time: @FormatTime()</h3>   // time since user started board
     @if (UserClient.MistakeDetection == "On")
     {
         <h3 style="margin-left: 100px">Mistakes: @mistakeCount</h3>
@@ -46,6 +45,7 @@ else
         <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
         <button class="btn-primary" @onclick=CheckBoard>Check Board</button>
         <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
+        <button class="btn-primary" @onclick=SaveBoard>Save Board</button>
     </div>
 
     <div class="game-btn-container-right-@containerType">
@@ -84,13 +84,31 @@ else
     private int mistakeCount;
     private int hintCount;
     private string noteTaking = "Off";
-    private MoveStack stack = new MoveStack(5);
+    private MoveStack stack = new MoveStack(100);
     private DBCaller DatabaseCaller = new();
     private GameWrapper? GameWrapper;
 
     protected override async Task OnInitializedAsync()
     {
         GetDifficulty();
+        await InitialiseBoardAndSolver();  // asynchronous method for API call
+        SetFrontendValues();
+        GameWrapper = new GameWrapper(board!, correctNumbers!);
+        launchTime = DateTime.Now;
+        while (solved == false)  // re-render the page every second while the board is not solved
+        {                        // this is required to update the timer to reflect real-time
+            await Task.Delay(1000);
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateToMenu()
+    {
+        NavigationManager.NavigateTo(menuUrl);
+    }
+
+    private void SetFrontendValues()
+    {
         if (dimensions == 9)
         {
             containerType = "default";
@@ -110,19 +128,6 @@ else
                 cellType = "large";
             }
         }
-        await InitialiseBoardAndSolver();  // asynchronous method for API call
-        GameWrapper = new GameWrapper(board!, correctNumbers!);
-        launchTime = DateTime.Now;
-        while (solved == false)  // re-render the page every second while the board is not solved
-        {                        // this is required to update the timer to reflect real-time
-            await Task.Delay(1000);
-            StateHasChanged();
-        }
-    }
-
-    private void NavigateToMenu()
-    {
-        NavigationManager.NavigateTo(menuUrl);
     }
 
     private async Task InitialiseBoardAndSolver()
@@ -334,5 +339,60 @@ else
     private void Undo()
     {
         GameWrapper!.Undo(stack);
+    }
+
+    private void SaveBoard()
+    {
+        string path = "SavedBoard.txt";
+        string[,] boardContents = new string[dimensions, dimensions];
+        int counter = 0;
+        foreach (Cell cell in board!.AdjacencyList.Keys)  // can do this as adjacency list is created in order of cell position
+        {
+            string saveData = "";
+            saveData += cell.Entry.ToString();
+            if (board.VariableNodes.Contains(cell))
+            {
+                saveData += "v";
+            }
+            boardContents[counter / dimensions, counter % dimensions] = saveData;
+            counter++;
+        }
+        File.WriteAllText(path, string.Empty);   // clears all text from the file
+        using (StreamWriter streamWriter = new StreamWriter(path))
+        {
+            for (int i=0; i<dimensions; i++)
+            {
+                for (int j=0; j<dimensions; j++)
+                {
+                    streamWriter.Write(boardContents[i, j] + " ");
+                }
+                streamWriter.Write("\n");
+            }
+            streamWriter.WriteLine(difficulty);
+            streamWriter.WriteLine(FormatTime());
+        }
+        NavigateToMenu();
+    }
+
+    private void LoadSavedBoard()
+    {
+        string path = "SavedBoard.txt";
+        int counter = 0;
+        List<string[]> cellList = new();
+        using (StreamReader streamReader = new StreamReader(path))
+        {
+            while (!streamReader.EndOfStream)
+            {
+                string line = streamReader.ReadLine() ?? string.Empty;
+                string[] cells = line.Split(" ");
+                cellList.Add(cells);
+                counter++;
+            }
+        }
+        int[,] boardSketch = new int[counter - 2, counter - 2];
+        for (int i=0; i<counter-2; i++)
+        {
+            foreach (str)
+        }
     }
 }
