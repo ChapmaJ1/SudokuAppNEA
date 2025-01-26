@@ -2,7 +2,7 @@
 
 namespace SudokuAppNEA.Components.Clients
 {
-    internal class GameWrapper  // for any shared methods between Game and LargerGame to prevent redundancy
+    public class GameWrapper  // for any shared methods between Game and LargerGame to prevent redundancy
     {
         internal Board Board { get; private set; }
         internal int[,] CorrectNumbers { get; private set; }
@@ -90,7 +90,7 @@ namespace SudokuAppNEA.Components.Clients
         internal string GetBackgroundColour(int row, int column)
         {
             string cellValue = DisplayCell(row, column);
-            if (cellValue[0].ToString() != " " && cellValue[0].ToString() != CorrectNumbers![row, column].ToString())  // if cell is non-empty and is filled with an incorrect value
+            if (cellValue[0].ToString() != " " && cellValue != CorrectNumbers![row, column].ToString())  // if cell is non-empty and is filled with an incorrect value
             {
                 return "red";
             }

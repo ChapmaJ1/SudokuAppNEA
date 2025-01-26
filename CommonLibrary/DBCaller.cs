@@ -101,7 +101,7 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "select Username, Score, CompletionTime, Difficulty, CalendarDay from Boards b, Users u on b.UserId = u.UserID where u.UserId = @UserID ORDER BY b.Score DESC";
+                command.CommandText = "select Username, Score, CompletionTime, Difficulty, CalendarDay from Boards b join Users u on b.UserId = u.UserID where u.UserId = @UserID ORDER BY b.Score DESC";
                 // selects details of all boards in the database for a particular user
                 command.Parameters.Add("@UserID", SqliteType.Integer).Value = user.Id;
                 var reader = command.ExecuteReader();
@@ -129,7 +129,7 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "select Username, Score, CompletionTime, Difficulty, CalendarDay from Boards b, Users u on b.UserId = u.UserID ORDER BY b.Score DESC";
+                command.CommandText = "select Username, Score, CompletionTime, Difficulty, CalendarDay from Boards b join Users u on b.UserId = u.UserID ORDER BY b.Score DESC";
                 // selects details of all boards in the database
                 var reader = command.ExecuteReader();
                 while (reader.Read())  // same situation as above

@@ -7,85 +7,94 @@ using System.Threading.Tasks;
 
 namespace Sudoku_Solver_NEA
 {
-    public class UniqueBoardGenerator
+    public class UniqueBoardGenerator : IBoardGenerator
     {
-        public Board Board { get; private set; }
-        public UniqueBoardGenerator(Board board)
+        public Board GenerateUniqueSolution(int dimensions, Board board)  // if 1.5s passed since starting, reset
         {
-            Board = board;
-        }
-
-        public void GenerateUniqueSolution(int dimensions)
-        {
-            ForwardChecker solver = new ForwardChecker(Board);
-            bool unique = false;
-            SetInitialNumbers(dimensions);  // if the number of fixed numbers on the board is less than the required threshold for a unique board
-            solver.PrintBoard(Board);
-            while (unique == false)
+            bool validBoard = false;
+            MoveStack stack = new MoveStack(5);
+            List<Cell> variableNodesCopy = new();
+            Random random = new Random();
+            board.SetQueue();
+            ForwardChecker solver = new ForwardChecker(board);
+            solver.Solve();
+            solver.PrintBoard(board);
+            foreach (Cell cell in board.VariableNodes)
             {
-                solver!.HasUniqueSolution();
-                if (Board.SolutionCount >= 2)  // if board does not have a unique solution, and hence is not a valid Sudoku
+                variableNodesCopy.Add(cell);
+            }
+            board.VariableNodes.Clear();  // solver interacts with the board's variable nodes when solving - remove all + add gradually
+            RemoveInitialNumbers(dimensions, variableNodesCopy, board);
+            while (!validBoard)
+            {
+                Cell randomCell = variableNodesCopy[random.Next(variableNodesCopy.Count)];
+                Move move = new(randomCell, randomCell.Entry);
+                AddDomains(move, board);
+                stack.Push(move);
+                randomCell.ChangeCellValue(0);
+                board.VariableNodes.Add(randomCell);
+                board.SetQueue();
+                solver.ChangeMostRecentCell(null);
+                bool unique = solver.HasUniqueSolution();
+                if (!unique)   // weird notation bc function returns true when board is not unique 
                 {
-                    for (int i = 0; i < dimensions; i++)
-                    {
-                        for (int j = 0; j < dimensions; j++)
-                        {
-                            if (Board.Solutions[0].BoardSketch[i, j] != Board.Solutions[1].BoardSketch[i, j])  // a square which has a different value between the 2 solutions
-                            {
-                                Cell cell = Board.GetCellLocation(i, j);
-                                cell.ChangeCellValue(Board.Solutions[0].BoardSketch[i, j]);
-                                i = dimensions;
-                                j = dimensions;
-                                Board.VariableNodes.Remove(cell);  // sets the cell to be fixed, taking on the value from the first solution
-                                Board.Reset();  // resets the board so the solving process can be repeated to find a unique solution
-                            }
-                        }
-                    }
-                    Board.Solutions.Clear();
-                    Board.SetSolutionCount(0);
+                    Move previousMove = stack.Pop();
+                    board.VariableNodes.Remove(randomCell);
+                    previousMove.Cell.ChangeCellValue(previousMove.OldEntry);
+                    board.Reset();
+                    RemoveDomains(previousMove, board);
+                    validBoard = true;
                 }
                 else
                 {
-                    unique = true;
+                    variableNodesCopy.Remove(randomCell);
+                    board.SetSolutionCount(0);
+                    board.Solutions.Clear();
+                }
+            }
+            return board;
+        }
+
+        private void RemoveDomains(Move move, Board board)
+        {
+            foreach (Cell cell in board.AdjacencyList[move.Cell])
+            {
+                if (cell.Domain.Contains(move.OldEntry))
+                {
+                    cell.Domain.Remove(move.OldEntry);
                 }
             }
         }
 
-        private void SetInitialNumbers(int dimensions)
+        private void AddDomains(Move move, Board board)
         {
+            move.Cell.Domain.Add(move.OldEntry);
+            foreach (Cell connectedNode in board.AdjacencyList[move.Cell])
+            {
+                if (!connectedNode.Domain.Contains(move.OldEntry))
+                {
+                    connectedNode.Domain.Add(move.OldEntry);
+                }
+            }
+        }
+
+        private void RemoveInitialNumbers(int dimensions, List<Cell> variableNodesCopy, Board board)
+        {
+            ForwardChecker solver = new(board);
             Random random = new Random();
-            BacktrackingSolver solver = new BacktrackingSolver(Board);
-            int numberCap = 17;  // minimum numbers required for a unique 9x9 Sudoku
-            if (dimensions == 16)
+            int cap = 80;
+            if (dimensions == 9)
             {
-                numberCap = 100;  // minimum numbers required for a unique 16x16 Sudoku - guess
+                cap = 20;
             }
-            int maximumVariableNodes = Convert.ToInt32(Math.Pow(dimensions,2)) - numberCap;
-            while (Board.VariableNodes.Count > maximumVariableNodes)   // while the number of fixed cells is below the required threshold
+            while (board.VariableNodes.Count <= cap)
             {
-                int randomCellIndex = random.Next(Board.VariableNodes.Count);
-                Cell randomCell = Board.VariableNodes[randomCellIndex];
-                int randomNumberIndex = random.Next(randomCell.Domain.Count);
-                int randomNumber = randomCell.Domain[randomNumberIndex];
-                randomCell.ChangeCellValue(randomNumber);  // selects a random cell, and changes its value to a random number in its domain
-                if (solver.CheckInvalid())
-                {
-                    solver.PrintBoard(Board);
-                    Console.WriteLine("Dead");
-                }
-                PruneDomains(randomCell, randomNumber);  // prunes the domains so no connected cells will take on identical values in future
-                Board.VariableNodes.Remove(randomCell);  // sets the cell to a fixed node
-            }
-        }
-
-        private void PruneDomains(Cell cell, int number)
-        {
-            foreach (Cell connectedNode in Board.AdjacencyList[cell])
-            {
-                if (connectedNode.Domain.Contains(number))
-                {
-                    connectedNode.Domain.Remove(number);
-                }
+                int randomCellIndex = random.Next(variableNodesCopy.Count);
+                Cell randomCell = variableNodesCopy[randomCellIndex];
+                AddDomains(new Move(randomCell, randomCell.Entry), board);
+                randomCell.ChangeCellValue(0);
+                variableNodesCopy.Remove(randomCell);
+                board.VariableNodes.Add(randomCell);
             }
         }
     }

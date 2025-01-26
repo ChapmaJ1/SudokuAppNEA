@@ -1,117 +1,45 @@
 ﻿@page "/custom/{dimensionString}"
 @inject NavigationManager NavigationManager
 
-<h1>Custom Board</h1>
+<h1 style="transform: translate(-50px, 0px)">Custom Board</h1>
 
 @if (sketch == null)
 {
-    <h1 style="margin-top: 100px">Loading...</h1>
+    <h1 style="margin-top: 100px;">Loading...</h1>
 }
 else
 {
-    if (dimensions == 25)
-    {
-        <div class="sudoku-container-large">
-            @for (int row = 0; row < dimensions; row++)
-            {
-                <div class="sudoku-column-large">
-                    @for (int column = 0; column < dimensions; column++)
-                    {
-                        int columnTemp = column; // if row, column directly used, OnSelected) would be called
-                        int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
-                        <button class="sudoku-cell-large" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
-                    }
-                </div>
-            }
-        </div>
-    }
-    else if (dimensions == 16)
-    {
-        <div class="sudoku-container-large">
-            @for (int row = 0; row < dimensions; row++)
-            {
-                <div class="sudoku-column">
-                    @for (int column = 0; column < dimensions; column++)
-                    {
-                        int columnTemp = column; // if row, column directly used, OnSelected) would be called
-                        int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
-                        <button class="sudoku-cell-medium" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
-                    }
-                </div>
-            }
-        </div>
-    }
-    else
-    {
-        <div class="sudoku-container-custom">
-            @for (int row = 0; row < dimensions; row++)  // prints 81 square buttons in a 9x9 format
-            {
-                <div class="sudoku-column">
-                    @for (int column = 0; column < 9; column++)
-                    {
-                        int columnTemp = column; // if row and column directly used, OnSelected(9,9) would be called
-                        int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
-                        <button class="sudoku-cell-default" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
-                    }
-                </div>
-            }
-        </div>
-    }
+    <div class="sudoku-container-custom-@containerType">
+        @for (int row = 0; row < dimensions; row++)
+        {
+            <div class="sudoku-column-large">
+                @for (int column = 0; column < dimensions; column++)
+                {
+                    int columnTemp = column; // if row, column directly used, OnSelected) would be called
+                    int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
+                    <button class="sudoku-cell-@cellType" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
+                }
+            </div>
+        }
+    </div>
 
-    if (dimensions == 25)
-    {
-        <div class="custom-btn-container-large">
-            <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
-            <button class="btn-primary" @onclick=NavigateToDifficulty>New Game</button>
-            <button class="btn-primary" @onclick=Reset>Reset Board</button>
-            <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
-        </div>
-    }
-    else
-    {
-        <div class="custom-btn-container">
-            <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
-            <button class="btn-primary" @onclick=NavigateToDifficulty>New Game</button>
-            <button class="btn-primary" @onclick=Reset>Reset Board</button>
-            <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
-        </div>
-    }
+    <div class="custom-btn-container">
+        <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
+        <button class="btn-primary" @onclick=NavigateToDifficulty>New Game</button>
+        <button class="btn-primary" @onclick=Reset>Reset Board</button>
+        <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
+    </div>
 
-    if (dimensions == 25)
-    {
-        <div class="number-buttons-container-large">
-            @for (int i = 1; i <= dimensions; i++)
-            {
-                int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
-                <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
-            }
-            <button class="button-cell" @onclick="() => EraseValue()">Erase</button>
-        </div>
-    }
-    else if (dimensions == 16)
-    {
-        <div class="number-buttons-container-medium">
-            @for (int i = 1; i <= dimensions; i++)
-            {
-                int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
-                <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
-            }
-            <button class="button-cell" @onclick="() => EraseValue()">Erase</button>
-        </div>
-    }
-    else
-    {
-        <div class="number-buttons-container-low">
-            @for (int i = 1; i <= dimensions; i++)
-            {
-                int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
-                <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
-            }
-            <button class="button-cell" @onclick="() => EraseValue()">Erase</button>
-        </div>
-    }
+    <div class="number-buttons-custom-container-@containerType">
+        @for (int i = 1; i <= dimensions; i++)
+        {
+            int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
+            <button class="button-cell-@cellType" @onclick="() => ChangeCellValue(temp)">@i</button>
+        }
+        <button class="button-cell-@cellType" @onclick="() => EraseValue()">Erase</button>
+    </div>
 
-    <div class="center-text-container">
+    <div class="center-text-container-@containerType">
         @if (solvable == false)
         {
             <h3>Unsolvable Board Input</h3>
@@ -122,7 +50,10 @@ else
 @code {
     [Parameter]
     public string? dimensionString { get; set;}
-    public int dimensions;
+    private int dimensions;
+    private string? containerType;
+    private string? cellType;
+    private string? numberType;
     private int[,]? sketch;  // using array instead of board to create initial board sketch (from user input) to be solved
     private Board? board;
     private (int, int) selectedSquare;
@@ -132,6 +63,24 @@ else
     protected override void OnInitialized()
     {
         dimensions = Convert.ToInt32(dimensionString);
+        if (dimensions == 25)
+        {
+            containerType = "large";
+            cellType = "large";
+            numberType = "large";
+        }
+        else if (dimensions == 16)
+        {
+            containerType = "large";
+            cellType = "medium";
+            numberType = "medium";
+        }
+        else
+        {
+            containerType = "default";
+            cellType = "default";
+            numberType = "low";
+        }
         sketch = new int[dimensions, dimensions];
         for (int i=0; i<dimensions; i++)
         {
@@ -140,7 +89,6 @@ else
                 sketch[i, j] = 0;   // initialises board sketch to an empty board
             }
         }
-        Console.Write("hi");
     }
 
     private void NavigateToDifficulty()
@@ -178,22 +126,22 @@ else
         board = new Board("", sketch, dimensions);
         board.InitialiseGraph();   // initialises the board, using the altered sketch, and solves
         board!.SetQueue();
-        solver = new ForwardChecker(board);
-        if (solver.CheckInvalid())  // if the board input by the user violates a constraint, and is hence unsolvable
+        BacktrackingSolver solver;
+        if (dimensions == 25)
         {
-            solvable = false;
-        }   
+            solver = new Annealer(board);
+        }
         else
         {
-            if (dimensions == 25)
-            {
-                Annealer annealer = new Annealer(board, dimensions);
-                annealer.Solve();
-            }
-            else
-            {
-                solver.Solve();
-            }
+            solver = new ForwardChecker(board);
+        }
+        if (solver.CheckInvalidFull())  // if the board input by the user violates a constraint, and is hence unsolvable
+        {
+            solvable = false;
+        }
+        else
+        {
+            solver.Solve();
         }
     }
 

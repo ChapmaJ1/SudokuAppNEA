@@ -11,7 +11,7 @@
 }
 else
 {
-    TimeSpan timer = DateTime.Now - launchTime; // 
+    TimeSpan timer = DateTime.Now - launchTime; // time since user started board
     <h3 style="margin-left: 100px">Time: @FormatTime()</h3>
     @if (UserClient.MistakeDetection == "On")
     {
@@ -23,11 +23,11 @@ else
     {
         <h3>Board Completed!          Your Score: @GenerateScore(difficulty!)</h3>
     }
-    <div class="sudoku-container">
-        @for (int row = 0; row < 9; row++)  // prints 81 square buttons in a 9x9 format
+    <div class="sudoku-container-@containerType">
+        @for (int row = 0; row < dimensions; row++)  // prints 81 square buttons in a 9x9 format
         {
             <div class="sudoku-column">
-                @for (int column = 0; column < 9; column++)
+                @for (int column = 0; column < dimensions; column++)
                 {
                     int columnTemp = column; // if row and column directly used, OnSelected(9,9) would be called
                     int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
@@ -36,43 +36,47 @@ else
                     {
                         backgroundColour = GetBackgroundColour(rowTemp, columnTemp);
                     }
-                   <button class="sudoku-cell-default" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
+                    <button class="sudoku-cell-@cellType" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
                 }
             </div>
         }
     </div>
 
-    <div class="game-btn-container-left">
+    <div class="game-btn-container-left-@containerType">
         <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
         <button class="btn-primary" @onclick=CheckBoard>Check Board</button>
         <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
     </div>
 
-    <div class="game-btn-container-right">
+    <div class="game-btn-container-right-@containerType">
         <button class="btn-primary" @onclick=Reset>Reset Board</button>
         <button class="btn-primary" @onclick=GetHint>Get Hint</button>
         <button class="btn-primary" @onclick=Undo>Undo</button>
         <button class="btn-primary" @onclick=ChangeNotesFunctionality>Notes: @noteTaking</button>
     </div>
 
-    <div class="number-buttons-container">
-        @for (int i = 1; i < 10; i++)  // prints 9 numbered input buttons in a line
+    <div class="number-buttons-container-@containerType">
+        @for (int i = 1; i <= dimensions; i++)  // prints dimensions numbered input buttons in a line
         {
-            int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
-            <button class="button-cell" @onclick="() => ChangeCellValue(temp)">@i</button>
+            int temp = i; // if i directly used, ChangeCellValue(dimensions + 1) would be called for all button clicks
+            <button class="button-cell-@buttonType" @onclick="() => ChangeCellValue(temp)">@i</button>
         }
-        <button class="button-cell" style="font-size: 25px" @onclick="() => EraseValue()">Erase</button>
+        <button class="button-cell-@buttonType" style="font-size: 25px" @onclick="() => EraseValue()">Erase</button>
     </div>
 }
 
 @code {
     [Parameter]
     public string? difficulty {get; set;}
+    private int dimensions;
+    private string? containerType;
+    private string? cellType;
+    private string? buttonType;
     private Cell? selectedCell;
-    private Board? board { get; set; }
-    private Board? solution { get; set; }
-    private ForwardChecker? solver { get; set; }
-    private int[,]? correctNumbers = new int[9, 9];
+    private Board? board;
+    private Board? solution;
+    private ForwardChecker? solver;
+    private int[,]? correctNumbers;
     private string menuUrl = "/menu";
     private bool solved;
     private bool userCompleted = false;
@@ -87,6 +91,25 @@ else
     protected override async Task OnInitializedAsync()
     {
         GetDifficulty();
+        if (dimensions == 9)
+        {
+            containerType = "default";
+            cellType = "default";
+            buttonType = "default";
+        }
+        else
+        {
+            containerType = "large";
+            buttonType = "large";
+            if (dimensions == 16)
+            {
+                cellType = "medium";
+            }
+            else
+            {
+                cellType = "large";
+            }
+        }
         await InitialiseBoardAndSolver();  // asynchronous method for API call
         GameWrapper = new GameWrapper(board!, correctNumbers!);
         launchTime = DateTime.Now;
@@ -104,11 +127,19 @@ else
 
     private async Task InitialiseBoardAndSolver()
     {
-        await GetBoard();
+        if (dimensions == 9)
+        {
+            await GetBoard();
+        }
+        else
+        {
+            board = new Board(difficulty, new int[dimensions,dimensions], dimensions);
+        }
         board!.InitialiseGraph();
         MakeUniqueSolution(board);
         solver = new ForwardChecker(board);
         board.SetQueue();  // initialise the board ready for solving
+        correctNumbers = new int[dimensions, dimensions];
         InitialiseCorrectNumbers(); 
         solved = false;
     }
@@ -122,56 +153,72 @@ else
             if (savedBoard.Difficulty == difficulty)
             {
                 board = savedBoard;
+                UserClient!.FetchedBoards.Remove(savedBoard);
                 generated = true;
+                break;
             }
         }
         while (generated == false)
         {
-            ResponseData responseData = await generator.GenerateBoard();  // fetch board from API
+            List<Board> fetchedBoards = await generator.GenerateBoard();  // fetch board from API
             bool found = false;
             for (int i=0; i<10; i++)  // 10 boards fetched to minimise the number of fetches needed, while also preventing fetching from taking too long
             {
-                if (responseData.NewBoard.Grids[i].Difficulty == difficulty && found == false)
+                if (fetchedBoards[i].Difficulty == difficulty && found == false)
                 {
-                    board = generator.ConvertToBoard(responseData, i);     // no way of fetching board from API by difficulty, so this is checking whether
+                    board = fetchedBoards[i];    // no way of fetching board from API by difficulty, so this is checking whether
                     generated = true;                                   // the difficulty of the fetched board matches the desired difficulty
                     found = true;
                 }
                 else
                 {
-                    UserClient!.FetchedBoards.Add(generator.ConvertToBoard(responseData, i));
+                    UserClient!.FetchedBoards.Add(fetchedBoards[i]);
                 }
             }
         }
     }
 
     private void GetDifficulty()
-    {
-        if (difficulty == "Adaptive")  // get recommended difficulty from database if required, otherwise use the chosen difficulty
+    {   
+        if (difficulty == "16" || difficulty == "25")
         {
-            difficulty = DatabaseCaller.GetRecommendedDifficulty(UserClient.User!.Id);
+            dimensions = Convert.ToInt32(difficulty);
+        }
+        else
+        {
+            dimensions = 9;
+            if (difficulty == "Adaptive")  // get recommended difficulty from database if required, otherwise use the chosen difficulty
+            {
+                difficulty = DatabaseCaller.GetRecommendedDifficulty(UserClient.User!.Id);
+            }
         }
     }
 
     private void MakeUniqueSolution(Board board)
     {
-        UniqueBoardGenerator generator = new UniqueBoardGenerator(board); 
-        generator.GenerateUniqueSolution(9);
+        IBoardGenerator generator;
+        if (dimensions == 9)
+        {
+            generator = new BoardGeneratorAPI();
+        }
+        else
+        {
+            generator = new UniqueBoardGenerator();
+        }
+        generator.GenerateUniqueSolution(dimensions, board);
         board.InitialiseRemainingNumbers(board.GetFixedNodes());  // initialises unique board
     }
 
     private void InitialiseCorrectNumbers()
     {
-        solver!.Solve(); // solve the board to get correct numbers + caches the result in board.Solutions
-        for (int i=0; i<9; i++)  // for constant time access later on
+        for (int i=0; i<dimensions; i++)  // for constant time access later on
         {
-            for (int j=0; j<9; j++)
+            for (int j=0; j<dimensions; j++)
             {
                 correctNumbers![i, j] = board!.Solutions[0].BoardSketch[i, j];  // set correct numbers
             }
         }
         board!.Reset();  // resets the board so that it is rendered in its initial state for the user
-        board.SetQueue();
     }
 
     private string GetBackgroundColour(int row, int column)
@@ -205,7 +252,7 @@ else
 
     private void CheckBoard()
     {
-        if (solver!.CheckInvalid() == false && solver!.CheckFinished() == true && solved == false)
+        if (solver!.CheckInvalidFull() == false && solver!.CheckFinished() == true && solved == false)  // change invalid to use correctnumbers array
         {  // if board has been solved + not been solved in previous renders
             userCompleted = true;
             solved = true;
@@ -272,8 +319,11 @@ else
 
     private void GetHint()
     {
-        hintCount++;
-        GameWrapper!.GetHint();
+        if (!solved)
+        {
+            hintCount++;
+            GameWrapper!.GetHint();
+        }
     }
 
     internal void ChangeNotesFunctionality()  // changes frontend display + functionality when changing cell values

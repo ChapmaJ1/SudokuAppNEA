@@ -40,6 +40,10 @@ namespace Sudoku_Solver_NEA
 
         public Cell Dequeue()
         {
+            if (Occupied == 0)
+            {
+                throw new IndexOutOfRangeException("Queue is empty");
+            }
             Cell topCell = NodeArray[0];  // returns the cell at the top of the heap (front of the queue)
             NodeArray[0] = NodeArray[Occupied-1];  // highest priority cell replace by the cell at the bottom of the heap
             Occupied--;

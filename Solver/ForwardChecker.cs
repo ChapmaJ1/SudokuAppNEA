@@ -8,12 +8,14 @@ namespace Sudoku_Solver_NEA
 {
     public class ForwardChecker : BacktrackingSolver
     {
+        public bool EmptyDomains { get; private set; }
         public ForwardChecker(Board board) : base(board)
         {
+            EmptyDomains = false;
         }
         public override bool Solve()
         {
-            if (CheckInvalid())
+            if (CheckInvalid(MostRecentlyChangedCell))
             {
                 return false;
             }
@@ -27,12 +29,13 @@ namespace Sudoku_Solver_NEA
             for (int i = 0; i < orderedDomain.Count; i++)
             {
                 node.ChangeCellValue(orderedDomain[i].Item2);
-                Dictionary<Cell, List<int>> removed = PruneValues(node.Entry, node);   // forward check, pruning the domain early
+                List<(Cell,int)> removed = PruneValues(node.Entry, node);   // forward check, pruning the domain early
                 if (HasEmptyDomains())  // invalid board in the current state, so no point going deeper into backtracking
                 {
                     RestorePrunedValues(removed);  // reverts domain restrictions
                     continue;   // moves onto the next number in the iteration (the "branch" of the tree to the side)
                 }
+                ChangeMostRecentCell(node);
                 if (Solve())
                 {
                     return true;
@@ -44,37 +47,35 @@ namespace Sudoku_Solver_NEA
             return false;
         }
 
-        private Dictionary<Cell, List<int>> PruneValues(int number, Cell node)
+        private List<(Cell,int)> PruneValues(int number, Cell node)
         {
-            Dictionary<Cell, List<int>> removedNumbers = new();
+            List<(Cell, int)> removedNumbers = new();
             List<Cell> changeNodes = Board.AdjacencyList[node];   // all cells that the given node is linked to
             foreach (Cell changeNode in changeNodes)
             {
-              //  if (Board.VariableNodes.Contains(changeNode))  // does not unnecessarily remove from the domain of fixed nodes
-               // {
-                    removedNumbers[changeNode] = new();
-                    if (changeNode.Domain.Contains(number))   // if the current value of the node is in the domain of a connected cell
+                if (changeNode.Domain.Contains(number))   // if the current value of the node is in the domain of a connected cell
+                {
+                    changeNode.Domain.Remove(number);  // remove the value of the connected node from the cell
+                    removedNumbers.Add((changeNode, number));  // records the cell which the number has been removed from for later use
+                    if (changeNode.Domain.Count == 0)
                     {
-                        changeNode.Domain.Remove(number);  // remove the value of the connected node from the cell
-                        removedNumbers[changeNode].Add(number);  // records the cell which the number has been removed from for later use
+                        EmptyDomains = true;
                     }
-               // }
+                }
             }
             return removedNumbers;
         }
 
-        private void RestorePrunedValues(Dictionary<Cell, List<int>> removedNumbers)
+        private void RestorePrunedValues(List<(Cell,int)> removedNumbers)
         {
-            foreach (KeyValuePair<Cell, List<int>> pair in removedNumbers)  // recorded cell + number combination
+            foreach ((Cell,int) pair in removedNumbers)  // recorded cell + number combination
             {
-                foreach (int number in pair.Value)
+                if (!pair.Item1.Domain.Contains(pair.Item2)) // if the domain does not already contain the number
                 {
-                    if (!pair.Key.Domain.Contains(number)) // if the domain does not already contain the number
-                    {
-                        pair.Key.Domain.Add(number);  // adds the removed number back into the domain
-                    }
-                }
+                    pair.Item1.Domain.Add(pair.Item2);  // adds the removed number back into the domain
+                } 
             }
+            EmptyDomains = false;
         }
 
         private Cell GetMRV()
@@ -85,6 +86,10 @@ namespace Sudoku_Solver_NEA
 
         private List<(int,int)> SortByLCV(Cell cell)  
         {
+            if (cell.Domain.Count == 1)
+            {
+                return new List<(int, int)> { (0, cell.Domain[0]) };
+            } 
             List<(int,int)> orderedDomain = new();
             foreach (int number in cell.Domain)
             {
@@ -96,7 +101,7 @@ namespace Sudoku_Solver_NEA
                         impact++;
                     }
                 }
-                orderedDomain.Add((impact, number));
+                orderedDomain.Add((impact, number)); 
             }
             orderedDomain.Sort();    // sorts by increasing impact - lowest impact tested first
             return orderedDomain;
@@ -105,22 +110,23 @@ namespace Sudoku_Solver_NEA
 
         internal bool HasEmptyDomains()
         {
-            foreach (Cell cell in Board.AdjacencyList.Keys)
-            {
-                if (cell.Domain.Count == 0)  // if a certain cell has no values that it could take on without violating a Sudoku constraint
-                {
-                    return true;
-                }
-            }
-            return false;
+          /*    foreach (Cell cell in Board.AdjacencyList.Keys)
+              {
+                  if (cell.Domain.Count == 0)  // if a certain cell has no values that it could take on without violating a Sudoku constraint
+                  {
+                      return true;
+                  } 
+              }
+              return false;  */
+              return EmptyDomains;
         }
 
         public bool HasUniqueSolution()  // does not use a queue as the queue would have to be reset every time the board is checked
         {
-            if (CheckInvalid())
+            if (CheckInvalid(MostRecentlyChangedCell))
             {
                 return false;
-            }
+            }   // WHAT HAPPENS IF THERE ARE EMPTY DOMAINS IN STARTING STATE??
             if (CheckFinished())
             {
                 Board.SetSolutionCount(Board.SolutionCount + 1);
@@ -129,25 +135,18 @@ namespace Sudoku_Solver_NEA
                 Board.Solutions.Add(tempBoard);
                 return true;
             }
-            Cell node = new Cell((-1, -1), -1);  // arbitrary cell to be assigned to
-            for (int i=0; i<Board.VariableNodes.Count; i++)
-            {
-                if (Board.VariableNodes[i].Entry == 0)  // if cell currently has no value
-                {
-                    node = Board.VariableNodes[i];
-                    break;
-                }
-            }
+            Cell node = GetMRV();
             List<(int, int)> orderedDomain = SortByLCV(node);  // iterates through domains by increasing impact
             for (int i = 0; i < orderedDomain.Count; i++)
             {
                 node.ChangeCellValue(orderedDomain[i].Item2);
-                Dictionary<Cell, List<int>> removed = PruneValues(node.Entry, node); 
+                List<(Cell,int)> removed = PruneValues(node.Entry, node); 
                 if (HasEmptyDomains())
                 {
                     RestorePrunedValues(removed);
                     continue;
                 }
+                ChangeMostRecentCell(node);
                 if (HasUniqueSolution())
                 {
                     RestorePrunedValues(removed);  // reverts domain restrictions to allow exploration of a different tree branch
@@ -160,6 +159,7 @@ namespace Sudoku_Solver_NEA
                 RestorePrunedValues(removed);
             }
             node.ChangeCellValue(0);
+            Board.Queue.Enqueue(node);
             return false;
         }
     }

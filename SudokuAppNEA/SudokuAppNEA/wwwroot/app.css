@@ -124,10 +124,6 @@ strong {
     margin-left: 35em;
 }
 
-.sudoku-container{
-    margin-top: 1em;
-}
-
 .sudoku-column{
     margin-left: 28em;
     display: flex;
@@ -153,50 +149,12 @@ strong {
     font-size: 15px;
 }
 
-.number-buttons-container {
-    margin-left: 17em;
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
-    transform: translate(0,-830px)
-}
-
 .number-buttons-container-low {
     margin-left: 17em;
     display: flex;
     flex-direction: row;
     gap: 20px;
     transform: translate(0,-450px)
-}
-
-.button-cell{
-    min-width: 60px;
-    min-height: 60px;
-    border-color: black;
-    font-size: 40px;
-    text-align: center;
-    align-content: center;
-}
-
-.game-btn-container-left {
-    transform: translate(0px,-540px);
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    max-width: 150px;
-    text-align: center;
-    margin-left: 5em;
-    margin-top: 8em;
-}
-
-.game-btn-container-right {
-    transform: translate(0px,-880px);
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-    max-width: 150px;
-    text-align: center;
-    margin-left: 65em;
 }
 
 .custom-btn-container {
@@ -226,12 +184,12 @@ strong {
 
 .sudoku-container-large{
     margin-top: 3em;
-    transform: translateX(-50px);
+    transform: translate(-100px, -100px);
 }
 
-.sudoku-container-custom {
+.sudoku-container-custom-large {
     margin-top: 3em;
-    transform: translateX(-100px);
+    transform: translate(-80px, 0px)
 }
 
 .sudoku-column-large {
@@ -256,26 +214,6 @@ strong {
     border-color: black;
     padding: 2px;
     font-size: 20px;
-}
-
-.number-buttons-container-large {
-    margin-left: 5em;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    width: 30%;
-    margin-left: 100px;
-    transform: translate(850px,-1080px)
-}
-
-.number-buttons-container-medium {
-    margin-left: 5em;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    width: 30%;
-    margin-left: 100px;
-    transform: translate(850px,-1020px)
 }
 
 .custom-btn-container-large {
@@ -310,4 +248,136 @@ strong {
     display: flex;
     flex-direction: column;
     margin-top: 2em;
+}
+
+.number-buttons-custom-container-default {
+    margin-left: 14em;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    transform: translate(0,-430px)
+}
+
+.number-buttons-custom-container-large {
+    margin-left: 5em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 30%;
+    margin-left: 100px;
+    transform: translate(840px,-1000px)
+}
+
+.number-buttons-custom-container-medium {
+    margin-left: 5em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 30%;
+    margin-left: 100px;
+    transform: translate(850px,-1020px)
+}
+
+
+.sudoku-container-custom-default {
+    margin-top: 3em;
+}
+
+.number-buttons-container-default {
+    margin-left: 17em;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    transform: translate(0,-830px)
+}
+
+.number-buttons-container-large {
+    margin-left: 10em;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    transform: translate(0,-930px)
+}
+
+.sudoku-container-default {
+    margin-top: -2em;
+}
+
+.game-btn-container-left-default {
+    transform: translate(0px,-500px);
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    max-width: 150px;
+    text-align: center;
+    margin-left: 5em;
+    margin-top: 8em;
+}
+
+.game-btn-container-right-default {
+    transform: translate(0px,-880px);
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    max-width: 150px;
+    text-align: center;
+    margin-left: 65em;
+}
+
+.game-btn-container-left-large {
+    transform: translate(0px,-647px);
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    max-width: 150px;
+    text-align: center;
+    margin-left: 5em;
+    margin-top: 8em;
+}
+
+.game-btn-container-right-large {
+    transform: translate(0px,-1030px);
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    max-width: 150px;
+    text-align: center;
+    margin-left: 65em;
+}
+
+.button-cell-default {
+    min-width: 60px;
+    min-height: 60px;
+    border-color: black;
+    font-size: 40px;
+    text-align: center;
+    align-content: center;
+}
+
+.button-cell-medium {
+    min-width: 60px;
+    min-height: 60px;
+    border-color: black;
+    font-size: 25px;
+    text-align: center;
+    align-content: center;
+}
+
+.button-cell-large {
+    min-width: 40px;
+    min-height: 40px;
+    border-color: black;
+    font-size: 25px;
+    text-align: center;
+    align-content: center;
+}
+
+.center-text-container-default{
+    text-align: center;
+    transform: translate(-20px, -550px);
+}
+
+.center-text-container-large {
+    text-align: center;
+    transform: translate(-20px, -750px);
 }

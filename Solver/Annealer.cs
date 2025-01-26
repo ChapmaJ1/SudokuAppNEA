@@ -7,21 +7,17 @@ using System.Threading.Tasks;
 
 namespace Sudoku_Solver_NEA
 {
-    public class Annealer
+    public class Annealer : BacktrackingSolver
     {
-        public Board Board { get; private set; }
         public MoveStack MoveStack { get; private set; }
-        public int Dimensions { get; private set; }
         public Dictionary<int, List<Cell>> BoxGroupings { get; private set; }
-        public Annealer(Board board, int dimensions)
+        public Annealer(Board board) : base(board)
         {
-            Board = board;
             MoveStack = new MoveStack(100);
-            Dimensions = dimensions;
             BoxGroupings = new();
         }
 
-        public void Solve()
+        public override bool Solve()
         {
             InitialiseBoard();
             Random random = new Random();
@@ -54,7 +50,7 @@ namespace Sudoku_Solver_NEA
                 //temperature = initialTemperature - 0.1 * i;
                 temperature = initialTemperature * Math.Pow(Math.E, -0.05 * i);
                 (List<(Cell, Cell, int)>, int) changedConflicts = UpdateConflicts(conflictData, changedCells);
-                conflictData.Item2 += changedConflicts.Item2;  // REMOVE LATER
+                conflictData.Item2 += changedConflicts.Item2; 
                 if (conflictData.Item2 == 0)
                 {
                     solver.PrintBoard(Board);
@@ -85,18 +81,17 @@ namespace Sudoku_Solver_NEA
                     Board.VariableNodes.Add(pair.Key);
                 }
             }
-            //   Board.SetQueue();
-            solver.Solve(); // most cells have 0, 1 or 2 conflicts by the end of the procedure (25x25)
+            return true;
         }
 
         private void InitialiseBoard()
         {
             Random random = new Random();
-            int squareDimensions = Convert.ToInt32(Math.Sqrt(Dimensions));
-            for (int i = 0; i < Dimensions; i++)  // selects sub-box
+            int squareDimensions = Convert.ToInt32(Math.Sqrt(Board.Dimensions));
+            for (int i = 0; i < Board.Dimensions; i++)  // selects sub-box
             {
                 List<int> remainingNumbersInSquare = new();
-                for (int x = 1; x <= Dimensions; x++)
+                for (int x = 1; x <= Board.Dimensions; x++)
                 {
                     remainingNumbersInSquare.Add(x);
                 }
@@ -165,10 +160,10 @@ namespace Sudoku_Solver_NEA
             Random random = new Random();
             for (int i = 0; i < swapNumber; i++)
             {
-                int box = random.Next(Dimensions);
+                int box = random.Next(Board.Dimensions);
                 while (BoxGroupings[box].Count < 2 || usedBoxes.Contains(box))
                 {
-                    box = random.Next(Dimensions);
+                    box = random.Next(Board.Dimensions);
                 }
                 usedBoxes.Add(box);
                 List<Cell> boxCells = BoxGroupings[box];

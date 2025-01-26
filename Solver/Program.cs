@@ -27,7 +27,7 @@ namespace Sudoku_Solver_NEA
                              { 0,0,8,0,0,0,2,5,6 },
                              { 6,0,2,4,5,0,8,7,9 },
                              { 0,0,0,7,0,0,4,2,1 },
-                             { 7,8,0,2,1,0,6,0,0} };  */
+                             { 7,8,0,2,1,0,6,0,0} };    */
             int[,] boardSketch = new int[16, 16];
             for (int i = 0; i<boardSketch.GetLength(0); i++)
             {
@@ -35,7 +35,7 @@ namespace Sudoku_Solver_NEA
                 {
                     boardSketch[i, j] = 0;
                 }
-            } 
+            }  
             Board board = new Board("Hard", boardSketch, boardSketch.GetLength(0));
             board.InitialiseGraph();
 
@@ -84,13 +84,30 @@ namespace Sudoku_Solver_NEA
            /* BacktrackingSolver solver = new BacktrackingSolver(board);
             solver.Solve(); */
             ForwardChecker solver2 = new(board);
-            UniqueBoardGenerator generator = new UniqueBoardGenerator(board);
-            generator.GenerateUniqueSolution(16);
-           // board.SetQueue();
-           // solver2.Solve();
+            UniqueBoardGenerator generator = new UniqueBoardGenerator();
+            generator.GenerateUniqueSolution(16, board); 
+            //board.SetQueue();
+            //solver2.Solve(new Cell((-1,-1),-1));
             Console.WriteLine($"{(DateTime.Now - launchTime).Seconds} seconds {(DateTime.Now - launchTime).Milliseconds} milliseconds");
             solver2.PrintBoard(board);
             Console.ReadLine(); 
         }
     }
 }
+
+/* 0 9 0 13 0 6 3 0 14 12 0 8 0 0 0 16
+0 10 3 0 0 13 9 8 16 0 0 4 6 2 1 0
+15 7 16 0 0 12 5 4 6 0 1 0 11 0 9 0
+0 5 0 0 1 7 16 2 0 0 10 0 8 14 0 12
+10 6 12 9 5 0 0 3 4 0 8 0 16 0 0 7
+0 0 5 0 0 1 7 11 9 3 0 16 10 0 8 0
+0 11 0 0 0 0 0 0 12 5 0 0 14 15 0 0
+16 3 7 15 0 0 8 0 0 0 14 11 0 0 2 9
+0 0 15 0 12 8 6 0 3 0 0 10 4 11 0 1
+14 0 10 3 0 2 11 1 5 9 0 6 15 0 0 8
+9 0 1 11 4 0 0 7 2 8 15 12 0 6 16 0
+7 8 6 0 0 16 0 0 13 11 0 0 2 9 0 14
+3 12 4 0 2 0 1 16 0 0 13 0 0 0 15 11
+11 16 0 0 0 15 12 14 0 0 0 2 1 4 7 6
+0 0 0 7 8 11 4 6 0 16 0 5 0 3 0 0
+0 0 0 0 0 0 13 10 11 4 9 15 0 0 5 2 */

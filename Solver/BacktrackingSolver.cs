@@ -10,15 +10,17 @@ namespace Sudoku_Solver_NEA
     {
         public Board Board { get; private set; }
         public List<Cell> VisitedCells { get; private set; }
+        public Cell MostRecentlyChangedCell { get; private set; }
         public BacktrackingSolver(Board board)
         {
             Board = board;
             VisitedCells = new List<Cell>();
+            MostRecentlyChangedCell = null;
         }
 
         public virtual bool Solve()
         {
-            if (CheckInvalid())
+            if (CheckInvalid(MostRecentlyChangedCell))
             {
                 return false;
             }
@@ -27,7 +29,7 @@ namespace Sudoku_Solver_NEA
                 PrintBoard(Board);
                 return true;
             }
-            Cell node = new Cell((-1, -1), -1);   // new arbitrary cell to be assigned to
+            Cell node = null;   // new arbitrary cell to be assigned to
             for (int i = 0; i < Board.VariableNodes.Count; i++)
             {
                 if (Board.VariableNodes[i].Entry == 0)   // cell which is currently empty + has no value
@@ -36,15 +38,19 @@ namespace Sudoku_Solver_NEA
                     break;
                 }
             }
-            for (int i=1; i<=Board.Dimensions; i++)
+            if (node != null)
             {
-                node.ChangeCellValue(i);   // sets board cell equal to a value and performs backtracking tree traversal with this value
-                if (Solve())  // recursive loop - if the series of board cell changes leads to a solution, return true
+                for (int i = 1; i <= Board.Dimensions; i++)
                 {
-                    return true;
+                    node.ChangeCellValue(i);   // sets board cell equal to a value and performs backtracking tree traversal with this value
+                    ChangeMostRecentCell(node);
+                    if (Solve())  // recursive loop - if the series of board cell changes leads to a solution, return true
+                    {
+                        return true;
+                    }
                 }
+                node.ChangeCellValue(0);  // backtracking back up the tree - resetting the most recently edited cell
             }
-            node.ChangeCellValue(0);  // backtracking back up the tree - resetting the most recently edited cell
             return false;
         }
 
@@ -60,7 +66,23 @@ namespace Sudoku_Solver_NEA
             return true;
         }
 
-        public bool CheckInvalid()
+        public bool CheckInvalid(Cell cell)
+        {
+            if (cell == null)
+            {
+                return false;
+            }
+            foreach (Cell connectedNode in Board.AdjacencyList[cell])
+            {
+                if (connectedNode.Entry == cell.Entry)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool CheckInvalidFull()
         {
             foreach (KeyValuePair<Cell, List<Cell>> link in Board.AdjacencyList)
             {
@@ -89,7 +111,12 @@ namespace Sudoku_Solver_NEA
                 }
                 Console.WriteLine();
             }
-            Console.WriteLine(); 
+            Console.WriteLine();
+        }
+
+        public void ChangeMostRecentCell(Cell cell)
+        {
+            MostRecentlyChangedCell = cell;
         }
     }
 }
