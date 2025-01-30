@@ -17,13 +17,6 @@ namespace Sudoku_Solver_NEA
             Occupied = 0;
         }
 
-        private void SwapIndexes(int index1, int index2)
-        {
-            Cell temp = NodeArray[index1];  // creates temporary storage cell, then swaps the values at each index
-            NodeArray[index1] = NodeArray[index2];
-            NodeArray[index2] = temp;
-        }
-
         public void Enqueue(Cell cell)
         {
             if (Occupied == NodeArray.Length)
@@ -94,6 +87,13 @@ namespace Sudoku_Solver_NEA
                     }
                 }
             }
+        }
+
+        private void SwapIndexes(int index1, int index2)
+        {
+            Cell temp = NodeArray[index1];  // creates temporary storage cell, then swaps the values at each index
+            NodeArray[index1] = NodeArray[index2];
+            NodeArray[index2] = temp;
         }
     }
 }

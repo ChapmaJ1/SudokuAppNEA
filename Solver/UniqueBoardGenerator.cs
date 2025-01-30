@@ -15,10 +15,12 @@ namespace Sudoku_Solver_NEA
             MoveStack stack = new MoveStack(5);
             List<Cell> variableNodesCopy = new();
             Random random = new Random();
-            board.SetQueue();
+            board.InitialiseQueue();
             ForwardChecker solver = new ForwardChecker(board);
-            solver.Solve();
-            solver.PrintBoard(board);
+            if (solver.HasUniqueSolution())
+            {
+                return board;
+            }
             foreach (Cell cell in board.VariableNodes)
             {
                 variableNodesCopy.Add(cell);
@@ -33,7 +35,7 @@ namespace Sudoku_Solver_NEA
                 stack.Push(move);
                 randomCell.ChangeCellValue(0);
                 board.VariableNodes.Add(randomCell);
-                board.SetQueue();
+                board.InitialiseQueue();
                 solver.ChangeMostRecentCell(null);
                 bool unique = solver.HasUniqueSolution();
                 if (!unique)   // weird notation bc function returns true when board is not unique 
@@ -55,17 +57,6 @@ namespace Sudoku_Solver_NEA
             return board;
         }
 
-        private void RemoveDomains(Move move, Board board)
-        {
-            foreach (Cell cell in board.AdjacencyList[move.Cell])
-            {
-                if (cell.Domain.Contains(move.OldEntry))
-                {
-                    cell.Domain.Remove(move.OldEntry);
-                }
-            }
-        }
-
         private void AddDomains(Move move, Board board)
         {
             move.Cell.Domain.Add(move.OldEntry);
@@ -74,6 +65,16 @@ namespace Sudoku_Solver_NEA
                 if (!connectedNode.Domain.Contains(move.OldEntry))
                 {
                     connectedNode.Domain.Add(move.OldEntry);
+                }
+            }
+        }
+        private void RemoveDomains(Move move, Board board)
+        {
+            foreach (Cell cell in board.AdjacencyList[move.Cell])
+            {
+                if (cell.Domain.Contains(move.OldEntry))
+                {
+                    cell.Domain.Remove(move.OldEntry);
                 }
             }
         }

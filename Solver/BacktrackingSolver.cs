@@ -54,34 +54,6 @@ namespace Sudoku_Solver_NEA
             return false;
         }
 
-        public bool CheckFinished()
-        {
-            foreach (Cell node in Board.AdjacencyList.Keys)
-            {
-                if (node.Entry == 0)  // checks that the board has no empty values
-                {                     // validity of the board in terms of Sudoku constraints is guaranteed by the CheckInvalid() function
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public bool CheckInvalid(Cell cell)
-        {
-            if (cell == null)
-            {
-                return false;
-            }
-            foreach (Cell connectedNode in Board.AdjacencyList[cell])
-            {
-                if (connectedNode.Entry == cell.Entry)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         public bool CheckInvalidFull()
         {
             foreach (KeyValuePair<Cell, List<Cell>> link in Board.AdjacencyList)
@@ -97,13 +69,41 @@ namespace Sudoku_Solver_NEA
             return false;
         }
 
-        public void PrintBoard(Board board)
+        public bool CheckFinished()
+        {
+            foreach (Cell node in Board.AdjacencyList.Keys)
+            {
+                if (node.Entry == 0)  // checks that the board has no empty values
+                {                     // validity of the board in terms of Sudoku constraints is guaranteed by the CheckInvalid() function
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        protected bool CheckInvalid(Cell cell)
+        {
+            if (cell == null)
+            {
+                return false;
+            }
+            foreach (Cell connectedNode in Board.AdjacencyList[cell])
+            {
+                if (connectedNode.Entry == cell.Entry)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        protected void PrintBoard(Board board)
         {
             foreach (Cell cell in board.AdjacencyList.Keys)
             {
-                board.BoardSketch[cell.Position.Item1, cell.Position.Item2] = cell.Entry;   // updates board sketch to reflect the numerical entries of the cell objects
+                board.BoardSketch[cell.Position.Item1, cell.Position.Item2] = cell.Entry.ToString();   // updates board sketch to reflect the numerical entries of the cell objects
             }                                                                               // board sketch can then be used for output
-            for (int i=0; i<board.BoardSketch.GetLength(0); i++)
+          /*  for (int i=0; i<board.BoardSketch.GetLength(0); i++)
             {
                 for (int j=0; j<board.BoardSketch.GetLength(0); j++)
                 {
@@ -111,10 +111,10 @@ namespace Sudoku_Solver_NEA
                 }
                 Console.WriteLine();
             }
-            Console.WriteLine();
+            Console.WriteLine(); */
         }
 
-        public void ChangeMostRecentCell(Cell cell)
+        internal void ChangeMostRecentCell(Cell cell)
         {
             MostRecentlyChangedCell = cell;
         }

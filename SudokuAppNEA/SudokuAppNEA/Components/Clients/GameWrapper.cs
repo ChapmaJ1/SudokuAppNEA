@@ -1,8 +1,9 @@
-﻿using Sudoku_Solver_NEA;
+﻿using Microsoft.AspNetCore.Components;
+using Sudoku_Solver_NEA;
 
 namespace SudokuAppNEA.Components.Clients
 {
-    public class GameWrapper  // for any shared methods between Game and LargerGame to prevent redundancy
+    public class GameWrapper : ComponentBase // splits the frontend + backend functionality for enhanced modularity
     {
         internal Board Board { get; private set; }
         internal int[,] CorrectNumbers { get; private set; }
@@ -58,7 +59,7 @@ namespace SudokuAppNEA.Components.Clients
                     return cell;
                 }
             }
-            return new Cell((100, 100), 100);   // represents fixed node that is selected
+            return null!;   // represents fixed node that is selected
         }
 
         internal string DisplayCell(int row, int column)

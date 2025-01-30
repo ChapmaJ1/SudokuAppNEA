@@ -21,17 +21,17 @@ namespace Sudoku_Solver_NEA
             NoteEntries = new List<int>();  // the "note" values of the cell assigned by the user while playing
         }
 
+        public void ChangeCellValue(int value)
+        {
+            Entry = value;
+        }
+
         internal void InitialiseDomain(int dimensions) // potential values that the cell could take without violating constraints. initially every number is possible
         {
             for (int i=1; i<=dimensions; i++)
             {
                 Domain.Add(i);
             }
-        }
-
-        public void ChangeCellValue(int value)
-        {
-            Entry = value;
         }
     }
 }

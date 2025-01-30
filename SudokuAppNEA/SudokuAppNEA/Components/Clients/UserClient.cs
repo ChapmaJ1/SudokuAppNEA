@@ -1,8 +1,8 @@
 ﻿using CommonLibrary;
-using SQLDatabase;
 using Sudoku_Solver_NEA;
-using SudokuAppNEA.Components.Models;
+//using SudokuAppNEA.Components.Models;
 using SudokuAppNEA.Components.Pages;
+using SharedLibrary;
 
 namespace SudokuAppNEA.Components.Clients
 {
@@ -16,29 +16,21 @@ namespace SudokuAppNEA.Components.Clients
 
         public List<Board> FetchedBoards = new List<Board>();
 
-        public void AddEntry(string difficulty, int mistakeCount, string completionTime)
+        public void AddEntry(int score, string difficulty, int mistakeCount, string completionTime)
         {
-            Entry = new DatabaseEntry
-            {
-                Score = 0,//GenerateScore(difficulty),
-                CalendarDay = DateOnly.FromDateTime(DateTime.Now).ToString(),
-                Difficulty = difficulty,
-                CompletionTime = completionTime,
-                Mistakes = mistakeCount,
-                UserId = User!.Id
-            };
+            Entry = new DatabaseEntry(score, DateOnly.FromDateTime(DateTime.Now).ToString(), difficulty, completionTime, mistakeCount, User!.Id);
         }
-        public void SetUser(User user)
+        internal void SetUser(User user)
         {
             User = user;
         }
 
-        public void SetMistakeDetection(string input)
+        internal void SetMistakeDetection(string input)
         {
             MistakeDetection = input;
         }
 
-        public void SetSaveScores(string input)
+        internal void SetSaveScores(string input)
         {
             SaveScores = input;
         }

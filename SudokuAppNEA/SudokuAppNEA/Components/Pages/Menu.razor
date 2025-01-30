@@ -6,13 +6,13 @@
 
 <div class="menu-text">
     <button class="btn-primary" @onclick=GoToDifficulty>New Game</button>
-    <button class="btn-primary" @onclick=GoToDifficulty>Continue Game</button>
+    <button class="btn-primary" @onclick=GoToContinue>Continue Game</button>
     <button class="btn-primary" @onclick=GoToLeaderboard>Leaderboard</button>
     <button class="btn-primary" @onclick=GoToSettings>Settings/Stats</button>
 </div>
 
 @code {
-    private DBCaller? DatabaseCaller = new DBCaller();
+    private DBCaller? _databaseCaller = new DBCaller();
 
     protected override void OnInitialized()
     {
@@ -21,7 +21,7 @@
 
     private void LoadUserSettings()
     {
-        (string, string) settings = DatabaseCaller!.GetUserSettings(UserClient.User!.Id);  // gets user settings from database
+        (string, string) settings = _databaseCaller!.GetUserSettings(UserClient.User!.Id);  // gets user settings from database
         UserClient.SetMistakeDetection(settings.Item1);
         UserClient.SetSaveScores(settings.Item2);   // records settings in UserClient object
     }
@@ -29,6 +29,11 @@
     private void GoToDifficulty()
     {
         NavigationManager.NavigateTo("/difficulty");
+    }
+
+    private void GoToContinue()
+    {
+        NavigationManager.NavigateTo("/game/continue");
     }
 
     private void GoToLeaderboard()

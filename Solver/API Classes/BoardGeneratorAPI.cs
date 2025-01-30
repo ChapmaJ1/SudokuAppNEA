@@ -36,27 +36,13 @@ namespace Sudoku_Solver_NEA
             return boards;
         }
 
-        private Board ConvertToBoard(ResponseData data, int index)
-        {
-            int[][] twoDimensionalSketch = data.NewBoard.Grids[index].Value;  // represents the board sketch as a jagged array
-            int[,] boardSketch = new int[9, 9];
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    boardSketch[i, j] = twoDimensionalSketch[i][j];  // converts the jagged array API output into a 2D array
-                }
-            }
-            return new Board(data.NewBoard.Grids[index].Difficulty, boardSketch, 9);  // creates a board object using the API data
-        }
-
         public Board GenerateUniqueSolution(int dimensions, Board board)
         {
             ForwardChecker solver = new ForwardChecker(board);
             bool unique = false;
             while (unique == false)
             {
-                board.SetQueue();
+                board.InitialiseQueue();
                 solver!.HasUniqueSolution();
                 if (board.SolutionCount >= 2)  // if board does not have a unique solution, and hence is not a valid Sudoku
                 {
@@ -67,7 +53,7 @@ namespace Sudoku_Solver_NEA
                             if (board.Solutions[0].BoardSketch[i, j] != board.Solutions[1].BoardSketch[i, j])  // a square which has a different value between the 2 solutions
                             {
                                 Cell cell = board.GetCellLocation(i, j);
-                                cell.ChangeCellValue(board.Solutions[0].BoardSketch[i, j]);
+                                cell.ChangeCellValue(Convert.ToInt32(board.Solutions[0].BoardSketch[i, j]));
                                 i = dimensions;
                                 j = dimensions;
                                 board.VariableNodes.Remove(cell);  // sets the cell to be fixed, taking on the value from the first solution
@@ -85,6 +71,27 @@ namespace Sudoku_Solver_NEA
                 }
             }
             return board;
+        }
+
+        private Board ConvertToBoard(ResponseData data, int index)
+        {
+            int[][] twoDimensionalSketch = data.NewBoard.Grids[index].Value;  // represents the board sketch as a jagged array
+            string[,] boardSketch = new string[9, 9];
+            for (int i = 0; i < 9; i++)
+            {
+                for (int j = 0; j < 9; j++)
+                {
+                    if (twoDimensionalSketch[i][j] == 0)
+                    {
+                        boardSketch[i, j] = "0v";
+                    }
+                    else
+                    {
+                        boardSketch[i, j] = twoDimensionalSketch[i][j].ToString();  // converts the jagged array API output into a 2D array
+                    }
+                }
+            }
+            return new Board(data.NewBoard.Grids[index].Difficulty, boardSketch, 9);  // creates a board object using the API data
         }
     }
 }   

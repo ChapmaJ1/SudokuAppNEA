@@ -3,21 +3,21 @@
 
 <h1 style="transform: translate(-50px, 0px)">Custom Board</h1>
 
-@if (sketch == null)
+@if (_sketch == null)
 {
     <h1 style="margin-top: 100px;">Loading...</h1>
 }
 else
 {
-    <div class="sudoku-container-custom-@containerType">
-        @for (int row = 0; row < dimensions; row++)
+    <div class="sudoku-container-custom-@_containerType">
+        @for (int row = 0; row < _dimensions; row++)
         {
             <div class="sudoku-column-large">
-                @for (int column = 0; column < dimensions; column++)
+                @for (int column = 0; column < _dimensions; column++)
                 {
                     int columnTemp = column; // if row, column directly used, OnSelected) would be called
                     int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
-                    <button class="sudoku-cell-@cellType" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
+                    <button class="sudoku-cell-@_cellType" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
                 }
             </div>
         }
@@ -30,17 +30,17 @@ else
         <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
     </div>
 
-    <div class="number-buttons-custom-container-@containerType">
-        @for (int i = 1; i <= dimensions; i++)
+    <div class="number-buttons-custom-container-@_containerType">
+        @for (int i = 1; i <= _dimensions; i++)
         {
             int temp = i; // if i directly used, ChangeCellValue(10) would be called for all button clicks
-            <button class="button-cell-@cellType" @onclick="() => ChangeCellValue(temp)">@i</button>
+            <button class="button-cell-@_cellType" @onclick="() => ChangeCellValue(temp)">@i</button>
         }
-        <button class="button-cell-@cellType" @onclick="() => EraseValue()">Erase</button>
+        <button class="button-cell-@_cellType" @onclick="() => EraseValue()">Erase</button>
     </div>
 
-    <div class="center-text-container-@containerType">
-        @if (solvable == false)
+    <div class="center-text-container-@_containerType">
+        @if (_solvable == false)
         {
             <h3>Unsolvable Board Input</h3>
         }
@@ -50,45 +50,99 @@ else
 @code {
     [Parameter]
     public string? dimensionString { get; set;}
-    private int dimensions;
-    private string? containerType;
-    private string? cellType;
-    private string? numberType;
-    private int[,]? sketch;  // using array instead of board to create initial board sketch (from user input) to be solved
-    private Board? board;
-    private (int, int) selectedSquare;
-    private ForwardChecker? solver { get; set; }
-    private bool solvable = true;
+    private int _dimensions;
+    private string? _containerType;
+    private string? _cellType;
+    private string[,]? _sketch;  // using array instead of board to create initial board sketch (from user input) to be solved
+    private Board? _board;
+    private (int, int) _selectedSquare;
+    private bool _solvable = true;
 
     protected override void OnInitialized()
     {
-        dimensions = Convert.ToInt32(dimensionString);
-        if (dimensions == 25)
+        _dimensions = Convert.ToInt32(dimensionString);
+        if (_dimensions == 25)
         {
-            containerType = "large";
-            cellType = "large";
-            numberType = "large";
+            _containerType = "large";
+            _cellType = "large";
         }
-        else if (dimensions == 16)
+        else if (_dimensions == 16)
         {
-            containerType = "large";
-            cellType = "medium";
-            numberType = "medium";
+            _containerType = "large";
+            _cellType = "medium";
         }
         else
         {
-            containerType = "default";
-            cellType = "default";
-            numberType = "low";
+            _containerType = "default";
+            _cellType = "default";
         }
-        sketch = new int[dimensions, dimensions];
-        for (int i=0; i<dimensions; i++)
+        _sketch = new string[_dimensions, _dimensions];
+        for (int i=0; i<_dimensions; i++)
         {
-            for (int j=0; j<dimensions; j++)
+            for (int j=0; j<_dimensions; j++)
             {
-                sketch[i, j] = 0;   // initialises board sketch to an empty board
+                _sketch[i, j] = "0v";   // initialises board sketch to an empty _board
             }
         }
+    }
+
+    private void SolveBoard()
+    {
+        _board = new Board("", _sketch, _dimensions);
+        _board.InitialiseGraph();   // initialises the board, using the altered sketch, and solves
+        _board!.InitialiseQueue();
+        BacktrackingSolver _solver;
+        if (_dimensions == 25)
+        {
+            _solver = new Annealer(_board);
+        }
+        else
+        {
+            _solver = new ForwardChecker(_board);
+        }
+        if (_solver.CheckInvalidFull())  // if the board input by the user violates a constraint, and is hence unsolvable
+        {
+            _solvable = false;
+        }
+        else
+        {
+            _solver.Solve();
+        }
+    }
+
+    private string DisplayCell(int row, int column)
+    {
+        if (_sketch![row, column] != "0v")
+        {
+            return _sketch[row, column];
+        }
+        return "";
+        throw new InvalidOperationException("Cell does not exist");
+    }
+
+    private void OnCellSelected(int row, int column)
+    {
+        _selectedSquare = ((row, column));   // selects location
+    }
+
+    private void ChangeCellValue(int number)
+    {
+        _sketch![_selectedSquare.Item1, _selectedSquare.Item2] = number.ToString();   // sets the value of a given board location to the desired number, and sets the cell to fixed
+    }
+
+    private void Reset()
+    {
+        for (int i = 0; i < _dimensions; i++)
+        {
+            for (int j = 0; j < _dimensions; j++)
+            {
+                _sketch![i, j] = "0v";  // sketch not directly bound to board object - board can be reset
+            }                      // and a completely new one can be input + solved as required
+        }
+    }
+    private void EraseValue()
+    {
+        _sketch![_selectedSquare.Item1, _selectedSquare.Item2] = "0v";  // sets the cell value to 0 and reinstates it as a variable node
     }
 
     private void NavigateToDifficulty()
@@ -99,65 +153,5 @@ else
     private void NavigateToMenu()
     {
         NavigationManager.NavigateTo("/menu");
-    }
-
-    private string DisplayCell(int row, int column)
-    {
-        if (sketch![row,column] != 0)
-        {
-            return sketch[row,column].ToString();
-        }
-        return "";
-        throw new InvalidOperationException("Cell does not exist");
-    }
-
-    private void OnCellSelected(int row, int column)
-    {
-        selectedSquare = ((row, column));   // selects location
-    }
-
-    private void ChangeCellValue(int number)
-    {
-        sketch![selectedSquare.Item1, selectedSquare.Item2] = number;   // sets the value of a given board location to the desired number
-    }
-
-    private void SolveBoard()
-    {
-        board = new Board("", sketch, dimensions);
-        board.InitialiseGraph();   // initialises the board, using the altered sketch, and solves
-        board!.SetQueue();
-        BacktrackingSolver solver;
-        if (dimensions == 25)
-        {
-            solver = new Annealer(board);
-        }
-        else
-        {
-            solver = new ForwardChecker(board);
-        }
-        if (solver.CheckInvalidFull())  // if the board input by the user violates a constraint, and is hence unsolvable
-        {
-            solvable = false;
-        }
-        else
-        {
-            solver.Solve();
-        }
-    }
-
-    private void Reset()
-    {
-        for (int i=0; i<dimensions; i++)
-        {
-            for (int j=0; j<dimensions; j++)
-            {
-                sketch![i, j] = 0;  // sketch not directly bound to board object - board can be reset 
-            }                      // and a completely new one can be input + solved as required
-        }
-    }
-
-    private void EraseValue()
-    {
-        sketch![selectedSquare.Item1, selectedSquare.Item2] = 0;
     }
 }

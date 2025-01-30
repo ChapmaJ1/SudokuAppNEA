@@ -5,18 +5,18 @@
 <PageTitle>Home</PageTitle>
 
 <h1>Welcome!</h1>
-<h2>@message</h2>
+<h2>@_message</h2>
 
-<EditForm Model="@user" FormName="Login" OnValidSubmit="HandleSubmit">
+<EditForm Model="@_user" FormName="Login" OnValidSubmit="HandleSubmit">
     <DataAnnotationsValidator/>
     <div class="form-container">
         <div>
             <label class="form-label" for="username">Username:</label> 
-            <InputText id="username" @bind-Value="user!.Username" class="form-control" />
+            <InputText id="username" @bind-Value="_user!.Username" class="form-control" />
         </div>
         <div>
             <label class="form-label" for="password">Password:</label>
-            <InputText id="password" @bind-Value="user.Password" type="password" class="form-control" />
+            <InputText id="password" @bind-Value="_user.Password" type="password" class="form-control" />
         </div>
         <button class="btn-primary" type="submit" style="margin-top: 50px;">Submit</button>
         <button class="btn-primary" @onclick=CreateAccount>Create Account</button>
@@ -26,29 +26,29 @@
 @code
 {
     [SupplyParameterFromForm]
-    private User? user { get; set; } = new User();
-    private string? message;
-    private DBCaller DatabaseCaller = new DBCaller();
+    private User? _user { get; set; } = new User();
+    private string? _message;
+    private DBCaller _databaseCaller = new DBCaller();
 
     private void HandleSubmit()
     {
-        UserClient.SetUser(user!);
-        int userId = DatabaseCaller.FindUser(user!.Username, user.Password);  // find user in database if record exists, otherwise add a new user
+        UserClient.SetUser(_user!);
+        int userId = _databaseCaller.FindUser(_user!.Username, _user.Password);  // find user in database if record exists, otherwise add a new user
         if (userId != 0)
         {
-            user.SetId(userId);
+            _user.SetId(userId);
             GetUserSettings();
             NavigationManager.NavigateTo($"/menu");
         }
         else
         {
-            message = "Invalid Login Provided";
+            _message = "Invalid Login Provided";
         }
     }
 
     private void GetUserSettings()
     {
-        (string, string) settingsData = DatabaseCaller.GetUserSettings(UserClient.User!.Id);
+        (string, string) settingsData = _databaseCaller.GetUserSettings(UserClient.User!.Id);
         UserClient.SetMistakeDetection(settingsData.Item1);
         UserClient.SetSaveScores(settingsData.Item2);
     }

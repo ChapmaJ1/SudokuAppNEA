@@ -30,7 +30,7 @@ namespace Sudoku_Solver_NEA
             {
                 node.ChangeCellValue(orderedDomain[i].Item2);
                 List<(Cell,int)> removed = PruneValues(node.Entry, node);   // forward check, pruning the domain early
-                if (HasEmptyDomains())  // invalid board in the current state, so no point going deeper into backtracking
+                if (EmptyDomains)  // invalid board in the current state, so no point going deeper into backtracking
                 {
                     RestorePrunedValues(removed);  // reverts domain restrictions
                     continue;   // moves onto the next number in the iteration (the "branch" of the tree to the side)
@@ -45,80 +45,6 @@ namespace Sudoku_Solver_NEA
             node.ChangeCellValue(0);  // backtracking up the tree - resetting the most recently edited cell
             Board.Queue.Enqueue(node);  // adding the reset node back into the priority queue
             return false;
-        }
-
-        private List<(Cell,int)> PruneValues(int number, Cell node)
-        {
-            List<(Cell, int)> removedNumbers = new();
-            List<Cell> changeNodes = Board.AdjacencyList[node];   // all cells that the given node is linked to
-            foreach (Cell changeNode in changeNodes)
-            {
-                if (changeNode.Domain.Contains(number))   // if the current value of the node is in the domain of a connected cell
-                {
-                    changeNode.Domain.Remove(number);  // remove the value of the connected node from the cell
-                    removedNumbers.Add((changeNode, number));  // records the cell which the number has been removed from for later use
-                    if (changeNode.Domain.Count == 0)
-                    {
-                        EmptyDomains = true;
-                    }
-                }
-            }
-            return removedNumbers;
-        }
-
-        private void RestorePrunedValues(List<(Cell,int)> removedNumbers)
-        {
-            foreach ((Cell,int) pair in removedNumbers)  // recorded cell + number combination
-            {
-                if (!pair.Item1.Domain.Contains(pair.Item2)) // if the domain does not already contain the number
-                {
-                    pair.Item1.Domain.Add(pair.Item2);  // adds the removed number back into the domain
-                } 
-            }
-            EmptyDomains = false;
-        }
-
-        private Cell GetMRV()
-        {
-            Cell MRVCell = Board.Queue.Dequeue();
-            return MRVCell;
-        }
-
-        private List<(int,int)> SortByLCV(Cell cell)  
-        {
-            if (cell.Domain.Count == 1)
-            {
-                return new List<(int, int)> { (0, cell.Domain[0]) };
-            } 
-            List<(int,int)> orderedDomain = new();
-            foreach (int number in cell.Domain)
-            {
-                int impact = 0;
-                foreach (Cell connectedNode in Board.AdjacencyList[cell])
-                {
-                    if (connectedNode.Domain.Contains(number))  // records how many cells that are connected to a particular node have a specific number in their domain
-                    {
-                        impact++;
-                    }
-                }
-                orderedDomain.Add((impact, number)); 
-            }
-            orderedDomain.Sort();    // sorts by increasing impact - lowest impact tested first
-            return orderedDomain;
-        }
-        
-
-        internal bool HasEmptyDomains()
-        {
-          /*    foreach (Cell cell in Board.AdjacencyList.Keys)
-              {
-                  if (cell.Domain.Count == 0)  // if a certain cell has no values that it could take on without violating a Sudoku constraint
-                  {
-                      return true;
-                  } 
-              }
-              return false;  */
-              return EmptyDomains;
         }
 
         public bool HasUniqueSolution()  // does not use a queue as the queue would have to be reset every time the board is checked
@@ -141,7 +67,7 @@ namespace Sudoku_Solver_NEA
             {
                 node.ChangeCellValue(orderedDomain[i].Item2);
                 List<(Cell,int)> removed = PruneValues(node.Entry, node); 
-                if (HasEmptyDomains())
+                if (EmptyDomains)
                 {
                     RestorePrunedValues(removed);
                     continue;
@@ -161,6 +87,66 @@ namespace Sudoku_Solver_NEA
             node.ChangeCellValue(0);
             Board.Queue.Enqueue(node);
             return false;
+        }
+
+        private List<(Cell, int)> PruneValues(int number, Cell node)
+        {
+            List<(Cell, int)> removedNumbers = new();
+            List<Cell> changeNodes = Board.AdjacencyList[node];   // all cells that the given node is linked to
+            foreach (Cell changeNode in changeNodes)
+            {
+                if (changeNode.Domain.Contains(number))   // if the current value of the node is in the domain of a connected cell
+                {
+                    changeNode.Domain.Remove(number);  // remove the value of the connected node from the cell
+                    removedNumbers.Add((changeNode, number));  // records the cell which the number has been removed from for later use
+                    if (changeNode.Domain.Count == 0)
+                    {
+                        EmptyDomains = true;
+                    }
+                }
+            }
+            return removedNumbers;
+        }
+
+        private void RestorePrunedValues(List<(Cell, int)> removedNumbers)
+        {
+            foreach ((Cell, int) pair in removedNumbers)  // recorded cell + number combination
+            {
+                if (!pair.Item1.Domain.Contains(pair.Item2)) // if the domain does not already contain the number
+                {
+                    pair.Item1.Domain.Add(pair.Item2);  // adds the removed number back into the domain
+                }
+            }
+            EmptyDomains = false;
+        }
+
+        private Cell GetMRV()
+        {
+            Cell MRVCell = Board.Queue.Dequeue();  // gets MRV cell based on highest priority (lowest domain count)
+            return MRVCell;
+        }
+
+        private List<(int, int)> SortByLCV(Cell cell)
+        {
+            if (cell.Domain.Count == 1)
+            {
+                return new List<(int, int)> { (0, cell.Domain[0]) };
+            }
+            List<(int, int)> orderedDomain = new();
+            foreach (int number in cell.Domain)
+            {
+                int impact = 0;
+                foreach (Cell connectedNode in Board.AdjacencyList[cell])
+                {
+                    if (connectedNode.Domain.Contains(number))  // records how many cells that are connected to a particular node have a specific number in their domain
+                    {
+                        impact++;
+                    }
+                }
+                orderedDomain.Add((impact, number));
+            }
+            orderedDomain.Sort();    // sorts by increasing impact - lowest impact tested first
+            return orderedDomain;
         }
     }
 }

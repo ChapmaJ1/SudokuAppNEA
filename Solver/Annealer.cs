@@ -9,11 +9,11 @@ namespace Sudoku_Solver_NEA
 {
     public class Annealer : BacktrackingSolver
     {
-        public MoveStack MoveStack { get; private set; }
+        public MoveStack Stack { get; private set; }
         public Dictionary<int, List<Cell>> BoxGroupings { get; private set; }
         public Annealer(Board board) : base(board)
         {
-            MoveStack = new MoveStack(100);
+            Stack = new MoveStack(100);
             BoxGroupings = new();
         }
 
@@ -22,9 +22,7 @@ namespace Sudoku_Solver_NEA
             InitialiseBoard();
             Random random = new Random();
             double initialTemperature = 40;   // JUSTIFY LATER
-            BacktrackingSolver solver = new(Board);
-            solver.PrintBoard(Board);
-            (Dictionary<Cell, List<Cell>>, int) conflictData = GetConflicts();
+            (Dictionary<Cell, List<Cell>>, int) conflictData = GetInitialConflicts();
             for (int i = 0; i < 1000000; i++)
             {
                 double temperature;
@@ -53,7 +51,7 @@ namespace Sudoku_Solver_NEA
                 conflictData.Item2 += changedConflicts.Item2; 
                 if (conflictData.Item2 == 0)
                 {
-                    solver.PrintBoard(Board);
+                    PrintBoard(Board);
                     break;
                 }
                 if (changedConflicts.Item2 > 0)  // if less than 0, always accept change
@@ -65,7 +63,7 @@ namespace Sudoku_Solver_NEA
                         conflictData.Item2 -= changedConflicts.Item2;
                         for (int j = 0; j < swapNumber * 2; j++)
                         {
-                            Move move = MoveStack.Pop();
+                            Move move = Stack.Pop();
                             move.Cell.ChangeCellValue(move.OldEntry);
                         }
                         ReinstateConflicts(changedConflicts.Item1, conflictData.Item1);
@@ -126,17 +124,7 @@ namespace Sudoku_Solver_NEA
             }
         }
 
-        private double CalculateAcceptanceProbability(int change, double temperature)  // uses Metropolis criterion
-        {
-            double probability = Math.Pow(Math.E, -(change / temperature));
-            if (probability > 1)  // overflow
-            {
-                return 0;
-            }
-            return Math.Round(probability, 3);
-        }
-
-        private (Dictionary<Cell, List<Cell>>, int) GetConflicts()
+            private (Dictionary<Cell, List<Cell>>, int) GetInitialConflicts()
         {
             Dictionary<Cell, List<Cell>> conflictedCells = new();
             foreach (KeyValuePair<Cell, List<Cell>> pair in Board.AdjacencyList)
@@ -151,41 +139,6 @@ namespace Sudoku_Solver_NEA
                 }
             }
             return (conflictedCells, conflictedCells.Values.Sum(l => l.Count));  // undirected graph, therefore each conflict will be counted twice: (cell1, cell2) and (cell2, cell1)
-        }
-
-        private List<Cell> ChangeRandomCells(int swapNumber)
-        {
-            List<Cell> swappedCells = new();
-            List<int> usedBoxes = new();
-            Random random = new Random();
-            for (int i = 0; i < swapNumber; i++)
-            {
-                int box = random.Next(Board.Dimensions);
-                while (BoxGroupings[box].Count < 2 || usedBoxes.Contains(box))
-                {
-                    box = random.Next(Board.Dimensions);
-                }
-                usedBoxes.Add(box);
-                List<Cell> boxCells = BoxGroupings[box];
-                int firstRandomCell = random.Next(boxCells.Count);
-                int secondRandomCell = random.Next(boxCells.Count);
-                while (secondRandomCell == firstRandomCell)
-                {
-                    secondRandomCell = random.Next(boxCells.Count);
-                }
-                MoveStack.Push(new Move(boxCells[firstRandomCell], boxCells[firstRandomCell].Entry));
-                MoveStack.Push(new Move(boxCells[secondRandomCell], boxCells[secondRandomCell].Entry));
-                if (boxCells[firstRandomCell].Entry == boxCells[secondRandomCell].Entry)
-                {
-                    Console.WriteLine("Test");
-                }
-                int tempEntry = boxCells[firstRandomCell].Entry;
-                boxCells[firstRandomCell].ChangeCellValue(boxCells[secondRandomCell].Entry);
-                boxCells[secondRandomCell].ChangeCellValue(tempEntry);
-                swappedCells.Add(boxCells[firstRandomCell]);
-                swappedCells.Add(boxCells[secondRandomCell]);
-            }
-            return swappedCells;
         }
 
         private (List<(Cell, Cell, int)>, int) UpdateConflicts((Dictionary<Cell, List<Cell>>, int) oldConflictData, List<Cell> changedCells)
@@ -253,6 +206,51 @@ namespace Sudoku_Solver_NEA
                     conflictData[conflictChange.Item2].Remove(conflictChange.Item1);
                 }
             }
+        }
+
+        private List<Cell> ChangeRandomCells(int swapNumber)
+        {
+            List<Cell> swappedCells = new();
+            List<int> usedBoxes = new();
+            Random random = new Random();
+            for (int i = 0; i < swapNumber; i++)
+            {
+                int box = random.Next(Board.Dimensions);
+                while (BoxGroupings[box].Count < 2 || usedBoxes.Contains(box))
+                {
+                    box = random.Next(Board.Dimensions);
+                }
+                usedBoxes.Add(box);
+                List<Cell> boxCells = BoxGroupings[box];
+                int firstRandomCell = random.Next(boxCells.Count);
+                int secondRandomCell = random.Next(boxCells.Count);
+                while (secondRandomCell == firstRandomCell)
+                {
+                    secondRandomCell = random.Next(boxCells.Count);
+                }
+                Stack.Push(new Move(boxCells[firstRandomCell], boxCells[firstRandomCell].Entry));
+                Stack.Push(new Move(boxCells[secondRandomCell], boxCells[secondRandomCell].Entry));
+                if (boxCells[firstRandomCell].Entry == boxCells[secondRandomCell].Entry)
+                {
+                    Console.WriteLine("Test");
+                }
+                int tempEntry = boxCells[firstRandomCell].Entry;
+                boxCells[firstRandomCell].ChangeCellValue(boxCells[secondRandomCell].Entry);
+                boxCells[secondRandomCell].ChangeCellValue(tempEntry);
+                swappedCells.Add(boxCells[firstRandomCell]);
+                swappedCells.Add(boxCells[secondRandomCell]);
+            }
+            return swappedCells;
+        }
+
+        private double CalculateAcceptanceProbability(int change, double temperature)  // uses Metropolis criterion
+        {
+            double probability = Math.Pow(Math.E, -(change / temperature));
+            if (probability > 1)  // overflow
+            {
+                return 0;
+            }
+            return Math.Round(probability, 3);
         }
     }
 }

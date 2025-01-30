@@ -28,12 +28,12 @@ namespace Sudoku_Solver_NEA
                              { 6,0,2,4,5,0,8,7,9 },
                              { 0,0,0,7,0,0,4,2,1 },
                              { 7,8,0,2,1,0,6,0,0} };    */
-            int[,] boardSketch = new int[16, 16];
+            string[,] boardSketch = new string[16, 16];
             for (int i = 0; i<boardSketch.GetLength(0); i++)
             {
                 for (int j=0; j<boardSketch.GetLength(0); j++)
                 {
-                    boardSketch[i, j] = 0;
+                    boardSketch[i, j] = "0v";
                 }
             }  
             Board board = new Board("Hard", boardSketch, boardSketch.GetLength(0));
@@ -89,7 +89,8 @@ namespace Sudoku_Solver_NEA
             //board.SetQueue();
             //solver2.Solve(new Cell((-1,-1),-1));
             Console.WriteLine($"{(DateTime.Now - launchTime).Seconds} seconds {(DateTime.Now - launchTime).Milliseconds} milliseconds");
-            solver2.PrintBoard(board);
+            //solver2.PrintBoard(board);
+            Console.WriteLine("😊😊");
             Console.ReadLine(); 
         }
     }

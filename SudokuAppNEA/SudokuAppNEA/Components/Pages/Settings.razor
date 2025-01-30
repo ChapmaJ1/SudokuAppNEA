@@ -5,66 +5,66 @@
 <h1>Settings + Personal Statistics</h1>
 
 <div class="form-container">
-    <button class="btn-primary" @onclick=ChangeMistakeDetection>Mistake Detection: @mistakeDetection</button>
-    <button class="btn-primary" @onclick=ChangeScoreSaving>Save Scores To Leaderboard: @saveScores</button>
+    <button class="btn-primary" @onclick=ChangeMistakeDetection>Mistake Detection: @_mistakeDetection</button>
+    <button class="btn-primary" @onclick=ChangeScoreSaving>Save Scores To Leaderboard: @_saveScores</button>
 </div>
 
 <div class="stats-container">
-    <h2>Average Mistakes: @stats![0]</h2>
-    <h2>Average Score: @stats![1]</h2>
-    <h2>Average Time: @stats![2]</h2>
+    <h2>Average Mistakes: @_stats![0]</h2>
+    <h2>Average Score: @_stats![1]</h2>
+    <h2>Average Time: @_stats![2]</h2>
     <button class="btn-primary" @onclick=SaveSettings>Save And Return To Menu</button>
 </div>
 
 @code {
-    private List<string>? stats;
-    private string? mistakeDetection;
-    private string? saveScores;
-    private DBCaller? DatabaseCaller = new DBCaller();
+    private List<string>? _stats;
+    private string? _mistakeDetection;
+    private string? _saveScores;
+    private DBCaller? _databaseCaller = new DBCaller();
 
     protected override void OnInitialized()
     {
-        mistakeDetection = UserClient.MistakeDetection;
-        saveScores = UserClient.SaveScores;
-        GetUserStats();  // fetches user stats
-        if (stats!.Count == 0)  // if user has no previously played boards
+        _mistakeDetection = UserClient.MistakeDetection;
+        _saveScores = UserClient.SaveScores;
+        GetUserStats();  // fetches user _stats
+        if (_stats!.Count == 0)  // if user has no previously played boards
         {
-            stats = new List<string>() { "N/A", "N/A", "N/A" };
+            _stats = new List<string>() { "N/A", "N/A", "N/A" };
         }
     }
 
     private void ChangeMistakeDetection() // changes frontend display for mistake detection
     {
-        if (mistakeDetection == "On")
+        if (_mistakeDetection == "On")
         {
-            mistakeDetection = "Off";
+            _mistakeDetection = "Off";
         }
         else
         {
-            mistakeDetection = "On";
+            _mistakeDetection = "On";
         }
     }
 
     private void ChangeScoreSaving() // changes frontend display for score saving
     {
-        if (saveScores == "On")
+        if (_saveScores == "On")
         {
-            saveScores = "Off";
+            _saveScores = "Off";
         }
         else
         {
-            saveScores = "On";
+            _saveScores = "On";
         }
     }
 
     private void SaveSettings()
     {
-        DatabaseCaller!.SaveUserSettings(mistakeDetection!, saveScores!, UserClient.User!.Id);  // updates user settings according to their final choices
+        _databaseCaller!.SaveUserSettings(_mistakeDetection!, _saveScores!, UserClient.User!.Id);  // updates user settings according to their final choices
         NavigationManager.NavigateTo("/menu");  // takes user back to menu
     }
 
     private void GetUserStats()
     {
-        stats = DatabaseCaller!.GetUserStats(UserClient.User!.Id);
+        _stats = _databaseCaller!.GetUserStats(UserClient.User!.Id);
     }
 }

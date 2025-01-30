@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 @inject UserClient UserClient
+@inherits GameWrapper
 
 <h1>Game</h1>
 
@@ -44,8 +45,7 @@ else
     <div class="game-btn-container-left-@containerType">
         <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
         <button class="btn-primary" @onclick=CheckBoard>Check Board</button>
-        <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
-        <button class="btn-primary" @onclick=SaveBoard>Save Board</button>
+        <button class="btn-primary" @onclick=SaveBoard>Save + Menu</button>
     </div>
 
     <div class="game-btn-container-right-@containerType">
@@ -74,13 +74,13 @@ else
     private string? buttonType;
     private Cell? selectedCell;
     private Board? board;
-    private Board? solution;
     private ForwardChecker? solver;
     private int[,]? correctNumbers;
-    private string menuUrl = "/menu";
     private bool solved;
     private bool userCompleted = false;
     private DateTime launchTime;
+    private int minuteDelay = 0;
+    private int secondDelay = 0;
     private int mistakeCount;
     private int hintCount;
     private string noteTaking = "Off";
@@ -90,11 +90,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        GetDifficulty();
+        if (difficulty != "continue")
+        {
+            GetDifficulty();
+        }
         await InitialiseBoardAndSolver();  // asynchronous method for API call
         SetFrontendValues();
         GameWrapper = new GameWrapper(board!, correctNumbers!);
-        launchTime = DateTime.Now;
+        launchTime = DateTime.Now.Add(new TimeSpan(0, minuteDelay, secondDelay));
         while (solved == false)  // re-render the page every second while the board is not solved
         {                        // this is required to update the timer to reflect real-time
             await Task.Delay(1000);
@@ -102,51 +105,142 @@ else
         }
     }
 
-    private void NavigateToMenu()
-    {
-        NavigationManager.NavigateTo(menuUrl);
-    }
-
-    private void SetFrontendValues()
-    {
-        if (dimensions == 9)
-        {
-            containerType = "default";
-            cellType = "default";
-            buttonType = "default";
-        }
-        else
-        {
-            containerType = "large";
-            buttonType = "large";
-            if (dimensions == 16)
-            {
-                cellType = "medium";
-            }
-            else
-            {
-                cellType = "large";
-            }
-        }
-    }
-
     private async Task InitialiseBoardAndSolver()
     {
         if (dimensions == 9)
         {
-            await GetBoard();
+            bool boardFetched = false;
+            while (boardFetched == false)
+            {
+                try
+                {
+                    await GetBoard();
+                    boardFetched = true;
+                }
+                catch (Exception)
+                {
+                    NavigateToMenu();
+                }
+            }
+        }
+        else if (difficulty == "continue")
+        {
+            string[,] boardSketch = LoadSavedBoard();
+            board = new Board(difficulty, boardSketch, dimensions);
         }
         else
         {
-            board = new Board(difficulty, new int[dimensions,dimensions], dimensions);
+            string[,] boardSketch = new string[dimensions, dimensions];
+            for (int i = 0; i < dimensions; i++)
+            {
+                for (int j = 0; j < dimensions; j++)
+                {
+                    boardSketch[i, j] = "0v";
+                }
+            }
+            board = new Board(difficulty, boardSketch, dimensions);
         }
         board!.InitialiseGraph();
+        RecordVariableNodesWithValues();
         MakeUniqueSolution(board);
         solver = new ForwardChecker(board);
-        board.SetQueue();  // initialise the board ready for solving
+        board.InitialiseQueue();  // initialise the board ready for solving
         correctNumbers = new int[dimensions, dimensions];
-        InitialiseCorrectNumbers(); 
+        InitialiseCorrectNumbers();
+        RevertVariableNodesWithValues();
         solved = false;
+    }
+
+    private void SaveBoard()
+    {
+        if (!solved)
+        {
+            string path = "SavedBoard.txt";
+            string[,] boardContents = new string[dimensions, dimensions];
+            int counter = 0;
+            foreach (Cell cell in board!.AdjacencyList.Keys)  // can do this as adjacency list is created in order of cell position
+            {
+                string saveData = "";
+                saveData += cell.Entry.ToString();
+                if (board.VariableNodes.Contains(cell))
+                {
+                    saveData += "v";
+                }
+                boardContents[counter / dimensions, counter % dimensions] = saveData;
+                counter++;
+            }
+            File.WriteAllText(path, string.Empty);   // clears all text from the file
+            using (StreamWriter streamWriter = new StreamWriter(path))
+            {
+                for (int i = 0; i < dimensions; i++)
+                {
+                    for (int j = 0; j < dimensions; j++)
+                    {
+                        streamWriter.Write(boardContents[i, j] + " ");
+                    }
+                    streamWriter.Write("\n");
+                }
+                streamWriter.WriteLine(difficulty);
+                streamWriter.WriteLine(FormatTime());
+                streamWriter.WriteLine(mistakeCount);
+                streamWriter.Write(hintCount);
+            }
+        }
+        NavigateToMenu();
+    }
+
+    private string[,] LoadSavedBoard()
+    {
+        string path = "SavedBoard.txt";
+        int counter = 0;
+        List<string[]> cellList = new();
+        using (StreamReader streamReader = new StreamReader(path))
+        {
+            while (!streamReader.EndOfStream)
+            {
+                string line = streamReader.ReadLine() ?? string.Empty;
+                string[] cells = line.Split(" ");
+                cellList.Add(cells);
+                counter++;
+            }
+        }
+        string[,] boardSketch = new string[counter - 4, counter - 4];
+        for (int i = 0; i < counter - 4; i++)
+        {
+            for (int j = 0; j < counter - 4; j++)
+            {
+                boardSketch[i, j] = cellList[i][j];
+            }
+        }
+        difficulty = cellList[counter - 4][0];
+        dimensions = counter - 4;
+        string[] timeDelay = cellList[counter - 3][0].Split(':');
+        minuteDelay = -1 * Convert.ToInt32(timeDelay[0]);
+        secondDelay = -1 * Convert.ToInt32(timeDelay[1]);
+        mistakeCount = Convert.ToInt32(cellList[counter - 2][0]);
+        hintCount = Convert.ToInt32(cellList[counter - 1][0]);
+        return boardSketch;
+    }
+
+    private void RecordVariableNodesWithValues()   // stores values of non-zero variable nodes in case of a continued/stored game
+    {
+        foreach (Cell cell in board!.VariableNodes)
+        {
+            if (cell.Entry != 0)
+            {
+                stack!.Push(new Move(cell, cell.Entry));
+                cell.ChangeCellValue(0);
+            }
+        }
+    }
+
+    private void RevertVariableNodesWithValues()
+    {
+        while (stack.Count > 0)
+        {
+            Move move = stack.Pop();
+            move.Cell.ChangeCellValue(move.OldEntry);
+        }
     }
 
     private async Task GetBoard()
@@ -167,7 +261,7 @@ else
         {
             List<Board> fetchedBoards = await generator.GenerateBoard();  // fetch board from API
             bool found = false;
-            for (int i=0; i<10; i++)  // 10 boards fetched to minimise the number of fetches needed, while also preventing fetching from taking too long
+            for (int i = 0; i < 10; i++)  // 10 boards fetched to minimise the number of fetches needed, while also preventing fetching from taking too long
             {
                 if (fetchedBoards[i].Difficulty == difficulty && found == false)
                 {
@@ -184,7 +278,7 @@ else
     }
 
     private void GetDifficulty()
-    {   
+    {
         if (difficulty == "16" || difficulty == "25")
         {
             dimensions = Convert.ToInt32(difficulty);
@@ -214,26 +308,40 @@ else
         board.InitialiseRemainingNumbers(board.GetFixedNodes());  // initialises unique board
     }
 
+
     private void InitialiseCorrectNumbers()
     {
-        for (int i=0; i<dimensions; i++)  // for constant time access later on
+        for (int i = 0; i < dimensions; i++)  // for constant time access later on
         {
-            for (int j=0; j<dimensions; j++)
+            for (int j = 0; j < dimensions; j++)
             {
-                correctNumbers![i, j] = board!.Solutions[0].BoardSketch[i, j];  // set correct numbers
+                correctNumbers![i, j] = Convert.ToInt32(board!.Solutions[0].BoardSketch[i, j]);  // set correct numbers
             }
         }
         board!.Reset();  // resets the board so that it is rendered in its initial state for the user
     }
 
-    private string GetBackgroundColour(int row, int column)
+    private void SetFrontendValues()
     {
-        return GameWrapper!.GetBackgroundColour(row, column);
-    }
-
-    private string DisplayCell(int row, int column)    // change to array method for linear time rendering?
-    {
-        return GameWrapper!.DisplayCell(row, column);
+        if (dimensions == 9)
+        {
+            containerType = "default";
+            cellType = "default";
+            buttonType = "default";
+        }
+        else
+        {
+            containerType = "large";
+            buttonType = "large";
+            if (dimensions == 16)
+            {
+                cellType = "medium";
+            }
+            else
+            {
+                cellType = "large";
+            }
+        }
     }
 
     private void OnCellSelected(int row, int column)   // also change to array method?
@@ -244,15 +352,25 @@ else
         }
     }
 
+    private string DisplayCell(int row, int column)    // change to array method for linear time rendering?
+    {
+        return GameWrapper!.DisplayCell(row, column);
+    }
+
     private void ChangeCellValue(int number)
     {
-        if (!(selectedCell!.Position.Item1 == 100))
+        if (selectedCell != null)
         {
             if (!solved)
             {
                 mistakeCount += GameWrapper!.ChangeCellValue(number, stack, selectedCell!, noteTaking);
             }
         }
+    }
+
+    private string GetBackgroundColour(int row, int column)
+    {
+        return GameWrapper!.GetBackgroundColour(row, column);
     }
 
     private void CheckBoard()
@@ -263,13 +381,13 @@ else
             solved = true;
             if (UserClient.SaveScores == "On")  // if the user's settings indicate that the score should be saved to the database
             {
-                UserClient.AddEntry(difficulty!, mistakeCount, FormatTime());
+                UserClient.AddEntry(GenerateScore(difficulty!), difficulty!, mistakeCount, FormatTime());
                 DatabaseCaller.AddEntry(UserClient.Entry!);  // creates a new record for the board entry + adds it to the database
             }
         }
     }
 
-    internal int GenerateScore(string difficulty)
+    private int GenerateScore(string difficulty)
     {
         TimeSpan completionTime = DateTime.Now - launchTime;
         int timeScoreSubtraction = (completionTime.Minutes * 60 + completionTime.Seconds);  // 1 score subtracted per second
@@ -331,7 +449,7 @@ else
         }
     }
 
-    internal void ChangeNotesFunctionality()  // changes frontend display + functionality when changing cell values
+    private void ChangeNotesFunctionality()  // changes frontend display + functionality when changing cell values
     {
         noteTaking = GameWrapper!.ChangeNotesFunctionality(noteTaking);
     }
@@ -341,58 +459,8 @@ else
         GameWrapper!.Undo(stack);
     }
 
-    private void SaveBoard()
+    private void NavigateToMenu()
     {
-        string path = "SavedBoard.txt";
-        string[,] boardContents = new string[dimensions, dimensions];
-        int counter = 0;
-        foreach (Cell cell in board!.AdjacencyList.Keys)  // can do this as adjacency list is created in order of cell position
-        {
-            string saveData = "";
-            saveData += cell.Entry.ToString();
-            if (board.VariableNodes.Contains(cell))
-            {
-                saveData += "v";
-            }
-            boardContents[counter / dimensions, counter % dimensions] = saveData;
-            counter++;
-        }
-        File.WriteAllText(path, string.Empty);   // clears all text from the file
-        using (StreamWriter streamWriter = new StreamWriter(path))
-        {
-            for (int i=0; i<dimensions; i++)
-            {
-                for (int j=0; j<dimensions; j++)
-                {
-                    streamWriter.Write(boardContents[i, j] + " ");
-                }
-                streamWriter.Write("\n");
-            }
-            streamWriter.WriteLine(difficulty);
-            streamWriter.WriteLine(FormatTime());
-        }
-        NavigateToMenu();
-    }
-
-    private void LoadSavedBoard()
-    {
-        string path = "SavedBoard.txt";
-        int counter = 0;
-        List<string[]> cellList = new();
-        using (StreamReader streamReader = new StreamReader(path))
-        {
-            while (!streamReader.EndOfStream)
-            {
-                string line = streamReader.ReadLine() ?? string.Empty;
-                string[] cells = line.Split(" ");
-                cellList.Add(cells);
-                counter++;
-            }
-        }
-        int[,] boardSketch = new int[counter - 2, counter - 2];
-        for (int i=0; i<counter-2; i++)
-        {
-            foreach (str)
-        }
+        NavigationManager.NavigateTo("/menu");
     }
 }
