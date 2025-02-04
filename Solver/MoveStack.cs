@@ -39,7 +39,7 @@ namespace Sudoku_Solver_NEA
                 Count--;  // records the decrease in moves being stored
                 return move;
             }
-            throw new IndexOutOfRangeException();
+            throw new InvalidOperationException();
         }
     }
 }

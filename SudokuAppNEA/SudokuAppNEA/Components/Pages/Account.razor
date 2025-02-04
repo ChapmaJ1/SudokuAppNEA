@@ -32,7 +32,7 @@
         int userId = _databaseCaller.AddUser(_user!.Username, _user.Password);  // find user in database if record exists, otherwise add a new user
         UserClient.User!.SetId(userId);
         SetUserSettings();
-        NavigationManager.NavigateTo($"/menu");
+        GoToHome();
     }
 
     private void SetUserSettings()

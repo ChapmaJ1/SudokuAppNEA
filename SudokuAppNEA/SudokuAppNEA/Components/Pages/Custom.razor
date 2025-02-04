@@ -89,7 +89,7 @@ else
     private void SolveBoard()
     {
         _board = new Board("", _sketch, _dimensions);
-        _board.InitialiseGraph();   // initialises the board, using the altered sketch, and solves
+        _board.InitialiseGraph();    // initialises the board, using the altered sketch, and solves
         _board!.InitialiseQueue();
         BacktrackingSolver _solver;
         if (_dimensions == 25)

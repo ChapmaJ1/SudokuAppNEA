@@ -8,8 +8,6 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore.Sqlite.Query.Internal;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using SharedLibrary;
-//using SQLDatabase.Models;
-//using SudokuAppNEA.Components.Models;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace CommonLibrary
@@ -177,7 +175,7 @@ namespace CommonLibrary
                 var dataReader = command.ExecuteReader();
                 if (dataReader.Read() && !dataReader.IsDBNull(0))   
                 {
-                    stats.Add(dataReader.GetInt32(0).ToString());
+                    stats.Add(Math.Round(dataReader.GetDouble(0),1).ToString());
                     stats.Add(dataReader.GetInt32(1).ToString());
                     stats.Add(GetAverageTime(userID));  // calculates the user's average time per board 
                 }

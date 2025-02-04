@@ -52,7 +52,7 @@ namespace Sudoku_Solver_NEA
             if (CheckInvalid(MostRecentlyChangedCell))
             {
                 return false;
-            }   // WHAT HAPPENS IF THERE ARE EMPTY DOMAINS IN STARTING STATE??
+            }
             if (CheckFinished())
             {
                 Board.SetSolutionCount(Board.SolutionCount + 1);
@@ -65,6 +65,7 @@ namespace Sudoku_Solver_NEA
             List<(int, int)> orderedDomain = SortByLCV(node);  // iterates through domains by increasing impact
             for (int i = 0; i < orderedDomain.Count; i++)
             {
+                ChangeMostRecentCell(node);
                 node.ChangeCellValue(orderedDomain[i].Item2);
                 List<(Cell,int)> removed = PruneValues(node.Entry, node); 
                 if (EmptyDomains)
@@ -72,7 +73,6 @@ namespace Sudoku_Solver_NEA
                     RestorePrunedValues(removed);
                     continue;
                 }
-                ChangeMostRecentCell(node);
                 if (HasUniqueSolution())
                 {
                     RestorePrunedValues(removed);  // reverts domain restrictions to allow exploration of a different tree branch

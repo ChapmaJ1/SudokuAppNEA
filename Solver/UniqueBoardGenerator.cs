@@ -17,10 +17,7 @@ namespace Sudoku_Solver_NEA
             Random random = new Random();
             board.InitialiseQueue();
             ForwardChecker solver = new ForwardChecker(board);
-            if (solver.HasUniqueSolution())
-            {
-                return board;
-            }
+            solver.Solve();
             foreach (Cell cell in board.VariableNodes)
             {
                 variableNodesCopy.Add(cell);
@@ -37,29 +34,38 @@ namespace Sudoku_Solver_NEA
                 board.VariableNodes.Add(randomCell);
                 board.InitialiseQueue();
                 solver.ChangeMostRecentCell(null);
-                bool unique = solver.HasUniqueSolution();
-                if (!unique)   // weird notation bc function returns true when board is not unique 
+                solver.HasUniqueSolution();
+                if (board.SolutionCount != 1)   // function returns true when solution is not unique, so this checks if the solution is not unique
                 {
                     Move previousMove = stack.Pop();
                     board.VariableNodes.Remove(randomCell);
                     previousMove.Cell.ChangeCellValue(previousMove.OldEntry);
                     board.Reset();
                     RemoveDomains(previousMove, board);
+                    board.InitialiseQueue();   // GROUP INTO FUNCTIONS
+                    board.SetSolutionCount(0);
+                    board.Solutions.Clear();
+                    solver.ChangeMostRecentCell(null);
+                    solver.HasUniqueSolution();  // gets single unique solution + stores it in solutions
                     validBoard = true;
                 }
-                else
+                else   // if solution not unique, keep increasing the number of variable nodes 
                 {
                     variableNodesCopy.Remove(randomCell);
                     board.SetSolutionCount(0);
                     board.Solutions.Clear();
+                    board.Reset();
                 }
             }
             return board;
         }
 
-        private void AddDomains(Move move, Board board)
+        private void AddDomains(Move move, Board board)   // faulty, could use CheckInvalidFull instead
         {
-            move.Cell.Domain.Add(move.OldEntry);
+            if (!move.Cell.Domain.Contains(move.OldEntry))
+            {
+                move.Cell.Domain.Add(move.OldEntry);
+            }
             foreach (Cell connectedNode in board.AdjacencyList[move.Cell])
             {
                 if (!connectedNode.Domain.Contains(move.OldEntry))
@@ -88,7 +94,7 @@ namespace Sudoku_Solver_NEA
             {
                 cap = 20;
             }
-            while (board.VariableNodes.Count <= cap)
+            while (board.VariableNodes.Count < cap)
             {
                 int randomCellIndex = random.Next(variableNodesCopy.Count);
                 Cell randomCell = variableNodesCopy[randomCellIndex];

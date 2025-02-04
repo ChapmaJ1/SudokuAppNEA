@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 @inject UserClient UserClient
-@inherits GameWrapper
 
 <h1>Game</h1>
 
@@ -86,7 +85,6 @@ else
     private string noteTaking = "Off";
     private MoveStack stack = new MoveStack(100);
     private DBCaller DatabaseCaller = new();
-    private GameWrapper? GameWrapper;
 
     protected override async Task OnInitializedAsync()
     {
@@ -96,7 +94,6 @@ else
         }
         await InitialiseBoardAndSolver();  // asynchronous method for API call
         SetFrontendValues();
-        GameWrapper = new GameWrapper(board!, correctNumbers!);
         launchTime = DateTime.Now.Add(new TimeSpan(0, minuteDelay, secondDelay));
         while (solved == false)  // re-render the page every second while the board is not solved
         {                        // this is required to update the timer to reflect real-time
@@ -142,9 +139,9 @@ else
         }
         board!.InitialiseGraph();
         RecordVariableNodesWithValues();
-        MakeUniqueSolution(board);
+        MakeUniqueSolution(board!);
         solver = new ForwardChecker(board);
-        board.InitialiseQueue();  // initialise the board ready for solving
+        board!.InitialiseQueue();  // initialise the board ready for solving
         correctNumbers = new int[dimensions, dimensions];
         InitialiseCorrectNumbers();
         RevertVariableNodesWithValues();
@@ -273,7 +270,7 @@ else
                 {
                     UserClient!.FetchedBoards.Add(fetchedBoards[i]);
                 }
-            }
+            } 
         }
     }
 
@@ -306,6 +303,19 @@ else
         }
         generator.GenerateUniqueSolution(dimensions, board);
         board.InitialiseRemainingNumbers(board.GetFixedNodes());  // initialises unique board
+    }
+
+
+    private void SolveBoard()
+    {
+        if (!solved)
+        {
+            foreach (Cell cell in board!.VariableNodes)
+            {
+                cell.ChangeCellValue(correctNumbers![cell.Position.Item1, cell.Position.Item2]); // sets the value of all cells to the correct value, ensuring they are rendered correctly
+            }
+        }
+        solved = true;
     }
 
 
@@ -348,29 +358,88 @@ else
     {
         if (!solved)
         {
-            selectedCell = GameWrapper!.OnCellSelected(row, column);
+            bool found = false;
+            foreach (Cell cell in board!.VariableNodes)  // finds the cell selected by the user
+            {
+                if (cell.Position.Item1 == row && cell.Position.Item2 == column)
+                {
+                    selectedCell = cell;
+                    found = true;
+                }
+            }
+            if (found == false)
+            {
+                selectedCell = null;
+            }
         }
     }
 
     private string DisplayCell(int row, int column)    // change to array method for linear time rendering?
     {
-        return GameWrapper!.DisplayCell(row, column);
+        foreach (Cell cell in board!.AdjacencyList.Keys)
+        {
+            if (cell.Position.Item1 == row && cell.Position.Item2 == column)
+            {
+                if (cell.NoteEntries.Count != 0)
+                {
+                    if (cell.Entry != 0)
+                    {
+                        return $"{cell.Entry.ToString()}  ({string.Join(",", cell.NoteEntries)})";
+                    }
+                    return $" ({string.Join(",", cell.NoteEntries)})";  // displays cell value if applicable + note entries
+                }
+                else
+                {
+                    if (cell.Entry != 0)
+                    {
+                        return cell.Entry.ToString();
+                    }
+                    return $" ";  // displays the cell value if it is non-empty, otherwise displays nothing
+                }
+            }
+        }
+        throw new InvalidOperationException("Cell does not exist");
     }
 
     private void ChangeCellValue(int number)
     {
-        if (selectedCell != null)
+        if (!solved)
         {
-            if (!solved)
+            if (noteTaking == "Off")
             {
-                mistakeCount += GameWrapper!.ChangeCellValue(number, stack, selectedCell!, noteTaking);
+                if (!(selectedCell == null))
+                {
+                    Move move = new Move(selectedCell, selectedCell!.Entry);
+                    stack.Push(move);  // records move + pushes it onto move stack
+                    selectedCell.ChangeCellValue(number);
+                    if (number != correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2])  // if the input number is incorrect
+                    {
+                        mistakeCount++;
+                    }
+                }
+            }
+            else  // note taking mode is on
+            {
+                if (selectedCell!.NoteEntries.Contains(number))  // if number already noted, remove it from the list
+                {
+                    selectedCell.NoteEntries.Remove(number);
+                }
+                else
+                {
+                    selectedCell.NoteEntries.Add(number);  // if number not already noted, add it to the list
+                }
             }
         }
     }
 
     private string GetBackgroundColour(int row, int column)
     {
-        return GameWrapper!.GetBackgroundColour(row, column);
+        string cellValue = DisplayCell(row, column);
+        if (cellValue[0].ToString() != " " && cellValue != correctNumbers![row, column].ToString())  // if cell is non-empty and is filled with an incorrect value
+        {
+            return "red";
+        }
+        return "white";
     }
 
     private void CheckBoard()
@@ -412,24 +481,20 @@ else
 
     private string FormatTime()
     {
-        return GameWrapper!.FormatTime(launchTime);
+        TimeSpan currentTime = DateTime.Now - launchTime;
+        if (currentTime.Seconds < 10)
+        {
+            return $"{currentTime.Minutes}:0{currentTime.Seconds}";  // eg formats as 7:06 instead of 7:6
+        }
+        return $"{currentTime.Minutes}:{currentTime.Seconds}";
     }
 
     private void EraseValue()
     {
-        if (!solved)
+        if (!solved && selectedCell != null)
         {
             selectedCell!.ChangeCellValue(0); 
         }
-    }
-
-    private void SolveBoard()
-    {
-        if (!solved)
-        {
-            GameWrapper!.SolveBoard();
-        }
-        solved = true;
     }
 
     private void Reset()
@@ -444,19 +509,43 @@ else
     {
         if (!solved)
         {
-            hintCount++;
-            GameWrapper!.GetHint();
+            List<Cell> emptyCells = new();
+            foreach (Cell cell in board!.VariableNodes)
+            {
+                if (cell.Entry == 0)
+                {
+                    emptyCells.Add(cell);  // adds all cells that currently have no value to a list
+                }
+            }
+            Random random = new Random();
+            int randomIndex = random.Next(emptyCells.Count);
+            Cell selectedCell = emptyCells[randomIndex];  // selects a random empty cell
+            selectedCell.ChangeCellValue(correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2]); // fills the random cell
         }
     }
 
     private void ChangeNotesFunctionality()  // changes frontend display + functionality when changing cell values
     {
-        noteTaking = GameWrapper!.ChangeNotesFunctionality(noteTaking);
+        if (noteTaking == "On")
+        {
+            noteTaking = "off";
+        }
+        else
+        {
+            noteTaking = "on";
+        }
     }
 
     private void Undo()
     {
-        GameWrapper!.Undo(stack);
+        try
+        {
+            Move move = stack.Pop();
+            move.Cell.ChangeCellValue(move.OldEntry);  // sets the given cell to its original entry before being changed
+        }
+        catch (InvalidOperationException)
+        {
+        }
     }
 
     private void NavigateToMenu()
