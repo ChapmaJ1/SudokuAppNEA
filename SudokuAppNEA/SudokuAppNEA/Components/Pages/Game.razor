@@ -243,11 +243,12 @@ else
     private async Task GetBoard()
     {
         bool generated = false;
-        BoardGeneratorAPI generator = new BoardGeneratorAPI();    // SAVE UNUSED BOARDS TO LIST FOR POTENTIAL LATER USE
+        BoardGeneratorAPI generator = new BoardGeneratorAPI();  
         foreach (Board savedBoard in UserClient!.FetchedBoards)
         {
-            if (savedBoard.Difficulty == difficulty)
+            if (savedBoard.Difficulty == difficulty)   // difficulty of a cached board matches the desired difficulty
             {
+                // sets the board to the cached board, removing it from the cache and eliminating the need for an API call
                 board = savedBoard;
                 UserClient!.FetchedBoards.Remove(savedBoard);
                 generated = true;
@@ -435,7 +436,8 @@ else
     private string GetBackgroundColour(int row, int column)
     {
         string cellValue = DisplayCell(row, column);
-        if (cellValue[0].ToString() != " " && cellValue != correctNumbers![row, column].ToString())  // if cell is non-empty and is filled with an incorrect value
+        string[] entriesSplit = cellValue.Split(' ');  // splits into separate parts - the entry + notes
+        if (cellValue[0].ToString() != " " && entriesSplit[0] != correctNumbers![row, column].ToString())  // if cell is non-empty and is filled with an incorrect value
         {
             return "red";
         }
@@ -528,11 +530,11 @@ else
     {
         if (noteTaking == "On")
         {
-            noteTaking = "off";
+            noteTaking = "Off";
         }
         else
         {
-            noteTaking = "on";
+            noteTaking = "On";
         }
     }
 

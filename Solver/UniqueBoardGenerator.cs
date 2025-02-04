@@ -15,9 +15,9 @@ namespace Sudoku_Solver_NEA
             MoveStack stack = new MoveStack(5);
             List<Cell> variableNodesCopy = new();
             Random random = new Random();
-            board.InitialiseQueue();
             ForwardChecker solver = new ForwardChecker(board);
-            solver.Solve();
+            board.InitialiseQueue();
+            solver.Solve();   // fills all cells with valid initial conditions
             foreach (Cell cell in board.VariableNodes)
             {
                 variableNodesCopy.Add(cell);
@@ -40,11 +40,9 @@ namespace Sudoku_Solver_NEA
                     Move previousMove = stack.Pop();
                     board.VariableNodes.Remove(randomCell);
                     previousMove.Cell.ChangeCellValue(previousMove.OldEntry);
-                    board.Reset();
+                    ResetBoardParameters(board);
+                    board.InitialiseQueue();
                     RemoveDomains(previousMove, board);
-                    board.InitialiseQueue();   // GROUP INTO FUNCTIONS
-                    board.SetSolutionCount(0);
-                    board.Solutions.Clear();
                     solver.ChangeMostRecentCell(null);
                     solver.HasUniqueSolution();  // gets single unique solution + stores it in solutions
                     validBoard = true;
@@ -52,9 +50,7 @@ namespace Sudoku_Solver_NEA
                 else   // if solution not unique, keep increasing the number of variable nodes 
                 {
                     variableNodesCopy.Remove(randomCell);
-                    board.SetSolutionCount(0);
-                    board.Solutions.Clear();
-                    board.Reset();
+                    ResetBoardParameters(board);
                 }
             }
             return board;
@@ -103,6 +99,13 @@ namespace Sudoku_Solver_NEA
                 variableNodesCopy.Remove(randomCell);
                 board.VariableNodes.Add(randomCell);
             }
+        }
+
+        private void ResetBoardParameters(Board board)
+        {
+            board.SetSolutionCount(0);
+            board.Solutions.Clear();
+            board.Reset();
         }
     }
 }
