@@ -141,7 +141,7 @@ else
         }
         board!.InitialiseGraph();
         RecordVariableNodesWithValues();
-        MakeUniqueSolution(board!);
+        await MakeUniqueSolution(board!);
         solver = new ForwardChecker(board);
         board!.InitialiseQueue();  // initialise the board ready for solving
         correctNumbers = new int[dimensions, dimensions];
@@ -293,7 +293,7 @@ else
         }
     }
 
-    private void MakeUniqueSolution(Board board)
+    private async Task MakeUniqueSolution(Board board)
     {
         IBoardGenerator generator;
         if (dimensions == 9)
@@ -304,7 +304,7 @@ else
         {
             generator = new UniqueBoardGenerator();
         }
-        generator.GenerateUniqueSolution(dimensions, board);
+        await Task.Run(() => generator.GenerateUniqueSolution(dimensions, board));    // runs asynchronously, allowing page to be rendered while board is being generated
         board.InitialiseRemainingNumbers(board.GetFixedNodes());  // initialises unique board
     }
 
