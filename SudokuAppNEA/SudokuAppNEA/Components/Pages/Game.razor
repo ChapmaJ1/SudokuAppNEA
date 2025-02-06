@@ -5,7 +5,7 @@
 
 <h1>Game</h1>
 
-@if (board == null)
+@if (rendered == false)
 {
     <h1 style="margin-top: 100px">Loading...</h1>
 }
@@ -71,6 +71,7 @@ else
     private string? containerType;
     private string? cellType;
     private string? buttonType;
+    private bool rendered = false;
     private Cell? selectedCell;
     private Board? board;
     private ForwardChecker? solver;
@@ -94,6 +95,7 @@ else
         }
         await InitialiseBoardAndSolver();  // asynchronous method for API call
         SetFrontendValues();
+        rendered = true;
         launchTime = DateTime.Now.Add(new TimeSpan(0, minuteDelay, secondDelay));
         while (solved == false)  // re-render the page every second while the board is not solved
         {                        // this is required to update the timer to reflect real-time

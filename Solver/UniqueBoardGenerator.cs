@@ -40,7 +40,7 @@ namespace Sudoku_Solver_NEA
                     Move previousMove = stack.Pop();
                     board.VariableNodes.Remove(randomCell);
                     previousMove.Cell.ChangeCellValue(previousMove.OldEntry);
-                    ResetBoardParameters(board);
+                    ResetBoardProperties(board);
                     board.InitialiseQueue();
                     RemoveDomains(previousMove, board);
                     solver.ChangeMostRecentCell(null);
@@ -50,7 +50,7 @@ namespace Sudoku_Solver_NEA
                 else   // if solution not unique, keep increasing the number of variable nodes 
                 {
                     variableNodesCopy.Remove(randomCell);
-                    ResetBoardParameters(board);
+                    ResetBoardProperties(board);
                 }
             }
             return board;
@@ -101,7 +101,7 @@ namespace Sudoku_Solver_NEA
             }
         }
 
-        private void ResetBoardParameters(Board board)
+        private void ResetBoardProperties(Board board)
         {
             board.SetSolutionCount(0);
             board.Solutions.Clear();
