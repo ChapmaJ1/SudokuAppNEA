@@ -9,23 +9,44 @@ namespace Sudoku_Solver_NEA
 {
     public class UniqueBoardGenerator : IBoardGenerator
     {
-        public Board GenerateUniqueSolution(int dimensions, Board board)  // if 1.5s passed since starting, reset
+        public async Task<Board> GenerateUniqueSolution(int dimensions, Board board)
         {
             bool validBoard = false;
-            MoveStack stack = new MoveStack(5);
+            MoveStack stack = new MoveStack(20);
             List<Cell> variableNodesCopy = new();
             Random random = new Random();
             ForwardChecker solver = new ForwardChecker(board);
             board.InitialiseQueue();
+            await solver.HasUniqueSolution();
+            if (board.SolutionCount == 1)
+            {
+                return board;
+            }
+            else
+            {
+                board.Reset();
+                board.InitialiseQueue();
+                board.Solutions.Clear();
+                board.SetSolutionCount(0);
+            }
             solver.Solve();   // fills all cells with valid initial conditions
             foreach (Cell cell in board.VariableNodes)
             {
                 variableNodesCopy.Add(cell);
             }
             board.VariableNodes.Clear();  // solver interacts with the board's variable nodes when solving - remove all + add gradually
-            RemoveInitialNumbers(dimensions, variableNodesCopy, board);
+          //  RemoveInitialNumbers(dimensions, variableNodesCopy, board);
             while (!validBoard)
             {
+                if (board.VariableNodes.Count > 100)    // generation gets exponentially slower after this point, experimentally
+                {
+                    while (stack.Count > 0)
+                    {
+                        Move tempMove = stack.Pop();
+                        tempMove.Cell.ChangeCellValue(tempMove.OldEntry);
+                        board.VariableNodes.Remove(tempMove.Cell);
+                    }
+                }
                 Cell randomCell = variableNodesCopy[random.Next(variableNodesCopy.Count)];
                 Move move = new(randomCell, randomCell.Entry);
                 AddDomains(move, board);
@@ -34,7 +55,7 @@ namespace Sudoku_Solver_NEA
                 board.VariableNodes.Add(randomCell);
                 board.InitialiseQueue();
                 solver.ChangeMostRecentCell(null);
-                solver.HasUniqueSolution();
+                await solver.HasUniqueSolution();
                 if (board.SolutionCount != 1)   // function returns true when solution is not unique, so this checks if the solution is not unique
                 {
                     Move previousMove = stack.Pop();
@@ -44,7 +65,7 @@ namespace Sudoku_Solver_NEA
                     board.InitialiseQueue();
                     RemoveDomains(previousMove, board);
                     solver.ChangeMostRecentCell(null);
-                    solver.HasUniqueSolution();  // gets single unique solution + stores it in solutions
+                    await solver.HasUniqueSolution();  // gets single unique solution + stores it in solutions
                     validBoard = true;
                 }
                 else   // if solution not unique, keep increasing the number of variable nodes 

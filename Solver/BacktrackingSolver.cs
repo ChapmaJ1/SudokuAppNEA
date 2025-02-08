@@ -103,7 +103,7 @@ namespace Sudoku_Solver_NEA
             {
                 board.BoardSketch[cell.Position.Item1, cell.Position.Item2] = cell.Entry.ToString();   // updates board sketch to reflect the numerical entries of the cell objects
             }                                                                               // board sketch can then be used for output
-            for (int i=0; i<board.BoardSketch.GetLength(0); i++)
+          /*  for (int i=0; i<board.BoardSketch.GetLength(0); i++)
             {
                 for (int j=0; j<board.BoardSketch.GetLength(0); j++)
                 {
@@ -111,7 +111,7 @@ namespace Sudoku_Solver_NEA
                 }
                 Console.WriteLine();
             }
-            Console.WriteLine(); 
+            Console.WriteLine();  */
         }
 
         internal void ChangeMostRecentCell(Cell cell)

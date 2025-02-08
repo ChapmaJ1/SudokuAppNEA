@@ -12,7 +12,8 @@
 <div class="stats-container">
     <h2>Average Mistakes: @_stats![0]</h2>
     <h2>Average Score: @_stats![1]</h2>
-    <h2>Average Time: @_stats![2]</h2>
+    <h2>Average Hints: @_stats[2]</h2>
+    <h2>Average Time: @_stats![3]</h2>
     <button class="btn-primary" @onclick=SaveSettings>Save And Return To Menu</button>
 </div>
 
@@ -26,10 +27,10 @@
     {
         _mistakeDetection = UserClient.MistakeDetection;
         _saveScores = UserClient.SaveScores;
-        GetUserStats();  // fetches user _stats
+        GetUserStats();  // fetches user stats
         if (_stats!.Count == 0)  // if user has no previously played boards
         {
-            _stats = new List<string>() { "N/A", "N/A", "N/A" };
+            _stats = new List<string>() { "N/A", "N/A", "N/A", "N/A" };
         }
     }
 

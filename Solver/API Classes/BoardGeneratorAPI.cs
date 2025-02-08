@@ -36,14 +36,14 @@ namespace Sudoku_Solver_NEA
             return boards;
         }
 
-        public Board GenerateUniqueSolution(int dimensions, Board board)
+        public async Task<Board> GenerateUniqueSolution(int dimensions, Board board)
         {
             ForwardChecker solver = new ForwardChecker(board);
             bool unique = false;
             while (unique == false)
             {
                 board.InitialiseQueue();
-                solver!.HasUniqueSolution();
+                await solver!.HasUniqueSolution();
                 if (board.SolutionCount >= 2)  // if board does not have a unique solution, and hence is not a valid Sudoku
                 {
                     for (int i = 0; i < dimensions; i++)

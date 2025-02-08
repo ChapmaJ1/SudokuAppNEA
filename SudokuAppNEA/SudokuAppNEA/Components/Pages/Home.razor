@@ -30,6 +30,26 @@
     private string? _message;
     private DBCaller _databaseCaller = new DBCaller();
 
+    protected override void OnInitialized()
+    {
+        UserClient!.InitialiseClient();
+        Task.Run(() => GetApiBoards());  // EXPLAIN
+    }  
+
+    private async Task GetApiBoards()
+    {
+        BoardGeneratorAPI generator = new();
+        while (UserClient.EasyFetched == 0 || UserClient.MediumFetched == 0 || UserClient.HardFetched == 0)
+        {
+            List<Board> fetchedBoards = await generator.GenerateBoard();  // fetch board from API
+            for (int i = 0; i < 10; i++)  // 10 boards fetched to minimise the number of fetches needed, while also preventing fetching from taking too long
+            {
+                UserClient.IncrementDifficultiesFetched(fetchedBoards[i].Difficulty);
+                UserClient!.FetchedBoards!.Add(fetchedBoards[i]);
+            }
+        }
+    }
+
     private void HandleSubmit()
     {
         UserClient.SetUser(_user!);
@@ -37,6 +57,8 @@
         if (userId != 0)
         {
             _user.SetId(userId);
+            _databaseCaller.AddSession(userId);
+            _user.SetSessionId(_databaseCaller.GetTableCount("sessions"));
             GetUserSettings();
             NavigationManager.NavigateTo($"/menu");
         }

@@ -230,10 +230,6 @@ namespace Sudoku_Solver_NEA
                 }
                 Stack.Push(new Move(boxCells[firstRandomCell], boxCells[firstRandomCell].Entry));
                 Stack.Push(new Move(boxCells[secondRandomCell], boxCells[secondRandomCell].Entry));
-                if (boxCells[firstRandomCell].Entry == boxCells[secondRandomCell].Entry)
-                {
-                    Console.WriteLine("Test");
-                }
                 int tempEntry = boxCells[firstRandomCell].Entry;
                 boxCells[firstRandomCell].ChangeCellValue(boxCells[secondRandomCell].Entry);
                 boxCells[secondRandomCell].ChangeCellValue(tempEntry);
@@ -246,7 +242,7 @@ namespace Sudoku_Solver_NEA
         private double CalculateAcceptanceProbability(int change, double temperature)  // uses Metropolis criterion
         {
             double probability = Math.Pow(Math.E, -(change / temperature));
-            if (probability > 1)  // overflow
+            if (probability > 1)  // checks for underflow error
             {
                 return 0;
             }

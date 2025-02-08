@@ -24,7 +24,7 @@ namespace CommonLibrary
                 connection.Open();
                 using (SqliteCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"insert into users (Username, Password) VALUES(@Username,@Password)";  // adds a new user with the input username and password into the Users table
+                    command.CommandText = $"INSERT INTO Users (Username, Password) VALUES (@Username,@Password)";  // adds a new user with the input username and password into the Users table
                     command.Parameters.Add("@Username", SqliteType.Text).Value = username;
                     command.Parameters.Add("@Password", SqliteType.Text).Value = password;
                     command.ExecuteNonQuery();
@@ -41,7 +41,7 @@ namespace CommonLibrary
                 connection.Open();
                 using (SqliteCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"select * from users where username = @Username and password = @Password";
+                    command.CommandText = $"SELECT UserID FROM Users WHERE Username = @Username and Password = @Password";
                     command.Parameters.Add("@Username", SqliteType.Text).Value = username;
                     command.Parameters.Add("@Password", SqliteType.Text).Value = password;
                     using (SqliteDataReader dataReader = command.ExecuteReader())
@@ -56,6 +56,20 @@ namespace CommonLibrary
             return 0;  // adds a new user with the given details to the database, with true representing the fact that the user is new
         }
 
+        public void AddSession(int userId)
+        {
+            using (SqliteConnection connection = new SqliteConnection())
+            {
+                connection.ConnectionString = _connectionString;
+                connection.Open();
+                SqliteCommand command = connection.CreateCommand();
+                command.CommandText = "INSERT INTO Sessions (CalendarDate, UserId) VALUES(@CalendarDate, @UserID)";
+                command.Parameters.Add("@CalendarDate", SqliteType.Text).Value = DateOnly.FromDateTime(DateTime.Now).ToString();
+                command.Parameters.Add("@UserID", SqliteType.Integer).Value = userId;
+                command.ExecuteNonQuery();
+            }
+        }
+
         public void AddEntry(DatabaseEntry entry)
         {
             using (SqliteConnection connection = new SqliteConnection())
@@ -63,14 +77,14 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "insert into Boards (Score, CalendarDay, Difficulty, CompletionTime, Mistakes, UserID) VALUES (@Score, @CalendarDay, @Difficulty, @CompletionTime, @Mistakes, @UserID)";
+                command.CommandText = "INSERT INTO Boards (Score, Difficulty, CompletionTime, Mistakes, Hints, SessionID) VALUES (@Score, @Difficulty, @CompletionTime, @Mistakes, @Hints, @SessionID)";
                 // adds a new board entry to the Boards table, with all parameters provided below
                 command.Parameters.Add("@Score", SqliteType.Integer).Value = entry.Score;
-                command.Parameters.Add("@CalendarDay", SqliteType.Text).Value = entry.CalendarDay;
                 command.Parameters.Add("@Difficulty", SqliteType.Text).Value = entry.Difficulty;
                 command.Parameters.Add("@CompletionTime", SqliteType.Text).Value = entry.CompletionTime;
                 command.Parameters.Add("@Mistakes", SqliteType.Integer).Value = entry.Mistakes;
-                command.Parameters.Add("@UserID", SqliteType.Integer).Value = entry.UserId;
+                command.Parameters.Add("@Hints", SqliteType.Text).Value = entry.Hints;
+                command.Parameters.Add("@SessionID", SqliteType.Integer).Value = entry.SessionId;
                 command.ExecuteNonQuery();
             }
         }
@@ -84,7 +98,7 @@ namespace CommonLibrary
                 connection.Open();
                 using (SqliteCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"select Count(*) from {parameter}";  // outputs the number of entries in a given table
+                    command.CommandText = $"SELECT Count(*) FROM {parameter}";  // outputs the number of entries in a given table
                     count = Convert.ToInt32(command.ExecuteScalar());
                 }
             }
@@ -99,7 +113,7 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "select Username, Score, CompletionTime, Difficulty, CalendarDay from Boards b join Users u on b.UserId = u.UserID ORDER BY b.Score DESC";
+                command.CommandText = "SELECT u.Username, b.Score, b.CompletionTime, b.Difficulty, s.CalendarDate FROM Boards b JOIN Sessions s on b.SessionID = s.SessionID JOIN Users u on s.UserID = u.UserID order by b.Score DESC";
                 // selects details of all boards in the database
                 var reader = command.ExecuteReader();
                 while (reader.Read())  // same situation as above
@@ -111,7 +125,7 @@ namespace CommonLibrary
             return data;
         }
 
-        public List<LeaderboardEntry> GetLeaderboardEntriesPersonal(User user)
+        public List<LeaderboardEntry> GetLeaderboardEntriesPersonal(User user)  // REMOVE OR ADD NEW PAGE
         {
             List<LeaderboardEntry> data = new();
             using (SqliteConnection connection = new())
@@ -138,7 +152,7 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = $"select avg(score) from boards where userid = @UserID";  // gets average score of all board previously solved by user
+                command.CommandText = $"SELECT avg(score) from Boards b JOIN Sessions s on b.SessionID = s.SessionID where s.UserID = @UserID";  // gets average score of all board previously solved by user
                 command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
                 var reader = command.ExecuteReader();
                 int score;   // does not use reader.Read() as avg operation returns null, instead of nothing (as select does)
@@ -170,13 +184,14 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = $"select avg(mistakes), avg(score) from boards where userid = @UserID";  // gets stats for a particular user, such as the average mistakes and average score per board
+                command.CommandText = $"SELECT avg(mistakes), avg(score), avg(hints) FROM Boards b JOIN Sessions s on b.SessionID = s.SessionID where s.UserID = @UserID";  // gets stats for a particular user, such as the average mistakes and average score per board
                 command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
                 var dataReader = command.ExecuteReader();
                 if (dataReader.Read() && !dataReader.IsDBNull(0))   
                 {
                     stats.Add(Math.Round(dataReader.GetDouble(0),1).ToString());
                     stats.Add(dataReader.GetInt32(1).ToString());
+                    stats.Add(Math.Round(dataReader.GetDouble(2),1).ToString());
                     stats.Add(GetAverageTime(userID));  // calculates the user's average time per board 
                 }
             }
@@ -192,7 +207,7 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = $"select CompletionTime from boards where userid = @UserID";  // selects the completion time for each board completed by the user
+                command.CommandText = $"SELECT CompletionTime from Boards b join Sessions s on b.SessionID = s.SessionID where s.UserID = @UserID";  // selects the completion time for each board completed by the user
                 command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
                 var dataReader = command.ExecuteReader();
                 while (dataReader.Read())
@@ -214,7 +229,7 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = $"select MistakeDetection, SaveScores from UserSettings where UserID = @UserID";  // gets the user's settings saved in the database
+                command.CommandText = $"SELECT MistakeDetection, SaveScores FROM UserSettings WHERE UserID = @UserID";  // gets the user's settings saved in the database
                 command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
                 var dataReader = command.ExecuteReader();
                 dataReader.Read();
@@ -230,7 +245,7 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = $"insert into UserSettings (MistakeDetection, SaveScores, UserID) VALUES(@MistakeDetection, @SaveScores, @UserID)";
+                command.CommandText = $"INSERT INTO UserSettings (MistakeDetection, SaveScores, UserID) VALUES(@MistakeDetection, @SaveScores, @UserID)";
                 command.Parameters.Add("@MistakeDetection", SqliteType.Text).Value = "On";
                 command.Parameters.Add("@SaveScores", SqliteType.Text).Value = "On";
                 command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
@@ -245,7 +260,7 @@ namespace CommonLibrary
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = $"update UserSettings set MistakeDetection = @MistakeDetection, SaveScores = @SaveScores where UserID = @UserID";
+                command.CommandText = $"UPDATE UserSettings SET MistakeDetection = @MistakeDetection, SaveScores = @SaveScores WHERE UserID = @UserID";
                 // updates the user's settings in the database according to their choices in the settings page
                 command.Parameters.Add("@MistakeDetection", SqliteType.Text).Value = mistakeDetection;
                 command.Parameters.Add("@SaveScores", SqliteType.Text).Value = saveScores;

@@ -9,6 +9,6 @@ namespace Sudoku_Solver_NEA
 {
     public interface IBoardGenerator
     {
-        public Board GenerateUniqueSolution(int dimensions , Board board);
+        public Task<Board> GenerateUniqueSolution(int dimensions , Board board);
     }
 }

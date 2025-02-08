@@ -85,7 +85,7 @@ namespace Sudoku_Solver_NEA
             solver.Solve(); */
             ForwardChecker solver2 = new(board);
             UniqueBoardGenerator generator = new UniqueBoardGenerator();
-            generator.GenerateUniqueSolution(16, board); 
+            await generator.GenerateUniqueSolution(16, board); 
             //board.SetQueue();
             //solver2.Solve(new Cell((-1,-1),-1));
             Console.WriteLine($"{(DateTime.Now - launchTime).Seconds} seconds {(DateTime.Now - launchTime).Milliseconds} milliseconds");
