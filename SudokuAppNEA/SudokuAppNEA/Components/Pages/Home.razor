@@ -28,12 +28,13 @@
     [SupplyParameterFromForm]
     private User? _user { get; set; } = new User();
     private string? _message;
-    private DBCaller _databaseCaller = new DBCaller();
+    private DBCallerUser _databaseCallerUser = new DBCallerUser();
+    private DBCallerSettings _databaseCallerSettings = new DBCallerSettings();
 
     protected override void OnInitialized()
     {
         UserClient!.InitialiseClient();
-        Task.Run(() => GetApiBoards());  // EXPLAIN
+        Task.Run(() => GetApiBoards());
     }  
 
     private async Task GetApiBoards()
@@ -53,12 +54,12 @@
     private void HandleSubmit()
     {
         UserClient.SetUser(_user!);
-        int userId = _databaseCaller.FindUser(_user!.Username, _user.Password);  // find user in database if record exists, otherwise add a new user
+        int userId = _databaseCallerUser.FindUser(_user!.Username, _user.Password);  // find user in database if record exists, otherwise add a new user
         if (userId != 0)
         {
             _user.SetId(userId);
-            _databaseCaller.AddSession(userId);
-            _user.SetSessionId(_databaseCaller.GetTableCount("sessions"));
+            _databaseCallerUser.AddSession(userId);
+            _user.SetSessionId(_databaseCallerUser.GetTableCount("sessions"));
             GetUserSettings();
             NavigationManager.NavigateTo($"/menu");
         }
@@ -70,7 +71,7 @@
 
     private void GetUserSettings()
     {
-        (string, string) settingsData = _databaseCaller.GetUserSettings(UserClient.User!.Id);
+        (string, string) settingsData = _databaseCallerSettings.GetUserSettings(UserClient.User!.Id);
         UserClient.SetMistakeDetection(settingsData.Item1);
         UserClient.SetSaveScores(settingsData.Item2);
     }

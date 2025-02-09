@@ -43,12 +43,11 @@ else
 
     <div class="game-btn-container-left-@containerType">
         <button class="btn-primary" @onclick=SolveBoard>Solve Board</button>
-        <button class="btn-primary" @onclick=CheckBoard>Check Board</button>
+        <button class="btn-primary" @onclick=Reset>Reset Board</button>
         <button class="btn-primary" @onclick=SaveBoard>Save + Menu</button>
     </div>
 
     <div class="game-btn-container-right-@containerType">
-        <button class="btn-primary" @onclick=Reset>Reset Board</button>
         <button class="btn-primary" @onclick=GetHint>Get Hint</button>
         <button class="btn-primary" @onclick=Undo>Undo</button>
         <button class="btn-primary" @onclick=ChangeNotesFunctionality>Notes: @noteTaking</button>
@@ -85,7 +84,7 @@ else
     private int hintCount;
     private string noteTaking = "Off";
     private MoveStack stack = new MoveStack(100);
-    private DBCaller DatabaseCaller = new();
+    private DBCallerBoard _databaseCallerBoard = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -149,10 +148,11 @@ else
             board = new Board(difficulty, boardSketch, dimensions);
         }
         board!.InitialiseGraph();
+        solver = new ForwardChecker(board);
         RecordVariableNodesWithValues();
         await MakeUniqueSolution(board!);
-        solver = new ForwardChecker(board);
-        board!.InitialiseQueue();  // initialise the board ready for solving
+        //solver = new ForwardChecker(board);
+        //board!.InitialiseQueue();  // initialise the board ready for solving
         correctNumbers = new int[dimensions, dimensions];
         InitialiseCorrectNumbers();
         RevertVariableNodesWithValues();
@@ -197,7 +197,7 @@ else
         NavigateToMenu();
     }
 
-    private string[,] LoadSavedBoard()
+    private string[,] LoadSavedBoard()    // EXCEPTION HANDLING REQUIRED
     {
         string path = "SavedBoard.txt";
         int counter = 0;
@@ -278,24 +278,25 @@ else
             dimensions = 9;
             if (difficulty == "Adaptive")  // get recommended difficulty from database if required, otherwise use the chosen difficulty
             {
-                difficulty = DatabaseCaller.GetRecommendedDifficulty(UserClient.User!.Id);
+                difficulty = _databaseCallerBoard.GetRecommendedDifficulty(UserClient.User!.Id);
             }
         }
     }
 
     private async Task MakeUniqueSolution(Board board)
     {
-        IBoardGenerator generator;
-        if (dimensions == 9)
-        {
-            generator = new BoardGeneratorAPI();
-        }
-        else
-        {
-            generator = new UniqueBoardGenerator();
-        }
+        IBoardGenerator generator = GetGeneratorType(dimensions);
         await Task.Run(() => generator.GenerateUniqueSolution(dimensions, board));    // runs asynchronously, allowing page to be rendered while board is being generated
         board.InitialiseRemainingNumbers(board.GetFixedNodes());  // initialises unique board
+    }
+
+    private IBoardGenerator GetGeneratorType(int dimensions)
+    {
+        if (dimensions == 9)
+        {
+            return new BoardGeneratorAPI();
+        }
+        return new UniqueBoardGenerator();
     }
 
 
@@ -445,7 +446,7 @@ else
             if (UserClient.SaveScores == "On")  // if the user's settings indicate that the score should be saved to the database
             {
                 UserClient.AddEntry(GenerateScore(difficulty!), difficulty!, mistakeCount, hintCount, FormatTime());
-                DatabaseCaller.AddEntry(UserClient.Entry!);  // creates a new record for the board entry + adds it to the database
+                _databaseCallerBoard.AddEntry(UserClient.Entry!);  // creates a new record for the board entry + adds it to the database
             }
         }
     }

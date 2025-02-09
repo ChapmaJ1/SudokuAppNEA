@@ -36,7 +36,7 @@ namespace SudokuAppNEA.Components.Clients
         {
             User = user;
         }
-
+            
         internal void SetMistakeDetection(string input)
         {
             MistakeDetection = input;

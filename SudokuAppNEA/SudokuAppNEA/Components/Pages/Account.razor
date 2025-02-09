@@ -24,12 +24,13 @@
 @code {
     [SupplyParameterFromForm]
     private User? _user { get; set; } = new User();
-    private DBCaller _databaseCaller = new DBCaller();
+    private DBCallerUser _databaseCallerUser = new DBCallerUser();
+    private DBCallerSettings _databaseCallerSettings = new DBCallerSettings();
 
     private void HandleSubmit()
     {
         UserClient.SetUser(_user!);
-        int userId = _databaseCaller.AddUser(_user!.Username, _user.Password);  // find user in database if record exists, otherwise add a new user
+        int userId = _databaseCallerUser.AddUser(_user!.Username, _user.Password);  // find user in database if record exists, otherwise add a new user
         UserClient.User!.SetId(userId);
         SetUserSettings();
         GoToHome();
@@ -37,9 +38,7 @@
 
     private void SetUserSettings()
     {
-        _databaseCaller.SetDefaultUserSettings(UserClient.User!.Id);
-        UserClient.SetMistakeDetection("On");
-        UserClient.SetSaveScores("On");
+        _databaseCallerSettings.SetDefaultUserSettings(UserClient.User!.Id);
     }
 
     private void GoToHome()

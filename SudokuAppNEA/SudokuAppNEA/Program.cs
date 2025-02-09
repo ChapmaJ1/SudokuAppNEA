@@ -22,7 +22,6 @@ namespace SudokuAppNEA
                 .AddInteractiveServerComponents();
 
             builder.Services.AddSingleton<UserClient>();
-            builder.Services.AddSingleton<DBCaller>();
 
             var app = builder.Build();
 

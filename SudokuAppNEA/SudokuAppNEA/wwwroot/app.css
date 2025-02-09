@@ -180,6 +180,7 @@ strong {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    margin-top: -5em;
 }
 
 .sudoku-container-large{
@@ -288,7 +289,7 @@ strong {
     display: flex;
     flex-direction: row;
     gap: 20px;
-    transform: translate(0,-830px)
+    transform: translate(0,-720px)
 }
 
 .number-buttons-container-large {
@@ -296,7 +297,7 @@ strong {
     display: flex;
     flex-direction: row;
     gap: 20px;
-    transform: translate(0,-930px)
+    transform: translate(0,-830px)
 }
 
 .sudoku-container-default {
@@ -315,7 +316,7 @@ strong {
 }
 
 .game-btn-container-right-default {
-    transform: translate(0px,-880px);
+    transform: translate(0px,-830px);
     display: flex;
     flex-direction: column;
     gap: 25px;
@@ -336,7 +337,7 @@ strong {
 }
 
 .game-btn-container-right-large {
-    transform: translate(0px,-1030px);
+    transform: translate(0px,-980px);
     display: flex;
     flex-direction: column;
     gap: 25px;

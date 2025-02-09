@@ -12,19 +12,7 @@
 </div>
 
 @code {
-    private DBCaller? _databaseCaller = new DBCaller();
-
-    protected override void OnInitialized()
-    {
-        LoadUserSettings();
-    }
-
-    private void LoadUserSettings()
-    {
-        (string, string) settings = _databaseCaller!.GetUserSettings(UserClient.User!.Id);  // gets user settings from database
-        UserClient.SetMistakeDetection(settings.Item1);
-        UserClient.SetSaveScores(settings.Item2);   // records settings in UserClient object
-    }
+    private DBCallerSettings? _databaseCallerSettings = new DBCallerSettings();
 
     private void GoToDifficulty()
     {

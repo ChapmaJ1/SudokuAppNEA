@@ -47,7 +47,7 @@ namespace Sudoku_Solver_NEA
             return false;
         }
 
-        public async Task<bool> HasUniqueSolution()  // does not use a queue as the queue would have to be reset every time the board is checked
+        public bool HasUniqueSolution()  // does not use a queue as the queue would have to be reset every time the board is checked
         {
             if (CheckInvalid(MostRecentlyChangedCell))
             {
@@ -73,7 +73,7 @@ namespace Sudoku_Solver_NEA
                     RestorePrunedValues(removed);
                     continue;
                 }
-                if (await HasUniqueSolution())
+                if (HasUniqueSolution())
                 {
                     RestorePrunedValues(removed);  // reverts domain restrictions to allow exploration of a different tree branch
                     if (Board.SolutionCount >= 2)   // if multiple solutions have already been found, stop early

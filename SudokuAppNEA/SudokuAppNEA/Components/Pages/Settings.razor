@@ -14,6 +14,7 @@
     <h2>Average Score: @_stats![1]</h2>
     <h2>Average Hints: @_stats[2]</h2>
     <h2>Average Time: @_stats![3]</h2>
+    <h2>Best Session Average: @_stats![4]</h2>
     <button class="btn-primary" @onclick=SaveSettings>Save And Return To Menu</button>
 </div>
 
@@ -21,7 +22,7 @@
     private List<string>? _stats;
     private string? _mistakeDetection;
     private string? _saveScores;
-    private DBCaller? _databaseCaller = new DBCaller();
+    private DBCallerSettings? _databaseCallerSettings = new DBCallerSettings();
 
     protected override void OnInitialized()
     {
@@ -30,7 +31,7 @@
         GetUserStats();  // fetches user stats
         if (_stats!.Count == 0)  // if user has no previously played boards
         {
-            _stats = new List<string>() { "N/A", "N/A", "N/A", "N/A" };
+            _stats = new List<string>() { "N/A", "N/A", "N/A", "N/A", "N/A" };
         }
     }
 
@@ -60,12 +61,14 @@
 
     private void SaveSettings()
     {
-        _databaseCaller!.SaveUserSettings(_mistakeDetection!, _saveScores!, UserClient.User!.Id);  // updates user settings according to their final choices
+        _databaseCallerSettings!.SaveUserSettings(_mistakeDetection!, _saveScores!, UserClient.User!.Id);  // updates user settings according to their final choices
+        UserClient.SetMistakeDetection(_mistakeDetection!);
+        UserClient.SetSaveScores(_saveScores!);
         NavigationManager.NavigateTo("/menu");  // takes user back to menu
     }
 
     private void GetUserStats()
     {
-        _stats = _databaseCaller!.GetUserStats(UserClient.User!.Id);
+        _stats = _databaseCallerSettings!.GetUserStats(UserClient.User!.Id);
     }
 }

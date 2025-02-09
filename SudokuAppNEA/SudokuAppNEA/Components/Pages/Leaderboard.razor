@@ -3,7 +3,7 @@
 
 <h1 style="font-size: 50px; text-align: center">Leaderboard</h1>
 
-@if (_dataEntries == null)  // database records in the process of being fetched
+@if (_leaderboardEntries == null)  // database records in the process of being fetched
 {
     <h1 style="margin-top: 100px">Loading...</h1>
 }
@@ -17,7 +17,7 @@ else
             <strong><u>Difficulty</u></strong>
             <strong><u>Date</u></strong>
         </div>
-        @foreach (LeaderboardEntry entry in _dataEntries)  // displays each leaderboard entry in a suitable format
+        @foreach (LeaderboardEntry entry in _leaderboardEntries)  // displays each leaderboard entry in a suitable format
         {
             <div class="leaderboard-text">
                 <h3>@entry.Username</h3>
@@ -33,12 +33,12 @@ else
 
 
 @code {
-    private List<LeaderboardEntry>? _dataEntries;
+    private List<LeaderboardEntry>? _leaderboardEntries;
+    private DBCallerBoard _databaseCallerBoard = new DBCallerBoard();
 
     protected override void OnInitialized()
     {
-        DBCaller DatabaseCaller = new DBCaller();
-        _dataEntries = DatabaseCaller.GetLeaderboardEntries();  // gets leaderboard entries from database
+        _leaderboardEntries = _databaseCallerBoard.GetLeaderboardEntries();  // gets leaderboard entries from database
     }
 
     private void NavigateToMenu()
