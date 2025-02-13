@@ -55,42 +55,12 @@ namespace Sudoku_Solver_NEA
             {
                 AddEdges(cell);  // adds the cells which each node links to to the dictionary
             }
-            InitialiseRemainingNumbers(GetFixedNodes());
-        }
-
-        public List<Cell> GetFixedNodes()
-        {
-            List<Cell> fixedNodes = new List<Cell>();
-            foreach (Cell cell in AdjacencyList.Keys)
-            {
-                if (!VariableNodes.Contains(cell))    // assigned in the starting board - cannot be changed during solving process. Call this a "fixed node"
-                {
-                    fixedNodes.Add(cell);
-                }
-            }
-            return fixedNodes;
-        }
-
-        public void InitialiseRemainingNumbers(List<Cell> fixedNodes)
-        {
-            for (int i = 0; i < fixedNodes.Count; i++)
-            {
-                foreach (KeyValuePair<Cell, List<Cell>> pair in AdjacencyList)
-                {
-                    foreach (Cell cell in pair.Value)
-                    {
-                        if (!VariableNodes.Contains(cell))   // fixed starting node
-                        {
-                            pair.Key.Domain.Remove(cell.Entry);  // removes values of fixed starting numbers from the domain of a certain square that links to a fixed node
-                        }
-                    }
-                }
-            }
+            InitialiseStartingDomains(GetFixedNodes());
         }
 
         public void InitialiseQueue()
         {
-            Queue = new HeapPriorityQueue(VariableNodes, BoardSketch.GetLength(0));
+            Queue = new HeapPriorityQueue(VariableNodes);
             foreach (Cell cell in VariableNodes)
             {
                 Queue.Enqueue(cell);
@@ -109,7 +79,6 @@ namespace Sudoku_Solver_NEA
                 cell.ChangeCellValue(0);   // sets all cells that were not part of the fixed starting arrangement to empty
             } 
         }
-
         internal Cell GetCellLocation(int x, int y)
         {
             foreach (Cell cell in AdjacencyList.Keys)
@@ -166,6 +135,36 @@ namespace Sudoku_Solver_NEA
                     if (!(addI == iDimension && addJ == jDimension) && !AdjacencyList[cell].Contains(GetCellLocation(addI, addJ)))  // prevents the cell linking to itself + duplicate linking (linking to the same cell twice)
                     {
                         AdjacencyList[cell].Add(GetCellLocation(addI, addJ));
+                    }
+                }
+            }
+        }
+
+        private List<Cell> GetFixedNodes()
+        {
+            List<Cell> fixedNodes = new List<Cell>();
+            foreach (Cell cell in AdjacencyList.Keys)
+            {
+                if (!VariableNodes.Contains(cell))    // assigned in the starting board - cannot be changed during solving process. Call this a "fixed node"
+                {
+                    fixedNodes.Add(cell);
+                }
+            }
+            return fixedNodes;
+        }
+
+        private void InitialiseStartingDomains(List<Cell> fixedNodes)
+        {
+            for (int i = 0; i < fixedNodes.Count; i++)
+            {
+                foreach (KeyValuePair<Cell, List<Cell>> pair in AdjacencyList)
+                {
+                    foreach (Cell cell in pair.Value)
+                    {
+                        if (!VariableNodes.Contains(cell))   // fixed starting node
+                        {
+                            pair.Key.Domain.Remove(cell.Entry);  // removes values of fixed starting numbers from the domain of a certain square that links to a fixed node
+                        }
                     }
                 }
             }

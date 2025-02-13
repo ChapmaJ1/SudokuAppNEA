@@ -20,6 +20,11 @@ namespace Sudoku_Solver_NEA
         public override bool Solve()
         {
             InitialiseBoard();
+            if (BoxGroupings.Count == 0)
+            {
+                PrintBoard(Board);
+                return true;
+            }
             Random random = new Random();
             double initialTemperature = 40;   // JUSTIFY LATER
             (Dictionary<Cell, List<Cell>>, int) conflictData = GetInitialConflicts();
@@ -27,25 +32,19 @@ namespace Sudoku_Solver_NEA
             {
                 double temperature;
                 int swapNumber;
-                if (i < 3000)
+                switch (i)
                 {
-                    swapNumber = BoxGroupings.Count;
-                    // temperature = initialTemperature / Math.Log(3 + i);
-                }
-                else if (i > 10000)
-                {
-                    swapNumber = 1;
-                    // temperature = initialTemperature * Math.Pow(Math.E, -0.1 * i);
-                }
-                else
-                {
-                    swapNumber = BoxGroupings.Count - 3;
-                    // temperature = initialTemperature / Math.Pow(i, 0.5);
+                    case < 5000: 
+                        swapNumber = BoxGroupings.Count; 
+                        break;
+                    case > 20000:
+                        swapNumber = 1;
+                        break;
+                    default:
+                        swapNumber = Convert.ToInt32(Math.Ceiling((double)BoxGroupings.Count / 2));
+                        break;
                 }
                 List<Cell> changedCells = ChangeRandomCells(swapNumber);
-                // solver.PrintBoard(Board);
-                // temperature = initialTemperature / Math.Log(3 + i); // temperature calculation, logarithmic decay
-                //temperature = initialTemperature - 0.1 * i;
                 temperature = initialTemperature * Math.Pow(Math.E, -0.05 * i);
                 (List<(Cell, Cell, int)>, int) changedConflicts = UpdateConflicts(conflictData, changedCells);
                 conflictData.Item2 += changedConflicts.Item2; 
@@ -86,36 +85,38 @@ namespace Sudoku_Solver_NEA
         {
             Random random = new Random();
             int squareDimensions = Convert.ToInt32(Math.Sqrt(Board.Dimensions));
-            for (int i = 0; i < Board.Dimensions; i++)  // selects sub-box
+            for (int i = 0; i < Board.Dimensions; i++)
             {
                 List<int> remainingNumbersInSquare = new();
                 for (int x = 1; x <= Board.Dimensions; x++)
                 {
-                    remainingNumbersInSquare.Add(x);
+                    remainingNumbersInSquare.Add(x);  // adds all N numbers on an NxN board to the list
                 }
                 List<Cell> cellsInSquare = new();
-                int boxI = i / squareDimensions;
+                int boxI = i / squareDimensions;  // selects sub-box
                 int boxJ = i % squareDimensions;
                 for (int j = 0; j < squareDimensions; j++)
                 {
                     for (int k = 0; k < squareDimensions; k++)
                     {
-                        Cell cell = Board.GetCellLocation(boxI * squareDimensions + j, boxJ * squareDimensions + k);
+                        Cell cell = Board.GetCellLocation(boxI * squareDimensions + j, boxJ * squareDimensions + k);   // gets every cell in the sub-box
                         if (cell.Entry == 0)
                         {
-                            cellsInSquare.Add(cell);
+                            cellsInSquare.Add(cell);   // add it to variable cells to be initialised
                         }
                         else
                         {
-                            remainingNumbersInSquare.Remove(cell.Entry);
+                            remainingNumbersInSquare.Remove(cell.Entry);   // fixed node - no other nodes in the sub-box can take on this value
                         }
                     }
                 }
-                if (cellsInSquare.Count != 0)
+                if (cellsInSquare.Count != 0)  // if at least 1 variable node in the sub-box
                 {
                     BoxGroupings.Add(i, cellsInSquare);
                     foreach (Cell cell in cellsInSquare)
                     {
+                        // gets random number remaining in the sub-box domain, changes the entry of a particular cell to this value
+                        // removes the number from the domain - no other nodes in the sub-box can take on this value
                         int indexToRemove = random.Next(remainingNumbersInSquare.Count);
                         cell.ChangeCellValue(remainingNumbersInSquare[indexToRemove]);
                         remainingNumbersInSquare.RemoveAt(indexToRemove);
@@ -138,7 +139,8 @@ namespace Sudoku_Solver_NEA
                     }
                 }
             }
-            return (conflictedCells, conflictedCells.Values.Sum(l => l.Count));  // undirected graph, therefore each conflict will be counted twice: (cell1, cell2) and (cell2, cell1)
+            return (conflictedCells, conflictedCells.Values.Sum(l => l.Count));  // returns all conflicting cells + number of conflicts
+            // undirected graph, therefore each conflict will be counted twice: (cell1, cell2) and (cell2, cell1)
         }
 
         private (List<(Cell, Cell, int)>, int) UpdateConflicts((Dictionary<Cell, List<Cell>>, int) oldConflictData, List<Cell> changedCells)
@@ -147,38 +149,37 @@ namespace Sudoku_Solver_NEA
             int deltaConflicts = 0;
             List<(Cell, Cell)> tempAddValues = new();
             List<(Cell, Cell)> tempRemoveValues = new();
-            foreach (Cell cell in changedCells)
+            foreach (Cell cell in changedCells)   // all cells whose value was changed during the current iteration
             {
-                List<Cell> cells = oldConflictData.Item1[cell];
-                foreach (Cell conflictCell in oldConflictData.Item1[cell])
+                foreach (Cell conflictCell in oldConflictData.Item1[cell])  // conflicting cells as of the previous iteration
                 {
-                    if (cell.Entry != conflictCell.Entry)
+                    if (cell.Entry != conflictCell.Entry)  // cell no longer conflicts with a given cell
                     {
                         if (!tempRemoveValues.Contains((conflictCell, cell)))
                         {
-                            deltaConflicts -= 2;
+                            deltaConflicts -= 2;  // subtract 2 rather than 1 due to undirected graph
                             tempRemoveValues.Add((cell, conflictCell));
-                            changedConflicts.Add((cell, conflictCell, 0));  // 0 represents removed conflict (add back)
+                            changedConflicts.Add((cell, conflictCell, 0));  // 0 represents removed conflict - add back if change not accepted
                         }
                     }
                 }
                 foreach (Cell neighbour in Board.AdjacencyList[cell])
                 {
-                    if (cell.Entry == neighbour.Entry)
+                    if (cell.Entry == neighbour.Entry)  // cell conflicts with a connected node
                     {
-                        if (!oldConflictData.Item1[cell].Contains(neighbour))
+                        if (!oldConflictData.Item1[cell].Contains(neighbour))  // if they were not already conflicting
                         {
-                            if (!tempAddValues.Contains((neighbour, cell)))
+                            if (!tempAddValues.Contains((neighbour, cell)))   // if conflict has not already been recorded the other way around (undirected graph)
                             {
                                 deltaConflicts += 2;
                                 tempAddValues.Add((cell, neighbour));
-                                changedConflicts.Add((cell, neighbour, 1));  // 1 represents added conflict (remove)
+                                changedConflicts.Add((cell, neighbour, 1));  // 1 represents added conflict - remove if change not accepted
                             }
                         }
                     }
                 }
             }
-            foreach ((Cell, Cell) pair in tempRemoveValues)   // why are tempAddValues and tempRemoveValues so small
+            foreach ((Cell, Cell) pair in tempRemoveValues)   // removes + adds all recorded conflict changes
             {
                 oldConflictData.Item1[pair.Item1].Remove(pair.Item2);
                 oldConflictData.Item1[pair.Item2].Remove(pair.Item1);

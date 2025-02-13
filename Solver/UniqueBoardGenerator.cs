@@ -11,8 +11,18 @@ namespace Sudoku_Solver_NEA
     {
         public Board GenerateUniqueSolution(int dimensions, Board board)
         {
+            int stackSize;
+            switch (dimensions)
+            {
+                case 9:
+                    stackSize = 70;
+                    break;
+                default:
+                    stackSize = 90;
+                    break;
+            }
             bool validBoard = false;
-            MoveStack stack = new MoveStack(90);
+            MoveStack stack = new MoveStack(stackSize);
             List<Cell> variableNodesCopy = new();
             Random random = new Random();
             ForwardChecker solver = new ForwardChecker(board);
@@ -31,13 +41,14 @@ namespace Sudoku_Solver_NEA
             //RemoveInitialNumbers(dimensions, variableNodesCopy, board);
             while (!validBoard)
             {
-                if (board.VariableNodes.Count > 90)    // generation gets exponentially slower after this point by experimentation
+                if (board.VariableNodes.Count > stackSize)    // generation gets exponentially slower after this point by experimentation
                 {
                     while (stack.Count > 0)
                     {
                         Move tempMove = stack.Pop();
                         tempMove.Cell.ChangeCellValue(tempMove.OldEntry);
                         board.VariableNodes.Remove(tempMove.Cell);
+                        variableNodesCopy.Add(tempMove.Cell);
                     }
                 }
                 Cell randomCell = variableNodesCopy[random.Next(variableNodesCopy.Count)];

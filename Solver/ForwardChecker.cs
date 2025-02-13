@@ -29,7 +29,7 @@ namespace Sudoku_Solver_NEA
             for (int i = 0; i < orderedDomain.Count; i++)
             {
                 node.ChangeCellValue(orderedDomain[i].Item2);
-                List<(Cell,int)> removed = PruneValues(node.Entry, node);   // forward check, pruning the domain early
+                List<(Cell,int)> removed = PruneValues(node);   // forward check, pruning the domain early
                 if (EmptyDomains)  // invalid board in the current state, so no point going deeper into backtracking
                 {
                     RestorePrunedValues(removed);  // reverts domain restrictions
@@ -67,7 +67,7 @@ namespace Sudoku_Solver_NEA
             {
                 ChangeMostRecentCell(node);
                 node.ChangeCellValue(orderedDomain[i].Item2);
-                List<(Cell,int)> removed = PruneValues(node.Entry, node); 
+                List<(Cell,int)> removed = PruneValues(node); 
                 if (EmptyDomains)
                 {
                     RestorePrunedValues(removed);
@@ -89,16 +89,16 @@ namespace Sudoku_Solver_NEA
             return false;
         }
 
-        private List<(Cell, int)> PruneValues(int number, Cell node)
+        private List<(Cell, int)> PruneValues(Cell node)
         {
             List<(Cell, int)> removedNumbers = new();
             List<Cell> changeNodes = Board.AdjacencyList[node];   // all cells that the given node is linked to
             foreach (Cell changeNode in changeNodes)
             {
-                if (changeNode.Domain.Contains(number))   // if the current value of the node is in the domain of a connected cell
+                if (changeNode.Domain.Contains(node.Entry))   // if the current value of the node is in the domain of a connected cell
                 {
-                    changeNode.Domain.Remove(number);  // remove the value of the connected node from the cell
-                    removedNumbers.Add((changeNode, number));  // records the cell which the number has been removed from for later use
+                    changeNode.Domain.Remove(node.Entry);  // remove the value of the connected node from the cell
+                    removedNumbers.Add((changeNode, node.Entry));  // records the cell which the number has been removed from for later use
                     if (changeNode.Domain.Count == 0)
                     {
                         EmptyDomains = true;

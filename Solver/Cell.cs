@@ -30,7 +30,10 @@ namespace Sudoku_Solver_NEA
         {
             for (int i=1; i<=dimensions; i++)
             {
-                Domain.Add(i);
+                if (!Domain.Contains(i))
+                {
+                    Domain.Add(i);
+                }
             }
         }
     }

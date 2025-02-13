@@ -11,7 +11,7 @@ namespace Sudoku_Solver_NEA
     {
         public Cell[] NodeArray { get; private set; }
         public int Occupied { get; private set; }
-        public HeapPriorityQueue(List<Cell> variableNodes, int boardDimensions) 
+        public HeapPriorityQueue(List<Cell> variableNodes) 
         {
             NodeArray = new Cell[Convert.ToInt32(variableNodes.Count)];
             Occupied = 0;
@@ -35,7 +35,7 @@ namespace Sudoku_Solver_NEA
         {
             if (Occupied == 0)
             {
-                throw new IndexOutOfRangeException("Queue is empty");
+                throw new InvalidOperationException("Queue is empty");
             }
             Cell topCell = NodeArray[0];  // returns the cell at the top of the heap (front of the queue)
             NodeArray[0] = NodeArray[Occupied-1];  // highest priority cell replace by the cell at the bottom of the heap

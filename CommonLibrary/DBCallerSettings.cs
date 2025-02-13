@@ -91,7 +91,7 @@ namespace SQLDatabase
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = $"SELECT CompletionTime from Boards b join Sessions s on b.SessionID = s.SessionID where s.UserID = @UserID";  // selects the completion time for each board completed by the user
+                command.CommandText = $"SELECT CompletionTime from Boards b JOIN Sessions s on b.SessionID = s.SessionID WHERE s.UserID = @UserID";  // selects the completion time for each board completed by the user
                 command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
                 var dataReader = command.ExecuteReader();
                 while (dataReader.Read())
@@ -113,7 +113,7 @@ namespace SQLDatabase
                 connection.ConnectionString = _connectionString;
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "SELECT avg(score), b.SessionID FROM Boards b JOIN Sessions s on b.SessionID = s.SessionID  WHERE s.userID = @UserID GROUP BY b.sessionid ORDER BY avg(score) DESC";
+                command.CommandText = "SELECT avg(score) FROM Boards b JOIN Sessions s on b.SessionID = s.SessionID  WHERE s.userID = @UserID GROUP BY b.sessionID ORDER BY avg(score) DESC";
                 command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
                 var dataReader = command.ExecuteReader();
                 if (dataReader.Read() && !dataReader.IsDBNull(0))

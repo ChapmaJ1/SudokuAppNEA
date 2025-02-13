@@ -12,7 +12,7 @@ namespace Sudoku_Solver_NEA
 {
     public class BoardGeneratorAPI: IBoardGenerator
     {
-        private readonly HttpClient client = new HttpClient();
+        private readonly HttpClient _client = new HttpClient();
         private readonly JsonSerializerOptions _options = new JsonSerializerOptions()
         {
             PropertyNameCaseInsensitive = true
@@ -22,10 +22,10 @@ namespace Sudoku_Solver_NEA
         {
             List<Board> boards = new List<Board>();
             string url = "https://sudoku-api.vercel.app/api/dosuku?query={newboard(limit:10){grids{value,difficulty}}}";
-            HttpResponseMessage response = await client.GetAsync(url);    // sends GET request, fetching 10 boards along with their associated difficulties
+            HttpResponseMessage response = await _client.GetAsync(url);    // sends GET request, fetching 10 boards along with their associated difficulties
             while (!response.IsSuccessStatusCode)   // until request is successful + response is received
             {
-                response = await client.GetAsync(url);
+                response = await _client.GetAsync(url);
             } 
             string data = await response.Content.ReadAsStringAsync();     // serialises the data into a string
             var result = JsonSerializer.Deserialize<ResponseData>(data, _options);   // deserialises the data a single ResponseData object

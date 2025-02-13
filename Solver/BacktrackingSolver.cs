@@ -81,6 +81,10 @@ namespace Sudoku_Solver_NEA
             return true;
         }
 
+        internal void ChangeMostRecentCell(Cell cell)
+        {
+            MostRecentlyChangedCell = cell;
+        }
         protected bool CheckInvalid(Cell cell)
         {
             if (cell == null)
@@ -112,11 +116,6 @@ namespace Sudoku_Solver_NEA
                 Console.WriteLine();
             }
             Console.WriteLine();  */
-        }
-
-        internal void ChangeMostRecentCell(Cell cell)
-        {
-            MostRecentlyChangedCell = cell;
         }
     }
 }
