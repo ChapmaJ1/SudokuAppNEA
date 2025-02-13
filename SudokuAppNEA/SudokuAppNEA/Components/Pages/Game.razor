@@ -564,6 +564,7 @@ else
 
     private async Task GetBackgroundBoards()   // generates new boards in the background while user is playing
     {
+        BoardGeneratorAPI generator = new();
         while (UserClient.EasyFetched == 0 || UserClient.MediumFetched == 0 || UserClient.HardFetched == 0)
         {
             List<Board> fetchedBoards = await generator.GenerateBoard();  // fetch board from API
