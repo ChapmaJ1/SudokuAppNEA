@@ -1,6 +1,5 @@
 ﻿using CommonLibrary;
 using Sudoku_Solver_NEA;
-//using SudokuAppNEA.Components.Models;
 using SudokuAppNEA.Components.Pages;
 using SharedLibrary;
 
@@ -18,6 +17,7 @@ namespace SudokuAppNEA.Components.Clients
         public int EasyFetched { get; private set; }
         public int MediumFetched { get; private set; }
         public int HardFetched { get; private set; }
+        public int SessionId { get; private set; }
 
         internal void InitialiseClient()
         {
@@ -25,11 +25,12 @@ namespace SudokuAppNEA.Components.Clients
             EasyFetched = 0;
             MediumFetched = 0;
             HardFetched = 0;
+            SessionId = 0;
         }
 
         internal void AddEntry(int score, string difficulty, int mistakeCount, int hintCount, string completionTime)
         {
-            Entry = new DatabaseEntry(score, difficulty, completionTime, mistakeCount, hintCount, User!.SessionId);
+            Entry = new DatabaseEntry(score, difficulty, completionTime, mistakeCount, hintCount, SessionId);
         }
 
         internal void SetUser(User user)
@@ -49,6 +50,7 @@ namespace SudokuAppNEA.Components.Clients
 
         internal void IncrementDifficultiesFetched(string difficulty)
         {
+            // increments one of the difficulty counters based on the difficulty of a particular board fetched from the api
             switch (difficulty)
             {
                 case "Easy": 
@@ -61,6 +63,11 @@ namespace SudokuAppNEA.Components.Clients
                     HardFetched++;
                     break;
             }
+        }
+
+        internal void SetSessionId(int id)
+        {
+            SessionId = id;
         }
     }
 }

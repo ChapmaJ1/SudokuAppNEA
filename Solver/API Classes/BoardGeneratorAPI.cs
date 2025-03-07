@@ -21,14 +21,18 @@ namespace Sudoku_Solver_NEA
         public async Task<List<Board>> GenerateBoard()
         {
             List<Board> boards = new List<Board>();
+            // sends GET request, fetching 10 boards along with their associated difficulties
             string url = "https://sudoku-api.vercel.app/api/dosuku?query={newboard(limit:10){grids{value,difficulty}}}";
-            HttpResponseMessage response = await _client.GetAsync(url);    // sends GET request, fetching 10 boards along with their associated difficulties
-            while (!response.IsSuccessStatusCode)   // until request is successful + response is received
+            HttpResponseMessage response = await _client.GetAsync(url);
+            // until request is successful + response is received
+            while (!response.IsSuccessStatusCode)
             {
                 response = await _client.GetAsync(url);
-            } 
-            string data = await response.Content.ReadAsStringAsync();     // serialises the data into a string
-            var result = JsonSerializer.Deserialize<ResponseData>(data, _options);   // deserialises the data a single ResponseData object
+            }
+            // serialises the data into a string
+            string data = await response.Content.ReadAsStringAsync();
+            // deserialises the data a single ResponseData object
+            var result = JsonSerializer.Deserialize<ResponseData>(data, _options);
             for (int i=0; i<10; i++)
             {
                 boards.Add(ConvertToBoard(result, i));
@@ -44,23 +48,28 @@ namespace Sudoku_Solver_NEA
             {
                 board.InitialiseQueue();
                 solver!.HasUniqueSolution();
-                if (board.SolutionCount >= 2)  // if board does not have a unique solution, and hence is not a valid Sudoku
+                // if board does not have a unique solution, and hence is not a valid Sudoku
+                if (board.SolutionCount >= 2)
                 {
                     for (int i = 0; i < dimensions; i++)
                     {
                         for (int j = 0; j < dimensions; j++)
                         {
-                            if (board.Solutions[0].BoardSketch[i, j] != board.Solutions[1].BoardSketch[i, j])  // a square which has a different value between the 2 solutions
+                            // indicates a square which has a different value between the 2 solution boards
+                            if (board.Solutions[0].BoardSketch[i, j] != board.Solutions[1].BoardSketch[i, j])
                             {
                                 Cell cell = board.GetCellLocation(i, j);
                                 cell.ChangeCellValue(Convert.ToInt32(board.Solutions[0].BoardSketch[i, j]));
                                 i = dimensions;
                                 j = dimensions;
-                                board.VariableNodes.Remove(cell);  // sets the cell to be fixed, taking on the value from the first solution
-                                board.Reset();  // resets the board so the solving process can be repeated to find a unique solution
+                                // sets the cell to be fixed in the set starting arrangement with it taking on the value from the first solution
+                                board.VariableNodes.Remove(cell);
+                                board.Reset();
+                                // resets the board so the solving process can be repeated to find a unique solution
                             }
                         }
                     }
+                    // resets solver metrics for next solving iteration
                     solver.ChangeMostRecentCell(null);
                     board.Solutions.Clear();
                     board.SetSolutionCount(0);
@@ -75,7 +84,8 @@ namespace Sudoku_Solver_NEA
 
         private Board ConvertToBoard(ResponseData data, int index)
         {
-            int[][] twoDimensionalSketch = data.NewBoard.Grids[index].Value;  // represents the board sketch as a jagged array
+            // represents the board sketch as a jagged array
+            int[][] twoDimensionalSketch = data.NewBoard.Grids[index].Value;
             string[,] boardSketch = new string[9, 9];
             for (int i = 0; i < 9; i++)
             {
@@ -87,11 +97,13 @@ namespace Sudoku_Solver_NEA
                     }
                     else
                     {
-                        boardSketch[i, j] = twoDimensionalSketch[i][j].ToString();  // converts the jagged array API output into a 2D array
+                        // converts the jagged array API output into a 2D array
+                        boardSketch[i, j] = twoDimensionalSketch[i][j].ToString();
                     }
                 }
             }
-            return new Board(data.NewBoard.Grids[index].Difficulty, boardSketch, 9);  // creates a board object using the API data
+            return new Board(data.NewBoard.Grids[index].Difficulty, boardSketch, 9);
+            // converts the API data into a Board object
         }
     }
 }   

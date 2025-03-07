@@ -21,6 +21,7 @@ namespace SudokuAppNEA
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
+            // injects global UserClient service
             builder.Services.AddSingleton<UserClient>();
 
             var app = builder.Build();

@@ -29,9 +29,12 @@
 
     private void HandleSubmit()
     {
+        // adds a new user record with the specified username and password to the database
+        int userId = _databaseCallerUser.AddUser(_user!.Username, _user.Password);
+        // binds user details to the injected UserClient service
         UserClient.SetUser(_user!);
-        int userId = _databaseCallerUser.AddUser(_user!.Username, _user.Password);  // find user in database if record exists, otherwise add a new user
         UserClient.User!.SetId(userId);
+        // sets default user settings ("on", "on")
         SetUserSettings();
         GoToHome();
     }

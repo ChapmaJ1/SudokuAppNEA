@@ -18,6 +18,7 @@ namespace Sudoku_Solver_NEA.Tests
             string[,] boardSketch = GenerateBoardSketch(9);
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
+            // checks whether a node has the correct number of connected nodes for 9x9 boards
             Assert.AreEqual(20, board.AdjacencyList[board.VariableNodes[0]].Count);
         }
 
@@ -27,6 +28,7 @@ namespace Sudoku_Solver_NEA.Tests
             string[,] boardSketch = GenerateBoardSketch(16);
             Board board = new Board("", boardSketch, 16);
             board.InitialiseGraph();
+            // checks whether a node has the correct number of connected nodes for 16x16 boards
             Assert.AreEqual(39, board.AdjacencyList[board.VariableNodes[0]].Count);
         }
 
@@ -36,6 +38,7 @@ namespace Sudoku_Solver_NEA.Tests
             string[,] boardSketch = GenerateBoardSketch(25);
             Board board = new Board("", boardSketch, 25);
             board.InitialiseGraph();
+            // checks whether a node has the correct number of connected nodes for 25x25 boards
             Assert.AreEqual(64, board.AdjacencyList[board.VariableNodes[0]].Count);
         }
 
@@ -55,6 +58,8 @@ namespace Sudoku_Solver_NEA.Tests
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
             BacktrackingSolver solver = new BacktrackingSolver(board);
+            // checks correctness of the CheckInvalidFull() function
+            // correctness of CheckInvalidFull() also validates the CheckInvalid() function for a particular MostRecentlyChangedCell object
             Assert.IsFalse(solver.CheckInvalidFull());
         }
 
@@ -74,6 +79,7 @@ namespace Sudoku_Solver_NEA.Tests
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
             BacktrackingSolver solver = new BacktrackingSolver(board);
+            // checks correctness of the CheckInvalidFull() function
             Assert.IsTrue(solver.CheckInvalidFull());
         }
 
@@ -93,6 +99,7 @@ namespace Sudoku_Solver_NEA.Tests
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
             BacktrackingSolver solver = new BacktrackingSolver(board);
+            // checks correctness of the CheckFinished() function
             Assert.IsFalse(solver.CheckFinished());
         }
 
@@ -112,6 +119,7 @@ namespace Sudoku_Solver_NEA.Tests
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
             BacktrackingSolver solver = new BacktrackingSolver(board);
+            // checks correctness of the CheckFinished() function
             Assert.IsTrue(solver.CheckFinished());
         }
 
@@ -130,6 +138,7 @@ namespace Sudoku_Solver_NEA.Tests
               {"6","7","4","0v","9","0v","0v","5","0v" } };
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
+            // validates functionality of the base backtracking solver
             BacktrackingSolver solver = new BacktrackingSolver(board);
             solver.Solve();
             Assert.IsFalse(solver.CheckInvalidFull());
@@ -152,6 +161,7 @@ namespace Sudoku_Solver_NEA.Tests
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
             board.InitialiseQueue();
+            // validates functionality of the forward checking solver
             ForwardChecker solver = new ForwardChecker(board);
             solver.Solve();
             Assert.IsFalse(solver.CheckInvalidFull());
@@ -164,6 +174,7 @@ namespace Sudoku_Solver_NEA.Tests
             string[,] boardSketch = GenerateBoardSketch(25);
             Board board = new Board("", boardSketch, 25);
             board.InitialiseGraph();
+            // validates functionality of the simulated annealing solver
             Annealer solver = new Annealer(board);
             solver.Solve();
             Assert.IsFalse(solver.CheckInvalidFull());
@@ -186,6 +197,7 @@ namespace Sudoku_Solver_NEA.Tests
             };
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
+            // validates functionality of the first unique solution generator (comparing solutions) for 16x16 boards
             BoardGeneratorAPI generator = new BoardGeneratorAPI();
             generator.GenerateUniqueSolution(9, board);
             Assert.AreEqual(1, board.SolutionCount);
@@ -197,6 +209,7 @@ namespace Sudoku_Solver_NEA.Tests
             string[,] boardSketch = GenerateBoardSketch(9);
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
+            // validates functionality of the first unique solution generator (comparing solutions) for 9x9 boards
             UniqueBoardGenerator generator = new();
             generator.GenerateUniqueSolution(9, board);
             Assert.AreEqual(1, board.SolutionCount);
@@ -208,32 +221,23 @@ namespace Sudoku_Solver_NEA.Tests
             string[,] boardSketch = GenerateBoardSketch(16);
             Board board = new Board("", boardSketch, 16);
             board.InitialiseGraph();
+            // validates functionality of the second unique solution generator (backtracking) for 16x16 boards
             UniqueBoardGenerator generator = new();
             generator.GenerateUniqueSolution(16, board);
             Assert.AreEqual(1, board.SolutionCount);
         }
 
         [TestMethod]
-        public void TestMoveStackPush()
+        public void TestMoveStackPushPop()
         {
             MoveStack stack = new MoveStack(5);
             stack.Push(new Move(new Cell((0, 1), 3), 3));
             stack.Push(new Move(new Cell((0, 2), 5), 5));
+            // checks if Push() method operates as expected
             Assert.AreEqual(2, stack.Count);
             Assert.ReferenceEquals(new Move(new Cell((0,2),5),5), stack.StackArray[1]);
             stack.Pop();
-            Assert.AreEqual(1, stack.Count);
-            Move move = stack.Pop();
-            Assert.ReferenceEquals(new Move(new Cell((0, 1), 3), 3), move);
-        }
-
-        [TestMethod]
-        public void TestMoveStackPop()
-        {
-            MoveStack stack = new MoveStack(5);
-            stack.Push(new Move(new Cell((0, 1), 3), 3));
-            stack.Push(new Move(new Cell((0, 2), 5), 5));
-            stack.Pop();
+            // check if Pop() method operates as expected
             Assert.AreEqual(1, stack.Count);
             Move move = stack.Pop();
             Assert.ReferenceEquals(new Move(new Cell((0, 1), 3), 3), move);
@@ -242,6 +246,7 @@ namespace Sudoku_Solver_NEA.Tests
         [TestMethod]
         public void TestMoveStackThrowsExceptionWhenPopEmpty()
         {
+            // checks if Pop() method throws an exception when trying to pop from an empty stack
             MoveStack stack = new MoveStack(5);
             Assert.ThrowsException<InvalidOperationException>(() => stack.Pop());
         }
@@ -250,16 +255,19 @@ namespace Sudoku_Solver_NEA.Tests
         public void TestPriorityQueue()
         {
             Cell newCell1 = new Cell((0, 1), 1);
-            newCell1.InitialiseDomain(5);   // sets domain of cells to a particular size
+            // sets domain of cells to a particular size
+            newCell1.InitialiseDomain(5);
             Cell newCell2 = new Cell((0, 2), 2);
             newCell2.InitialiseDomain(4);
             Cell newCell3 = new Cell((0, 3), 3);
             newCell3.InitialiseDomain(2);
 
             HeapPriorityQueue queue = new HeapPriorityQueue(new List<Cell> { newCell1, newCell2, newCell3});
+            // tests push up operation
             queue.Enqueue(newCell1);
             queue.Enqueue(newCell2);
             queue.Enqueue(newCell3);
+            // tests push down operation
             Assert.ReferenceEquals(new Cell((0, 3), 3), queue.Dequeue());
             Assert.AreEqual(2, queue.Occupied);;
             Assert.ReferenceEquals(new Cell((0,2),2), queue.Dequeue());
@@ -268,12 +276,14 @@ namespace Sudoku_Solver_NEA.Tests
         [TestMethod]
         public void TestPriorityQueueThrowsExceptionWhenDequeueEmpty()
         {
+            // tests if Dequeue() method throws an exception when trying to dequeue from an empty queue
             HeapPriorityQueue queue = new HeapPriorityQueue(new List<Cell>());
             Assert.ThrowsException<InvalidOperationException>(() => queue.Dequeue());
         }
 
         private string[,] GenerateBoardSketch(int dimensions)
         {
+            // generates an board sketch of specified size, with all cells empty and variable
             string[,] sketch = new string[dimensions,dimensions];
             for (int i=0; i<dimensions; i++)
             {

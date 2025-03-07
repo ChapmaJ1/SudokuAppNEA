@@ -19,7 +19,8 @@ namespace SQLDatabase
                 connection.Open();
                 using (SqliteCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"INSERT INTO Users (Username, Password) VALUES (@Username,@Password)";  // adds a new user with the input username and password into the Users table
+                    // adds a new user with the input username and password into the Users table
+                    command.CommandText = $"INSERT INTO Users (Username, Password) VALUES (@Username,@Password)";
                     command.Parameters.Add("@Username", SqliteType.Text).Value = username;
                     command.Parameters.Add("@Password", SqliteType.Text).Value = password;
                     command.ExecuteNonQuery();
@@ -36,19 +37,23 @@ namespace SQLDatabase
                 connection.Open();
                 using (SqliteCommand command = connection.CreateCommand())
                 {
+                    // selects the ID of a user within the database whose details match the input username and password
                     command.CommandText = $"SELECT UserID FROM Users WHERE Username = @Username and Password = @Password";
                     command.Parameters.Add("@Username", SqliteType.Text).Value = username;
                     command.Parameters.Add("@Password", SqliteType.Text).Value = password;
                     using (SqliteDataReader dataReader = command.ExecuteReader())
                     {
-                        if (dataReader.Read())  // if a user with the input username and password exists in the database
+                        // if a user with the input username and password exists in the database
+                        if (dataReader.Read())
                         {
-                            return dataReader.GetInt32(0);  // returns the user ID, with false representing the fact that the user is not new
+                            // returns the user ID
+                            return dataReader.GetInt32(0);
                         }
                     }
                 }
             }
-            return 0;  // adds a new user with the given details to the database, with true representing the fact that the user is new
+            // returns 0 to reflect that no user with matching details exists in the database
+            return 0;
         }
 
         public void AddSession(int userId)
@@ -57,11 +62,14 @@ namespace SQLDatabase
             {
                 connection.ConnectionString = _connectionString;
                 connection.Open();
-                SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "INSERT INTO Sessions (CalendarDate, UserId) VALUES(@CalendarDate, @UserID)";
-                command.Parameters.Add("@CalendarDate", SqliteType.Text).Value = DateOnly.FromDateTime(DateTime.Now).ToString();
-                command.Parameters.Add("@UserID", SqliteType.Integer).Value = userId;
-                command.ExecuteNonQuery();
+                using (SqliteCommand command = connection.CreateCommand())
+                {
+                    // adds a new session with the date and user's ID into the Sessions table
+                    command.CommandText = "INSERT INTO Sessions (CalendarDate, UserId) VALUES(@CalendarDate, @UserID)";
+                    command.Parameters.Add("@CalendarDate", SqliteType.Text).Value = DateOnly.FromDateTime(DateTime.Now).ToString();
+                    command.Parameters.Add("@UserID", SqliteType.Integer).Value = userId;
+                    command.ExecuteNonQuery();
+                }
             }
         }
 
@@ -74,7 +82,8 @@ namespace SQLDatabase
                 connection.Open();
                 using (SqliteCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"SELECT Count(*) FROM {parameter}";  // outputs the number of entries in a given table
+                    // selects the number of entries in a given table
+                    command.CommandText = $"SELECT Count(*) FROM {parameter}";
                     count = Convert.ToInt32(command.ExecuteScalar());
                 }
             }

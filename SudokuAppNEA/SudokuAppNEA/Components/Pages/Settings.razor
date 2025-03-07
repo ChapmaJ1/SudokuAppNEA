@@ -4,12 +4,9 @@
 
 <h1>Settings + Personal Statistics</h1>
 
-<div class="form-container">
+<div class="stats-container">
     <button class="btn-primary" @onclick=ChangeMistakeDetection>Mistake Detection: @_mistakeDetection</button>
     <button class="btn-primary" @onclick=ChangeScoreSaving>Save Scores To Leaderboard: @_saveScores</button>
-</div>
-
-<div class="stats-container">
     <h2>Average Mistakes: @_stats![0]</h2>
     <h2>Average Score: @_stats![1]</h2>
     <h2>Average Hints: @_stats[2]</h2>
@@ -26,17 +23,21 @@
 
     protected override void OnInitialized()
     {
+        // sets the display to reflect the user's current settings
         _mistakeDetection = UserClient.MistakeDetection;
         _saveScores = UserClient.SaveScores;
-        GetUserStats();  // fetches user stats
-        if (_stats!.Count == 0)  // if user has no previously played boards
+        // fetches user stats
+        GetUserStats();
+        // if user has no previously played boards
+        if (_stats!.Count == 0)
         {
             _stats = new List<string>() { "N/A", "N/A", "N/A", "N/A", "N/A" };
         }
     }
 
-    private void ChangeMistakeDetection() // changes frontend display for mistake detection
+    private void ChangeMistakeDetection()
     {
+        // changes frontend display for mistake detection
         if (_mistakeDetection == "On")
         {
             _mistakeDetection = "Off";
@@ -47,8 +48,9 @@
         }
     }
 
-    private void ChangeScoreSaving() // changes frontend display for score saving
+    private void ChangeScoreSaving()
     {
+        // changes frontend display for score saving
         if (_saveScores == "On")
         {
             _saveScores = "Off";
@@ -61,14 +63,18 @@
 
     private void SaveSettings()
     {
-        _databaseCallerSettings!.SaveUserSettings(_mistakeDetection!, _saveScores!, UserClient.User!.Id);  // updates user settings according to their final choices
+        // updates user settings in the database according to their final on/off selections
+        _databaseCallerSettings!.SaveUserSettings(_mistakeDetection!, _saveScores!, UserClient.User!.Id);
+        // updates bound values within the UserClient servie
         UserClient.SetMistakeDetection(_mistakeDetection!);
         UserClient.SetSaveScores(_saveScores!);
-        NavigationManager.NavigateTo("/menu");  // takes user back to menu
+        // takes user back to the menu page
+        NavigationManager.NavigateTo("/menu");
     }
 
     private void GetUserStats()
     {
+        // fetches user stats using the database caller
         _stats = _databaseCallerSettings!.GetUserStats(UserClient.User!.Id);
     }
 }

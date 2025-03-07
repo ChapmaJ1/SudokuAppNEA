@@ -13,12 +13,8 @@ namespace Sudoku_Solver_NEA
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static async Task Main()
+        static async Task Main()  // DELETE BEFORE SUBMISSION
         {
-            /*Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());*/
-
            /* int[,] boardSketch = { {8,0,0,0,2,0,0,6,0},
                              { 2,0,0,0,3,8,5,1,4 },
                              { 0,0,0,6,0,0,3,8,0 },

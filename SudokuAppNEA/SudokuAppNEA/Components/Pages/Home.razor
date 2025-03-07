@@ -39,30 +39,49 @@
 
     private async Task GetApiBoards()
     {
-        BoardGeneratorAPI generator = new();
-        while (UserClient.EasyFetched == 0 || UserClient.MediumFetched == 0 || UserClient.HardFetched == 0)
+        bool fetched = false;
+        // catches exceptions in case of the API call failing for any reason
+        while (fetched == false)
         {
-            List<Board> fetchedBoards = await generator.GenerateBoard();  // fetch board from API
-            for (int i = 0; i < 10; i++)  // 10 boards fetched to minimise the number of fetches needed, while also preventing fetching from taking too long
+            try
             {
-                UserClient.IncrementDifficultiesFetched(fetchedBoards[i].Difficulty);
-                UserClient!.FetchedBoards!.Add(fetchedBoards[i]);
+                BoardGeneratorAPI generator = new();
+                // fetches board from API in the background, while the user is logging in
+                // boards are continuously fetched until at least one board of each difficulty is stored
+                while (UserClient.EasyFetched == 0 || UserClient.MediumFetched == 0 || UserClient.HardFetched == 0)
+                {
+                    List<Board> fetchedBoards = await generator.GenerateBoard();
+                    // 10 boards fetched to minimise the number of fetches needed, while also preventing individual fetches from taking too long
+                    for (int i = 0; i < 10; i++)
+                    {
+                        UserClient.IncrementDifficultiesFetched(fetchedBoards[i].Difficulty);
+                        UserClient!.FetchedBoards!.Add(fetchedBoards[i]);
+                    }
+                }
+                fetched = true;
+            }
+            catch (Exception)
+            {
+                fetched = false;
             }
         }
     }
 
     private void HandleSubmit()
     {
+        // finds the user in the database if a record with matching details exists
+        int userId = _databaseCallerUser.FindUser(_user!.Username, _user.Password);
         UserClient.SetUser(_user!);
-        int userId = _databaseCallerUser.FindUser(_user!.Username, _user.Password);  // find user in database if record exists, otherwise add a new user
+        // if a matching user is found
         if (userId != 0)
         {
+            // binds user details to the injected UserClient service
             _user.SetId(userId);
-            _databaseCallerUser.AddSession(userId);
-            _user.SetSessionId(_databaseCallerUser.GetTableCount("sessions"));
+            // fetches the settings of the given user from the database
             GetUserSettings();
             NavigationManager.NavigateTo($"/menu");
         }
+        // if a matching user is not found
         else
         {
             _message = "Invalid Login Provided";
@@ -71,6 +90,7 @@
 
     private void GetUserSettings()
     {
+        // fetches settings + binds them accordingly to the service
         (string, string) settingsData = _databaseCallerSettings.GetUserSettings(UserClient.User!.Id);
         UserClient.SetMistakeDetection(settingsData.Item1);
         UserClient.SetSaveScores(settingsData.Item2);

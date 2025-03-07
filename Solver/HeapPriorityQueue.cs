@@ -9,6 +9,7 @@ namespace Sudoku_Solver_NEA
 {
     public class HeapPriorityQueue
     {
+        // stores the queue in the form of an array, with parent and child indices for each entry
         public Cell[] NodeArray { get; private set; }
         public int Occupied { get; private set; }
         public HeapPriorityQueue(List<Cell> variableNodes) 
@@ -19,13 +20,15 @@ namespace Sudoku_Solver_NEA
 
         public void Enqueue(Cell cell)
         {
+            // indicates that the queue is full
             if (Occupied == NodeArray.Length)
             {
                 throw new IndexOutOfRangeException("Queue is full");
             }
             else
             {
-                NodeArray[Occupied] = cell;  // inserts the cell at the bottom of the heap
+                // inserts the cell at the bottom of the heap and executes push up operation
+                NodeArray[Occupied] = cell; 
                 PushUp(Occupied);
                 Occupied++;
             }
@@ -37,22 +40,29 @@ namespace Sudoku_Solver_NEA
             {
                 throw new InvalidOperationException("Queue is empty");
             }
-            Cell topCell = NodeArray[0];  // returns the cell at the top of the heap (front of the queue)
-            NodeArray[0] = NodeArray[Occupied-1];  // highest priority cell replace by the cell at the bottom of the heap
+            // returns the cell at the top of the heap (front of the queue)
+            Cell topCell = NodeArray[0];
+            // the highest priority cell is replaced by the cell at the bottom of the heap
+            NodeArray[0] = NodeArray[Occupied-1];
             Occupied--;
+            // push down operation executed
             PushDown(0);
             return topCell;
         }
 
         private void PushUp(int childIndex)
         {
-            if (childIndex != 0)  // if not already at the top of the heap
+            // if the cell is not already at the top of the heap
+            if (childIndex != 0)
             {
                 int parentIndex = Convert.ToInt32(Math.Ceiling((decimal)childIndex / 2) - 1);
-                if (NodeArray[parentIndex].Domain.Count > NodeArray[childIndex].Domain.Count)  // if the domain of the child cell is smaller than the domain of the parent cell
+                // if the domain of the child cell is smaller than the domain of the parent cell
+                if (NodeArray[parentIndex].Domain.Count > NodeArray[childIndex].Domain.Count)
                 {
-                    SwapIndexes(parentIndex, childIndex);  // swap the parent and child cell elements
-                    PushUp(parentIndex);  // continue the process with the child cell (which is now at the parent index)
+                    // swap the parent and child cell elements
+                    SwapIndexes(parentIndex, childIndex);
+                    // recursive loop - continue the process with the child cell (which is now at the parent index)
+                    PushUp(parentIndex);
                 }
             }
         }
@@ -61,27 +71,34 @@ namespace Sudoku_Solver_NEA
         {
             int leftChildIndex = parentIndex * 2 + 1;
             int rightChildIndex = parentIndex * 2 + 2;
-            if (!(leftChildIndex > Occupied && rightChildIndex > Occupied))  // if both child indexes are out of range
+            // if at least one child index is in range (the parent has at least one child)
+            if (!(leftChildIndex > Occupied && rightChildIndex > Occupied))
             {
-                if (rightChildIndex > Occupied)  // if left child index in range, right child index out of range
+                // if left child index in range, right child index out of range
+                if (rightChildIndex > Occupied)
                 {
                     if (NodeArray[parentIndex].Domain.Count > NodeArray[leftChildIndex].Domain.Count)
                     {
                         SwapIndexes(parentIndex, leftChildIndex);
                     }
                 }
+                // otherwise, the parent has 2 children
+                // parent cannot have a right child without a left child due to the push down operation
                 else
                 {
                     if (!(NodeArray[parentIndex].Domain.Count < NodeArray[leftChildIndex].Domain.Count && NodeArray[parentIndex].Domain.Count < NodeArray[rightChildIndex].Domain.Count))  // if the domain of the parent cell is bigger than at least one of the child cell domains
                     {
                         if (NodeArray[leftChildIndex].Domain.Count < NodeArray[rightChildIndex].Domain.Count)
                         {
-                            SwapIndexes(parentIndex, leftChildIndex);  // if left child domain is smaller than right child domain, swap with left child
-                            PushDown(leftChildIndex);  // continue process with paret cell (now at left child index)
+                            // if left child domain is smaller than right child domain, swap with left child
+                            SwapIndexes(parentIndex, leftChildIndex);
+                            // recursive loop - continue process with parent cell (now at the index where the left child previously was)
+                            PushDown(leftChildIndex);
                         }
                         else
                         {
-                            SwapIndexes(parentIndex, rightChildIndex); // if right child domain is smaller than left child domain, swap with right child
+                            // if right child domain is smaller than left child domain, swap with right child
+                            SwapIndexes(parentIndex, rightChildIndex);
                             PushDown(rightChildIndex);
                         }
                     }
@@ -91,7 +108,8 @@ namespace Sudoku_Solver_NEA
 
         private void SwapIndexes(int index1, int index2)
         {
-            Cell temp = NodeArray[index1];  // creates temporary storage cell, then swaps the values at each index
+            // creates temporary storage cell, then swaps the values at each index
+            Cell temp = NodeArray[index1];
             NodeArray[index1] = NodeArray[index2];
             NodeArray[index2] = temp;
         }

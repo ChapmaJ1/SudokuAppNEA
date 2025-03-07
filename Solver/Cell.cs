@@ -26,7 +26,8 @@ namespace Sudoku_Solver_NEA
             Entry = value;
         }
 
-        internal void InitialiseDomain(int dimensions) // potential values that the cell could take without violating constraints. initially every number is possible
+        // potential values that the cell could take without violating constraints. initially every number is possible
+        internal void InitialiseDomain(int dimensions)
         {
             for (int i=1; i<=dimensions; i++)
             {

@@ -20,19 +20,23 @@ namespace Sudoku_Solver_NEA
 
         public virtual bool Solve()
         {
+            // if the board is invalid in the current state - backtrack
             if (CheckInvalid(MostRecentlyChangedCell))
             {
                 return false;
             }
+            // if the board is valid and finished - complete and can be returned 
             if (CheckFinished())
             {
                 PrintBoard(Board);
                 return true;
             }
-            Cell node = null;   // new arbitrary cell to be assigned to
+            // new arbitrary cell to be assigned to
+            Cell node = null;
+            // selects a cell which is currently empty + has no value
             for (int i = 0; i < Board.VariableNodes.Count; i++)
             {
-                if (Board.VariableNodes[i].Entry == 0)   // cell which is currently empty + has no value
+                if (Board.VariableNodes[i].Entry == 0)
                 {
                     node = Board.VariableNodes[i];
                     break;
@@ -42,25 +46,29 @@ namespace Sudoku_Solver_NEA
             {
                 for (int i = 1; i <= Board.Dimensions; i++)
                 {
-                    node.ChangeCellValue(i);   // sets board cell equal to a value and performs backtracking tree traversal with this value
+                    // sets board cell equal to a certain value and performs backtracking tree traversal with this value
+                    node.ChangeCellValue(i);
                     ChangeMostRecentCell(node);
-                    if (Solve())  // recursive loop - if the series of board cell changes leads to a solution, return true
+                    // recursive loop - if the series of board cell changes leads to a solution, return true
+                    if (Solve())
                     {
                         return true;
                     }
                 }
-                node.ChangeCellValue(0);  // backtracking back up the tree - resetting the most recently edited cell
+                // backtracks back up the tree by resetting the most recently edited cell
+                node.ChangeCellValue(0);
             }
             return false;
         }
 
         public bool CheckInvalidFull()
         {
+            // invalid board state if 2 linked nodes share the same, non-empty value, violating the Sudoku constraint
             foreach (KeyValuePair<Cell, List<Cell>> link in Board.AdjacencyList)
             {
                 foreach (Cell node in link.Value)
                 {
-                    if (link.Key.Entry == node.Entry && link.Key.Entry != 0)   // 2 linked nodes share the same, non-empty value, hence violating the Sudoku constraint
+                    if (link.Key.Entry == node.Entry && link.Key.Entry != 0)
                     {
                         return true;
                     }
@@ -71,10 +79,12 @@ namespace Sudoku_Solver_NEA
 
         public bool CheckFinished()
         {
+            // checks that the board has no cells with empty values
+            // the validity of the board in terms of Sudoku constraints is guaranteed by the CheckInvalid() function
             foreach (Cell node in Board.AdjacencyList.Keys)
             {
-                if (node.Entry == 0)  // checks that the board has no empty values
-                {                     // validity of the board in terms of Sudoku constraints is guaranteed by the CheckInvalid() function
+                if (node.Entry == 0)
+                {                     
                     return false;
                 }
             }
@@ -85,12 +95,16 @@ namespace Sudoku_Solver_NEA
         {
             MostRecentlyChangedCell = cell;
         }
+
+        // same functionality as CheckInvalidFull(), but speeds up the process by only checking nodes linked to the last changed cell
         protected bool CheckInvalid(Cell cell)
         {
+            // if null no cells have been changed yet
             if (cell == null)
             {
                 return false;
             }
+            // if a node shares the same, non-empty value with a connected node
             foreach (Cell connectedNode in Board.AdjacencyList[cell])
             {
                 if (connectedNode.Entry == cell.Entry)
@@ -105,17 +119,9 @@ namespace Sudoku_Solver_NEA
         {
             foreach (Cell cell in board.AdjacencyList.Keys)
             {
-                board.BoardSketch[cell.Position.Item1, cell.Position.Item2] = cell.Entry.ToString();   // updates board sketch to reflect the numerical entries of the cell objects
-            }                                                                               // board sketch can then be used for output
-          /*  for (int i=0; i<board.BoardSketch.GetLength(0); i++)
-            {
-                for (int j=0; j<board.BoardSketch.GetLength(0); j++)
-                {
-                    Console.Write(board.BoardSketch[i, j] + " ");
-                }
-                Console.WriteLine();
-            }
-            Console.WriteLine();  */
+                // updates board sketch to reflect the numerical entries of the cell objects
+                board.BoardSketch[cell.Position.Item1, cell.Position.Item2] = cell.Entry.ToString();
+            } 
         }
     }
 }

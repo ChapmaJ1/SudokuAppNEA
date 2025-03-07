@@ -8,6 +8,7 @@ namespace Sudoku_Solver_NEA
 {
     public class Move
     {
+        // stores details on the cell and its previous entry before a certain value change occurs
         public Cell Cell { get; private set; }
         public int OldEntry { get; private set; }
         public Move(Cell cell, int oldEntry)

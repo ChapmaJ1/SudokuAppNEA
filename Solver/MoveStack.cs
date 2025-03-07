@@ -14,7 +14,8 @@ namespace Sudoku_Solver_NEA
         public int Capacity { get; private set; }
         public MoveStack(int capacity)
         {
-            StackArray = new Move[capacity];  // maximum "capacity" most recent moves are stored
+            // when filled as much as possible, the "capacity" most recent moves are stored
+            StackArray = new Move[capacity];
             FrontPointer = -1;
             Count = 0;
             Capacity = capacity;
@@ -22,9 +23,11 @@ namespace Sudoku_Solver_NEA
 
         public void Push(Move move)
         {
-            FrontPointer = (FrontPointer + 1) % Capacity; // increments front pointer, bringing it back to the start of the array if index gets too large
+            // increments front pointer, bringing it back to the start of the array if index gets too large
+            FrontPointer = (FrontPointer + 1) % Capacity;
             StackArray[FrontPointer] = move;
-            if (Count < Capacity)  // if stack is not full, record the increase in moves being stored
+            // if stack is not full, record the increase in moves being stored
+            if (Count < Capacity) 
             {
                 Count++;
             }
@@ -32,11 +35,15 @@ namespace Sudoku_Solver_NEA
 
         public Move Pop()
         {
-            if (Count > 0)  // if stack is not empty - there is a move that can be popped
+            // if stack is not empty - there is a move that can be popped
+            if (Count > 0)
             {
-                Move move = StackArray[FrontPointer];  // returns the move at the top of the stack, indicated by the pointer
-                FrontPointer = (FrontPointer + (Capacity - 1)) % Capacity;  
-                Count--;  // records the decrease in moves being stored
+                // returns the move at the top of the stack, indicated by the pointer
+                Move move = StackArray[FrontPointer];
+                // moves the pointer back by 1 position, or to the back of the array if it is currently at the front
+                FrontPointer = (FrontPointer + (Capacity - 1)) % Capacity;
+                // records the decrease in moves being stored
+                Count--;
                 return move;
             }
             throw new InvalidOperationException();

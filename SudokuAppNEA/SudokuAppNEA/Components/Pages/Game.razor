@@ -8,6 +8,9 @@
 @if (_invalidFetch == true)
 {
     <h1 style="margin-top: 100px">Invalid Continue Request</h1>
+    <div class="form-container">
+        <button class="btn-primary" @onclick=NavigateToMenu>Menu</button>
+    </div>
 }
 else if (_rendered == false)
 {
@@ -32,11 +35,14 @@ else
             <div class="sudoku-column">
                 @for (int column = 0; column < _dimensions; column++)
                 {
-                    int columnTemp = column; // if row and column directly used, OnSelected(9,9) would be called
-                    int rowTemp = row;   // for all cells as the loop would have finished by the time of user interaction
+                    // if row and column directly used, OnSelected(_dimensions, _dimensions) would be called for all cells
+                    // for all cells as the loop would have finished by the time of user interaction, causing a logic error
+                    int columnTemp = column;
+                    int rowTemp = row;
                     string backgroundColour = "white";
                     @if (UserClient.MistakeDetection == "On")
                     {
+                        // selects background colour of each cell based on correctness
                         backgroundColour = GetBackgroundColour(rowTemp, columnTemp);
                     }
                     <button class="sudoku-cell-@_cellType" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
@@ -58,9 +64,11 @@ else
     </div>
 
     <div class="number-buttons-container-@_containerType">
-        @for (int i = 1; i <= _dimensions; i++)  // prints dimensions numbered input buttons in a line
+        @for (int i = 1; i <= _dimensions; i++)  // prints {_dimensions} numbered input buttons in a line
         {
-            int temp = i; // if i directly used, ChangeCellValue(dimensions + 1) would be called for all button clicks
+            // if i was directly used, ChangeCellValue(_dimensions + 1) would be called
+            // for all button clicks, causing a logic error
+            int temp = i;
             <button class="button-cell-@_buttonType" @onclick="() => ChangeCellValue(temp)">@i</button>
         }
         <button class="button-cell-@_buttonType" style="font-size: 25px" @onclick="() => EraseValue()">Erase</button>
@@ -81,6 +89,7 @@ else
     private Board? _board;
     private ForwardChecker? solver;
     private int[,]? _correctNumbers;
+    private string? _path;
     private bool _solved;
     private bool _userCompleted = false;
     private DateTime _launchTime;
@@ -94,6 +103,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        _path = "SavedBoard.txt";
         if (difficulty != "16")
         {
             while (UserClient!.EasyFetched == 0 || UserClient!.MediumFetched == 0 || UserClient!.HardFetched == 0)
@@ -105,21 +115,26 @@ else
         {
             GetDifficulty();
         }
-        await InitialiseBoardAndSolver();  // asynchronous method for API call
+        // asynchronous method for board generation (API call or backtracking generation)
+        await InitialiseBoardAndSolver();
         SetFrontendValues();
         _rendered = true;
         _launchTime = DateTime.Now.Add(new TimeSpan(0, _minuteDelay, _secondDelay));
         Task backgroundBoardsTask = GetBackgroundBoards();
-        while (_solved == false)  // re-render the page every second while the board is not solved
-        {                        // this is required to update the timer to reflect real-time
+        // re-renders the page every second while the board is not solved
+        // this is required to update the timer to reflect real-time
+        while (_solved == false)
+        {                        
             await Task.Delay(1000);
             StateHasChanged();
         }
+        // retrieves new boards in the background during gameplay
         await backgroundBoardsTask;
     }
 
     private async Task InitialiseBoardAndSolver()
     {
+        // if a 9x9 board selected, use the API to generate a board
         if (_dimensions == 9)
         {
             bool boardFetched = false;
@@ -136,10 +151,12 @@ else
                 }
             }
         }
+        // if the user has opted to continue a previous board, load the save from the text file
         else if (difficulty == "continue")
         {
             _boardSketch = LoadSavedBoard();
         }
+        // if the user has chosen another option, generate a new empty board sketch of the specified dimensions
         else
         {
             _boardSketch = new string[_dimensions, _dimensions];
@@ -151,6 +168,7 @@ else
                 }
             }
         }
+        // occurs if the most recent board save is bound to a user other than the one currently logged in
         if (_boardSketch!.Length == 0)
         {
             _invalidFetch = true;
@@ -158,11 +176,12 @@ else
         else
         {
             _board = new Board(difficulty, _boardSketch, _dimensions);
+            // initialise the board ready for solving
             _board!.InitialiseGraph();
             solver = new ForwardChecker(_board);
             RecordVariableNodesWithValues();
+            // alters the board by adding or removing numbers as required to form a board with a unique solution
             await MakeUniqueSolution(_board!);
-            //board!.InitialiseQueue();  // initialise the board ready for solving
             _correctNumbers = new int[_dimensions, _dimensions];
             InitialiseCorrectNumbers();
             RevertVariableNodesWithValues();
@@ -174,13 +193,16 @@ else
     {
         if (!_solved)
         {
-            string path = "SavedBoard.txt";
             string[,] boardContents = new string[_dimensions, _dimensions];
             int counter = 0;
-            foreach (Cell cell in _board!.AdjacencyList.Keys)  // can do this as adjacency list is created in order of cell position
+            // save each cell on the board to the text file
+            // this can be done using a loop as such as the adjacency list is created in order of cell position ((0,0), (0,1), ...)
+            foreach (Cell cell in _board!.AdjacencyList.Keys)
             {
+                // save the cell entry to the an array
                 string saveData = "";
                 saveData += cell.Entry.ToString();
+                // if the cell is a variable node, append a 'v' character to the end of the record
                 if (_board.VariableNodes.Contains(cell))
                 {
                     saveData += "v";
@@ -188,17 +210,21 @@ else
                 boardContents[counter / _dimensions, counter % _dimensions] = saveData;
                 counter++;
             }
-            File.WriteAllText(path, string.Empty);   // clears all text from the file
-            using (StreamWriter streamWriter = new StreamWriter(path))
+            // clears all text from the file - fresh write
+            File.WriteAllText(_path!, string.Empty);
+            using (StreamWriter streamWriter = new StreamWriter(_path!))
             {
+                // write each character from the array to the text file, in sequence
                 for (int i = 0; i < _dimensions; i++)
                 {
                     for (int j = 0; j < _dimensions; j++)
                     {
                         streamWriter.Write(boardContents[i, j] + " ");
                     }
+                    // new line character denotes a new row of the board
                     streamWriter.Write("\n");
                 }
+                // append statistics and the user's ID to the text file
                 streamWriter.WriteLine(difficulty);
                 streamWriter.WriteLine(FormatTime());
                 streamWriter.WriteLine(_mistakeCount);
@@ -209,46 +235,69 @@ else
         NavigateToMenu();
     }
 
-    private string[,] LoadSavedBoard()    // EXCEPTION HANDLING REQUIRED
+    private string[,] LoadSavedBoard()
     {
-        string path = "SavedBoard.txt";
-        int counter = 0;
-        List<string[]> cellList = new();
-        using (StreamReader streamReader = new StreamReader(path))
+        // catches exceptions in case of the file reader failing for any reason
+        try
         {
-            while (!streamReader.EndOfStream)
+            _path = "SavedBoard.txt";
+            int counter = 0;
+            List<string[]> cellList = new();
+            using (StreamReader streamReader = new StreamReader(_path))
             {
-                string line = streamReader.ReadLine() ?? string.Empty;
-                string[] cells = line.Split(" ");
-                cellList.Add(cells);
-                counter++;
+                // reads every line of the file
+                while (!streamReader.EndOfStream)
+                {
+                    // splits each line using the space character as a delimiter
+                    // this separates each cell into a different entry in the array
+                    string line = streamReader.ReadLine() ?? string.Empty;
+                    string[] cells = line.Split(" ");
+                    cellList.Add(cells);
+                    counter++;
+                }
             }
-        }
-        string[,] boardSketch = new string[counter - 5, counter - 5];
-        for (int i = 0; i < counter - 5; i++)
-        {
-            for (int j = 0; j < counter - 5; j++)
+            // if a continued game has been completed previously, it should not be able to be continued anymore
+            if (cellList[cellList.Count-1][0] == "Complete")
             {
-                boardSketch[i, j] = cellList[i][j];
+                return new string[0, 0];
             }
+            // {counter+5} lines are recorded in the file - the board details + 5 pieces of additional information such as difficulty, user ID etc
+            string[,] boardSketch = new string[counter - 5, counter - 5];
+            // reinstates the board sketch using the data from the file
+            for (int i = 0; i < counter - 5; i++)
+            {
+                for (int j = 0; j < counter - 5; j++)
+                {
+                    boardSketch[i, j] = cellList[i][j];
+                }
+            }
+            // reinstates other properties based on file data
+            difficulty = cellList[counter - 5][0];
+            _dimensions = counter - 5;
+            string[] timeDelay = cellList[counter - 4][0].Split(':');
+            // delay properties used to alter the launch time so the overall time elapsed across all saves can be displayed during gameplay
+            _minuteDelay = -1 * Convert.ToInt32(timeDelay[0]);
+            _secondDelay = -1 * Convert.ToInt32(timeDelay[1]);
+            _mistakeCount = Convert.ToInt32(cellList[counter - 3][0]);
+            _hintCount = Convert.ToInt32(cellList[counter - 2][0]);
+            int id = Convert.ToInt32(cellList[counter - 1][0]);
+            // checks if the ID of the user currently logged in matches the ID of the user who saved the board
+            if (UserClient.User!.Id == id)
+            {
+                return boardSketch;
+            }
+            // returns nothing if the ID's do not match
+            return new string[0, 0];
         }
-        difficulty = cellList[counter - 5][0];
-        _dimensions = counter - 5;
-        string[] timeDelay = cellList[counter - 4][0].Split(':');
-        _minuteDelay = -1 * Convert.ToInt32(timeDelay[0]);
-        _secondDelay = -1 * Convert.ToInt32(timeDelay[1]);
-        _mistakeCount = Convert.ToInt32(cellList[counter - 3][0]);
-        _hintCount = Convert.ToInt32(cellList[counter - 2][0]);
-        int id = Convert.ToInt32(cellList[counter - 1][0]);
-        if (UserClient.User!.Id == id)
+        catch (Exception)
         {
-            return boardSketch;
+            return new string[0, 0];
         }
-        return new string[0,0];
     }
 
-    private void RecordVariableNodesWithValues()   // stores values of non-zero variable nodes in case of a continued/stored game
+    private void RecordVariableNodesWithValues()
     {
+        // stores values of non-zero variable nodes in case of a continued/stored game
         foreach (Cell cell in _board!.VariableNodes)
         {
             if (cell.Entry != 0)
@@ -257,10 +306,12 @@ else
                 cell.ChangeCellValue(0);
             }
         }
+        // all variable nodes can be set to 0 for the solving process, ensuring it is unaffected by any previous user input
     }
 
     private void RevertVariableNodesWithValues()
     {
+        // resets the values of variable nodes to those input by the user in case of a continued game
         while (_stack.Count > 0)
         {
             Move move = _stack.Pop();
@@ -273,8 +324,8 @@ else
         BoardGeneratorAPI generator = new BoardGeneratorAPI();  
         foreach (Board savedBoard in UserClient!.FetchedBoards!)
         {
-            // no way of fetching board from API by desired difficulty
-            if (savedBoard.Difficulty == difficulty)   // checks if difficulty of a cached board matches the desired difficulty
+            // checks if difficulty of a cached board matches the desired difficulty
+            if (savedBoard.Difficulty == difficulty)
             {
                 // sets the board to the cached board, removing it from the cache and eliminating the need for another API call
                 _board = savedBoard;
@@ -287,14 +338,17 @@ else
 
     private void GetDifficulty()
     {
+        // indicates a larger board - no individual difficulty settings for these
         if (difficulty == "16" || difficulty == "25")
         {
             _dimensions = Convert.ToInt32(difficulty);
         }
+        // indicates a 9x9 board with difficulty settings
         else
         {
             _dimensions = 9;
-            if (difficulty == "Adaptive")  // get recommended difficulty from database if required, otherwise use the chosen difficulty
+            // gets recommended difficulty from database using the user's stats if required, otherwise use the chosen difficulty
+            if (difficulty == "Adaptive")
             {
                 difficulty = _databaseCallerBoard.GetRecommendedDifficulty(UserClient.User!.Id);
             }
@@ -304,11 +358,13 @@ else
     private async Task MakeUniqueSolution(Board board)
     {
         IBoardGenerator generator = GetGeneratorType(_dimensions);
-        await Task.Run(() => generator.GenerateUniqueSolution(_dimensions, board));    // runs asynchronously, allowing page to be rendered while board is being generated
+        // asynchronously alters the board so it has a unique solution
+        await Task.Run(() => generator.GenerateUniqueSolution(_dimensions, board));
     }
 
     private IBoardGenerator GetGeneratorType(int dimensions)
     {
+        // dynamically selects the generator type at runtime based on how the board was created (API or not)
         if (dimensions == 9)
         {
             return new BoardGeneratorAPI();
@@ -319,11 +375,13 @@ else
 
     private void SolveBoard()
     {
+        // if the board has not already been solved, allow new changes
         if (!_solved)
         {
             foreach (Cell cell in _board!.VariableNodes)
             {
-                cell.ChangeCellValue(_correctNumbers![cell.Position.Item1, cell.Position.Item2]); // sets the value of all cells to the correct value, ensuring they are rendered correctly
+                // sets the value of all cells to the correct value, ensuring they are rendered correctly
+                cell.ChangeCellValue(_correctNumbers![cell.Position.Item1, cell.Position.Item2]);
             }
         }
         _solved = true;
@@ -332,18 +390,23 @@ else
 
     private void InitialiseCorrectNumbers()
     {
-        for (int i = 0; i < _dimensions; i++)  // for constant time access later on
+        // array used to store numbers for rapid access later on
+        for (int i = 0; i < _dimensions; i++)
         {
             for (int j = 0; j < _dimensions; j++)
             {
-                _correctNumbers![i, j] = Convert.ToInt32(_board!.Solutions[0].BoardSketch[i, j]);  // set correct numbers
+                // sets correct numbers based on those in the solution
+                _correctNumbers![i, j] = Convert.ToInt32(_board!.Solutions[0].BoardSketch[i, j]);
             }
         }
-        _board!.Reset();  // resets the board so that it is rendered in its initial state for the user
+        // resets the board so that it is rendered in its initial state for the user
+        _board!.Reset();
     }
 
     private void SetFrontendValues()
     {
+        // selects how the board cells and numbers should be displayed to fit all elements on the page
+        // based on the board size/dimensions
         if (_dimensions == 9)
         {
             _containerType = "default";
@@ -365,19 +428,22 @@ else
         }
     }
 
-    private void OnCellSelected(int row, int column)   // also change to array method?
+    private void OnCellSelected(int row, int column)
     {
         if (!_solved)
         {
             bool found = false;
-            foreach (Cell cell in _board!.VariableNodes)  // finds the cell selected by the user
+            foreach (Cell cell in _board!.VariableNodes)
             {
+                // finds the cell selected by the user, based on position
                 if (cell.Position.Item1 == row && cell.Position.Item2 == column)
                 {
+                    // sets the _selectedCell property to indicate the cell that should be altered when a number button is pressed
                     _selectedCell = cell;
                     found = true;
                 }
             }
+            // if user selects a fixed node which cannot be altered
             if (found == false)
             {
                 _selectedCell = null;
@@ -385,30 +451,35 @@ else
         }
     }
 
-    private string DisplayCell(int row, int column)    // change to array method for linear time rendering?
+    private string DisplayCell(int row, int column)
     {
         foreach (Cell cell in _board!.AdjacencyList.Keys)
         {
             if (cell.Position.Item1 == row && cell.Position.Item2 == column)
             {
+                // if the cell contains user added note entries
                 if (cell.NoteEntries.Count != 0)
                 {
+                    // displays cell value if it is non-empty + note entries
                     if (cell.Entry != 0)
                     {
                         return $"{cell.Entry.ToString()}  ({string.Join(",", cell.NoteEntries)})";
                     }
-                    return $" ({string.Join(",", cell.NoteEntries)})";  // displays cell value if applicable + note entries
+                    return $" ({string.Join(",", cell.NoteEntries)})";
                 }
+                // if the cell contains no note entries
                 else
                 {
+                    // displays the cell value if it is non-empty, otherwise displays nothing
                     if (cell.Entry != 0)
                     {
                         return cell.Entry.ToString();
                     }
-                    return $" ";  // displays the cell value if it is non-empty, otherwise displays nothing
+                    return $" ";
                 }
             }
         }
+        // exception to catch logic errors during testing
         throw new InvalidOperationException("Cell does not exist");
     }
 
@@ -416,28 +487,35 @@ else
     {
         if (!_solved)
         {
+            // if note taking mode is off - entries directly impact the board
             if (_noteTaking == "Off")
             {
                 if (!(_selectedCell == null))
                 {
+                    // records the change + pushes it onto move stack, providing the option to undo later if necessary
                     Move move = new Move(_selectedCell, _selectedCell!.Entry);
-                    _stack.Push(move);  // records move + pushes it onto move stack
+                    _stack.Push(move);
                     _selectedCell.ChangeCellValue(number);
-                    if (number != _correctNumbers![_selectedCell.Position.Item1, _selectedCell.Position.Item2])  // if the input number is incorrect
+                    // if the input number is incorrect - does not match the value in the solution
+                    if (number != _correctNumbers![_selectedCell.Position.Item1, _selectedCell.Position.Item2])
                     {
+                        // increment the mistake count
                         _mistakeCount++;
                     }
                 }
             }
-            else  // note taking mode is on
+            // if note taking mode is on - entries do not impact the board
+            else
             {
-                if (_selectedCell!.NoteEntries.Contains(number))  // if number already noted, remove it from the list
+                // if the number is already noted, remove it from the list
+                if (_selectedCell!.NoteEntries.Contains(number))
                 {
                     _selectedCell.NoteEntries.Remove(number);
                 }
                 else
                 {
-                    _selectedCell.NoteEntries.Add(number);  // if number not already noted, add it to the list
+                    // if the number is not already noted, add it to the list
+                    _selectedCell.NoteEntries.Add(number);
                 }
             }
         }
@@ -446,8 +524,10 @@ else
     private string GetBackgroundColour(int row, int column)
     {
         string cellValue = DisplayCell(row, column);
-        string[] entriesSplit = cellValue.Split(' ');  // splits into separate parts - the entry + notes
-        if (cellValue[0].ToString() != " " && entriesSplit[0] != _correctNumbers![row, column].ToString())  // if cell is non-empty and is filled with an incorrect value
+        // splits the entry into separate parts - the cell value + any notes
+        string[] entriesSplit = cellValue.Split(' ');
+        // if cell is non-empty and is filled with an incorrect value
+        if (cellValue[0].ToString() != " " && entriesSplit[0] != _correctNumbers![row, column].ToString())
         {
             return "red";
         }
@@ -456,14 +536,31 @@ else
 
     private void CheckBoard()
     {
-        if (solver!.CheckInvalidFull() == false && solver!.CheckFinished() == true && _solved == false)  // change invalid to use correctnumbers array
-        {  // if board has been solved + not been solved in previous renders
+        // if board is complete + has not been solved in previous renders
+        if (solver!.CheckInvalidFull() == false && solver!.CheckFinished() == true && _solved == false)
+        {
+            // _userCompleted implies that the user has completed the board without using the solve functionality
             _userCompleted = true;
             _solved = true;
-            if (UserClient.SaveScores == "On")  // if the user's settings indicate that the score should be saved to the database
+            // if the user's settings indicate that the score should be saved to the database
+            if (UserClient.SaveScores == "On")
             {
+                // if this is the first board to be completed in the session
+                if (UserClient.SessionId == 0)
+                {
+                    // add a new session to the database
+                    DBCallerUser databaseCallerUser = new();
+                    databaseCallerUser.AddSession(UserClient.User!.Id);
+                    // bind the session id to the UserClient service
+                    UserClient.SetSessionId(databaseCallerUser.GetTableCount("sessions"));
+                }
+                // creates a new record for the board entry using the existing session id + adds it to the database
                 UserClient.AddEntry(GenerateScore(difficulty!), difficulty!, _mistakeCount, _hintCount, FormatTime());
-                _databaseCallerBoard.AddEntry(UserClient.Entry!);  // creates a new record for the board entry + adds it to the database
+                _databaseCallerBoard.AddEntry(UserClient.Entry!);
+            }
+            using (StreamWriter streamWriter = new StreamWriter(_path!))
+            {
+                streamWriter.WriteLine("Complete");
             }
         }
     }
@@ -483,26 +580,32 @@ else
         {
             difficultyBonus = 1000;
         }
-        int score = 5000 - timeScoreSubtraction - mistakeScoreSubtraction - hintScoreSubtraction + difficultyBonus;  // score calculation, from an initial score of 5000
+        // score calculation performed based on various factors, subtracting from an initial maximum score of 5000
+        int score = 5000 - timeScoreSubtraction - mistakeScoreSubtraction - hintScoreSubtraction + difficultyBonus;
+        // negative scores brought up to 0
         if (score < 0)
         {
-            return 0;  // negative scores brought up to 0
+            return 0;
         }
         return score;
     }
 
     private string FormatTime()
     {
+        // calculates the time spent on the board
         TimeSpan currentTime = DateTime.Now - _launchTime;
+        // splits the time into minutes and seconds
         if (currentTime.Seconds < 10)
         {
-            return $"{currentTime.Minutes}:0{currentTime.Seconds}";  // eg formats as 7:06 instead of 7:6
+            // e.g. time formats as 7:06 instead of 7:6
+            return $"{currentTime.Minutes}:0{currentTime.Seconds}";
         }
         return $"{currentTime.Minutes}:{currentTime.Seconds}";
     }
 
     private void EraseValue()
     {
+        // removes the value of a variable cell, providing that the board has not been solved already
         if (!_solved && _selectedCell != null)
         {
             _selectedCell!.ChangeCellValue(0); 
@@ -522,22 +625,27 @@ else
         if (!_solved)
         {
             List<Cell> emptyCells = new();
+            // adds all cells that currently have no value to a list
             foreach (Cell cell in _board!.VariableNodes)
             {
                 if (cell.Entry == 0)
                 {
-                    emptyCells.Add(cell);  // adds all cells that currently have no value to a list
+                    emptyCells.Add(cell);
                 }
             }
             Random random = new Random();
+            // selects a random empty cell from the list
             int randomIndex = random.Next(emptyCells.Count);
-            Cell selectedCell = emptyCells[randomIndex];  // selects a random empty cell
-            selectedCell.ChangeCellValue(_correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2]); // fills the random cell
+            Cell selectedCell = emptyCells[randomIndex];
+            // fills the random cell with the correct value + increment hint count
+            selectedCell.ChangeCellValue(_correctNumbers![selectedCell.Position.Item1, selectedCell.Position.Item2]);
+            _hintCount++;
         }
     }
 
-    private void ChangeNotesFunctionality()  // changes frontend display + functionality when changing cell values
+    private void ChangeNotesFunctionality()
     {
+        // changes frontend display + functionality when changing cell values
         if (_noteTaking == "On")
         {
             _noteTaking = "Off";
@@ -552,8 +660,9 @@ else
     {
         if (_stack.Count > 0)
         {
+            // sets the given cell to its original entry before being changed
             Move move = _stack.Pop();
-            move.Cell.ChangeCellValue(move.OldEntry);  // sets the given cell to its original entry before being changed
+            move.Cell.ChangeCellValue(move.OldEntry);
         }
     }
 
@@ -562,15 +671,33 @@ else
         NavigationManager.NavigateTo("/menu");
     }
 
-    private async Task GetBackgroundBoards()   // generates new boards in the background while user is playing
+    private async Task GetBackgroundBoards()
     {
-        while (UserClient.EasyFetched == 0 || UserClient.MediumFetched == 0 || UserClient.HardFetched == 0)
+        bool fetched = false;
+
+            // catches exceptions in case of the API call failing for any reason
+        while (fetched == false)
         {
-            List<Board> fetchedBoards = await generator.GenerateBoard();  // fetch board from API
-            for (int i = 0; i < 10; i++)  // 10 boards fetched to minimise the number of fetches needed, while also preventing fetching from taking too long
+            try
             {
-                UserClient.IncrementDifficultiesFetched(fetchedBoards[i].Difficulty);
-                UserClient!.FetchedBoards!.Add(fetchedBoards[i]);
+                // generates new boards asynchronously in the background while user is playing
+                BoardGeneratorAPI generator = new();
+                // boards are continuously fetched until at least one board of each difficulty is stored
+                while (UserClient.EasyFetched == 0 || UserClient.MediumFetched == 0 || UserClient.HardFetched == 0)
+                {
+                    // 10 boards fetched to minimise the number of fetches needed, while also preventing individual fetches from taking too long
+                    List<Board> fetchedBoards = await generator.GenerateBoard();
+                    for (int i = 0; i < 10; i++)
+                    {
+                        UserClient.IncrementDifficultiesFetched(fetchedBoards[i].Difficulty);
+                        UserClient!.FetchedBoards!.Add(fetchedBoards[i]);
+                    }
+                }
+                fetched = true;
+            }
+            catch (Exception)
+            {
+                fetched = false;
             }
         }
     }

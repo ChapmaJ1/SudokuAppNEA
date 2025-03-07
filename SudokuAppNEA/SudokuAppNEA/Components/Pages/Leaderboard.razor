@@ -1,9 +1,10 @@
 ﻿@page "/leaderboard"
 @inject NavigationManager NavigationManager
+@inject UserClient UserClient
 
 <h1 style="font-size: 50px; text-align: center">Leaderboard</h1>
 
-@if (_leaderboardEntries == null)  // database records in the process of being fetched
+@if (_leaderboardEntriesGlobal == null || _leaderboardEntriesPersonal == null)  // database records in the process of being fetched
 {
     <h1 style="margin-top: 100px">Loading...</h1>
 }
@@ -17,8 +18,10 @@ else
             <strong><u>Difficulty</u></strong>
             <strong><u>Date</u></strong>
         </div>
-        @foreach (LeaderboardEntry entry in _leaderboardEntries)  // displays each leaderboard entry in a suitable format
+        @foreach (LeaderboardEntry entry in GetLeaderboardType())
+        // selects global or personal leaderboard. by default, global leaderboard is displayed
         {
+            // displays each leaderboard entry in a suitable format
             <div class="leaderboard-text">
                 <h3>@entry.Username</h3>
                 <h3>@entry.Score</h3>
@@ -27,18 +30,46 @@ else
                 <h3>@entry.Date</h3>
             </div>
         }
+    </div>
+    <div class="horizontal-buttons">
         <button class="btn-leaderboard" @onclick=NavigateToMenu>Main Menu</button>
+        <button class="btn-leaderboard" @onclick=ChangeLeaderboardTypeGlobal>Global Leaderboard</button>
+        <button class="btn-leaderboard" @onclick=ChangeLeaderboardTypePersonal>Personal Leaderboard</button>
     </div>
 }
 
 
 @code {
-    private List<LeaderboardEntry>? _leaderboardEntries;
+    private List<LeaderboardEntry>? _leaderboardEntriesGlobal;
+    private List<LeaderboardEntry>? _leaderboardEntriesPersonal;
     private DBCallerBoard _databaseCallerBoard = new DBCallerBoard();
+    private bool _personal = false;    // add to class diagram
 
     protected override void OnInitialized()
     {
-        _leaderboardEntries = _databaseCallerBoard.GetLeaderboardEntries();  // gets leaderboard entries from database
+        // fetches leaderboard entries from database in a list
+        _leaderboardEntriesGlobal = _databaseCallerBoard.GetLeaderboardEntries();
+        _leaderboardEntriesPersonal = _databaseCallerBoard.GetLeaderboardEntriesPersonal(UserClient.User!);
+    }
+
+    private List<LeaderboardEntry> GetLeaderboardType()
+    {
+        // dynamically selects which list to display details of based on the user's choice
+        if (_personal == false)
+        {
+            return _leaderboardEntriesGlobal!;
+        }
+        return _leaderboardEntriesPersonal!;
+    }
+
+    private void ChangeLeaderboardTypeGlobal()
+    {
+        _personal = false;
+    }
+
+    private void ChangeLeaderboardTypePersonal()
+    {
+        _personal = true;
     }
 
     private void NavigateToMenu()

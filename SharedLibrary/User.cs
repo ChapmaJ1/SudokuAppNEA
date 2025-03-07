@@ -10,17 +10,10 @@ namespace SharedLibrary
         public string Password { get; set; } = string.Empty;
         [Required]
         public int Id { get; private set; }
-        [Required]
-        public int SessionId { get; private set; }
 
         public void SetId(int id)
         {
             Id = id;
-        }
-
-        public void SetSessionId(int sessionId)
-        {
-            SessionId = sessionId;
         }
     }
 }
