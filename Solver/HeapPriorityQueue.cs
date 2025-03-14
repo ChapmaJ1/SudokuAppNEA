@@ -72,7 +72,7 @@ namespace Sudoku_Solver_NEA
             int leftChildIndex = parentIndex * 2 + 1;
             int rightChildIndex = parentIndex * 2 + 2;
             // if at least one child index is in range (the parent has at least one child)
-            if (!(leftChildIndex > Occupied && rightChildIndex > Occupied))
+            if (leftChildIndex <= Occupied) 
             {
                 // if left child index in range, right child index out of range
                 if (rightChildIndex > Occupied)

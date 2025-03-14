@@ -23,7 +23,7 @@ namespace SQLDatabase
                     // selects the stats relating to a specified user and their completed boards
                     command.CommandText = $"SELECT avg(mistakes), avg(score), avg(hints) FROM Boards b JOIN Sessions s on b.SessionID = s.SessionID where s.UserID = @UserID";  // gets stats for a particular user, such as the average mistakes and average score per board
                     command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
-                    var dataReader = command.ExecuteReader();
+                    SqliteDataReader dataReader = command.ExecuteReader();
                     if (dataReader.Read() && !dataReader.IsDBNull(0))
                     {
                         stats.Add(Math.Round(dataReader.GetDouble(0), 1).ToString());
@@ -50,7 +50,7 @@ namespace SQLDatabase
                     // fetches the user's settings saved in the database
                     command.CommandText = $"SELECT MistakeDetection, SaveScores FROM UserSettings WHERE UserID = @UserID";
                     command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
-                    var dataReader = command.ExecuteReader();
+                    SqliteDataReader dataReader = command.ExecuteReader();
                     dataReader.Read();
                     // returns the data in (mistakeDetection, saveScores) format
                     settings = (dataReader.GetString(0), dataReader.GetString(1));
@@ -109,7 +109,7 @@ namespace SQLDatabase
                     // selects the completion time for each board completed by the user
                     command.CommandText = $"SELECT CompletionTime from Boards b JOIN Sessions s on b.SessionID = s.SessionID WHERE s.UserID = @UserID";
                     command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
-                    var dataReader = command.ExecuteReader();
+                    SqliteDataReader dataReader = command.ExecuteReader();
                     // for each board which the user has completed
                     while (dataReader.Read())
                     {
@@ -139,7 +139,7 @@ namespace SQLDatabase
                     // gets the highest average score of a single session for a user
                     command.CommandText = "SELECT avg(score) FROM Boards b JOIN Sessions s on b.SessionID = s.SessionID  WHERE s.userID = @UserID GROUP BY b.sessionID ORDER BY avg(score) DESC";
                     command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
-                    var dataReader = command.ExecuteReader();
+                    SqliteDataReader dataReader = command.ExecuteReader();
                     // if the query does not return NULL - the user has previously completed at least one board
                     if (dataReader.Read() && !dataReader.IsDBNull(0))
                     {

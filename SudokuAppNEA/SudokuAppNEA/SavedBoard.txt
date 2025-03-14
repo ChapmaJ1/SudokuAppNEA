@@ -1,1 +1,14 @@
-Complete
+6 5 0v 0v 0v 0v 0v 4 0v 
+8 0v 9 0v 0v 2v 0v 0v 0v 
+1 0v 7 8 3 5 0v 2 0v 
+0v 2 6 1 8 0v 0v 3 9 
+0v 0v 4 0v 5 7 8 0v 0v 
+0v 9 0v 0v 0v 6 0v 0v 5 
+2 0v 0v 5 0v 0v 0v 9 0v 
+0v 0v 3 6 9 0v 2 0v 7 
+9 0v 5 2 7 0v 0v 0v 4 
+Medium
+0:31
+3
+0
+1

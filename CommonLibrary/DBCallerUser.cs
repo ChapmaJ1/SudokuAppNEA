@@ -26,6 +26,7 @@ namespace SQLDatabase
                     command.ExecuteNonQuery();
                 }
             }
+            // gets the user id of the new user
             return GetTableCount("users");
         }
 
@@ -41,19 +42,37 @@ namespace SQLDatabase
                     command.CommandText = $"SELECT UserID FROM Users WHERE Username = @Username and Password = @Password";
                     command.Parameters.Add("@Username", SqliteType.Text).Value = username;
                     command.Parameters.Add("@Password", SqliteType.Text).Value = password;
-                    using (SqliteDataReader dataReader = command.ExecuteReader())
+                    SqliteDataReader dataReader = command.ExecuteReader();
+                    // if a user with the input username and password exists in the database
+                    if (dataReader.Read())
                     {
-                        // if a user with the input username and password exists in the database
-                        if (dataReader.Read())
-                        {
-                            // returns the user ID
-                            return dataReader.GetInt32(0);
-                        }
+                        // returns the user ID
+                        return dataReader.GetInt32(0);
                     }
                 }
             }
             // returns 0 to reflect that no user with matching details exists in the database
             return 0;
+        }
+
+        public bool UsernameAlreadyRegistered(string username)  // ADD TO WRITE UP
+        {
+            using (SqliteConnection connection = new SqliteConnection())
+            {
+                connection.ConnectionString = _connectionString;
+                connection.Open();
+                using (SqliteCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT UserID FROM Users WHERE Username = @Username";
+                    command.Parameters.Add("@Username", SqliteType.Text).Value = username;
+                    SqliteDataReader dataReader = command.ExecuteReader();
+                    if (dataReader.Read() && !dataReader.IsDBNull(0))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public void AddSession(int userId)
@@ -82,7 +101,7 @@ namespace SQLDatabase
                 connection.Open();
                 using (SqliteCommand command = connection.CreateCommand())
                 {
-                    // selects the number of entries in a given table
+                    // fetches the number of entries in a given table
                     command.CommandText = $"SELECT Count(*) FROM {parameter}";
                     count = Convert.ToInt32(command.ExecuteScalar());
                 }

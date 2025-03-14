@@ -43,6 +43,7 @@ else
                     @if (UserClient.MistakeDetection == "On")
                     {
                         // selects background colour of each cell based on correctness
+                        // and whether or not it is connected to the currently selected cell
                         backgroundColour = GetBackgroundColour(rowTemp, columnTemp);
                     }
                     <button class="sudoku-cell-@_cellType" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
@@ -87,6 +88,7 @@ else
     private Cell? _selectedCell;
     private string[,]? _boardSketch;
     private Board? _board;
+    private Cell[,]? _boardArray;
     private ForwardChecker? solver;
     private int[,]? _correctNumbers;
     private string? _path;
@@ -117,7 +119,17 @@ else
         }
         // asynchronous method for board generation (API call or backtracking generation)
         await InitialiseBoardAndSolver();
+        // sets the dimensions of the frontend display (board and buttons) based on board size
         SetFrontendValues();
+        int cellCounter = 0;
+        // array populated to store the cells representing each board square
+        // for rapid access in the DisplayCell() and OnCellSelected() rendering methods
+        _boardArray = new Cell[_dimensions, _dimensions];
+        foreach (Cell cell in _board!.AdjacencyList.Keys)
+        {
+            _boardArray[cellCounter/_dimensions, cellCounter%_dimensions] = cell;
+            cellCounter++;
+        }
         _rendered = true;
         _launchTime = DateTime.Now.Add(new TimeSpan(0, _minuteDelay, _secondDelay));
         Task backgroundBoardsTask = GetBackgroundBoards();
@@ -430,22 +442,17 @@ else
 
     private void OnCellSelected(int row, int column)
     {
+        // finds the cell selected by the user, based on position
         if (!_solved)
         {
-            bool found = false;
-            foreach (Cell cell in _board!.VariableNodes)
+            if (_board!.VariableNodes.Contains(_boardArray![row, column]))
             {
-                // finds the cell selected by the user, based on position
-                if (cell.Position.Item1 == row && cell.Position.Item2 == column)
-                {
-                    // sets the _selectedCell property to indicate the cell that should be altered when a number button is pressed
-                    _selectedCell = cell;
-                    found = true;
-                }
+                // sets the _selectedCell property to indicate the cell that should be altered when a number button is pressed
+                _selectedCell = _boardArray[row, column];
             }
-            // if user selects a fixed node which cannot be altered
-            if (found == false)
+            else
             {
+                // if user selects a fixed node which cannot be altered
                 _selectedCell = null;
             }
         }
@@ -453,34 +460,27 @@ else
 
     private string DisplayCell(int row, int column)
     {
-        foreach (Cell cell in _board!.AdjacencyList.Keys)
+        Cell cell = _boardArray![row, column];
+        // if the cell contains user added note entries
+        if (cell.NoteEntries.Count != 0)
         {
-            if (cell.Position.Item1 == row && cell.Position.Item2 == column)
+            // displays cell value if it is non-empty + note entries
+            if (cell.Entry != 0)
             {
-                // if the cell contains user added note entries
-                if (cell.NoteEntries.Count != 0)
-                {
-                    // displays cell value if it is non-empty + note entries
-                    if (cell.Entry != 0)
-                    {
-                        return $"{cell.Entry.ToString()}  ({string.Join(",", cell.NoteEntries)})";
-                    }
-                    return $" ({string.Join(",", cell.NoteEntries)})";
-                }
-                // if the cell contains no note entries
-                else
-                {
-                    // displays the cell value if it is non-empty, otherwise displays nothing
-                    if (cell.Entry != 0)
-                    {
-                        return cell.Entry.ToString();
-                    }
-                    return $" ";
-                }
+                return $"{cell.Entry.ToString()}  ({string.Join(",", cell.NoteEntries)})";
             }
+            return $" ({string.Join(",", cell.NoteEntries)})";
         }
-        // exception to catch logic errors during testing
-        throw new InvalidOperationException("Cell does not exist");
+        // if the cell contains no note entries
+        else
+        {
+            // displays the cell value if it is non-empty, otherwise displays nothing
+            if (cell.Entry != 0)
+            {
+                return cell.Entry.ToString();
+            }
+            return $" ";
+        }
     }
 
     private void ChangeCellValue(int number)
@@ -530,6 +530,14 @@ else
         if (cellValue[0].ToString() != " " && entriesSplit[0] != _correctNumbers![row, column].ToString())
         {
             return "red";
+        }
+        else if (_selectedCell != null)
+        {
+            // if cell is connected to _selectedCell in the graph
+            if (_board!.AdjacencyList[_selectedCell].Contains(_boardArray![row, column]))
+            {
+                return "#e2e2e2";
+            }
         }
         return "white";
     }

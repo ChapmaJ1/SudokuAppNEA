@@ -44,7 +44,7 @@ namespace SQLDatabase
                 {
                     // selects details of all boards in the database from the Boards table
                     command.CommandText = "SELECT u.Username, b.Score, b.CompletionTime, b.Difficulty, s.CalendarDate FROM Boards b JOIN Sessions s on b.SessionID = s.SessionID JOIN Users u on s.UserID = u.UserID order by b.Score DESC";
-                    var reader = command.ExecuteReader();
+                    SqliteDataReader reader = command.ExecuteReader();
                     // fetches details on all boards returned by the query
                     while (reader.Read())
                     {

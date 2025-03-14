@@ -6,6 +6,7 @@
 <EditForm Model="@_user" FormName="Login" OnValidSubmit="HandleSubmit">
         <DataAnnotationsValidator />
     <div class="form-container">
+        <h2>@_message</h2>
         <div>
             <label class="form-label" for="username">Username:</label>
             <InputText id="username" @bind-Value="_user!.Username" class="form-control" />
@@ -26,17 +27,41 @@
     private User? _user { get; set; } = new User();
     private DBCallerUser _databaseCallerUser = new DBCallerUser();
     private DBCallerSettings _databaseCallerSettings = new DBCallerSettings();
+    private string? _message;
+
+    protected override void OnInitialized()
+    {
+        _message = "Password must be at least 8 characters long with at least 1 special character";
+    }
 
     private void HandleSubmit()
     {
-        // adds a new user record with the specified username and password to the database
-        int userId = _databaseCallerUser.AddUser(_user!.Username, _user.Password);
-        // binds user details to the injected UserClient service
-        UserClient.SetUser(_user!);
-        UserClient.User!.SetId(userId);
-        // sets default user settings ("on", "on")
-        SetUserSettings();
-        GoToHome();
+        // if username is not already taken
+        if (_databaseCallerUser.UsernameAlreadyRegistered(_user!.Username))
+        {
+            _message = "Username already taken";
+        }
+        // if password satisfies length constraint
+        else    if (_user!.Password.Length < 8)
+        {
+            _message = "Password is too short";
+        }
+        // if password contains no special characters
+        else if (!_user.Password.Any(character => !char.IsLetterOrDigit(character)))
+        {
+            _message = "Password contains no special characters";
+        }
+        else
+        {
+            // adds a new user record with the specified username and password to the database
+            int userId = _databaseCallerUser.AddUser(_user!.Username, _user.Password);
+            // binds user details to the injected UserClient service
+            UserClient.SetUser(_user!);
+            UserClient.User!.SetId(userId);
+            // sets default user settings ("on", "on")
+            SetUserSettings();
+            GoToHome();
+        }
     }
 
     private void SetUserSettings()
