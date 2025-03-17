@@ -94,29 +94,34 @@ else
 
     private void SolveBoard()
     {
+        _solvable = true;
         _board = new Board("", _sketch, _dimensions);
         // initialises the board's graph and priority queue, using the altered sketch, and solves
         _board.InitialiseGraph();
         _board!.InitialiseQueue();
-        BacktrackingSolver _solver;
+        BacktrackingSolver solver;
         // dynamically selects the type of solver to use based on board size
         if (_dimensions == 25)
         {
-            _solver = new Annealer(_board);
+            solver = new Annealer(_board);
         }
         else
         {
-            _solver = new ForwardChecker(_board);
+            solver = new ForwardChecker(_board);
         }
         // checks if the board input by the user violates a constraint, and is hence unsolvable
-        if (_solver.CheckInvalidFull())
+        var fixedNodes = _board.AdjacencyList.Keys.Except(_board.VariableNodes);
+        foreach (Cell cell in fixedNodes)
         {
-            _solvable = false;
+            if (solver.CheckInvalid(cell))
+            {
+                _solvable = false;
+                break;
+            }
         }
-        else
+        if (_solvable == true)
         {
-            _solvable = true;
-            _solver.Solve();
+            solver.Solve();
         }
     }
 

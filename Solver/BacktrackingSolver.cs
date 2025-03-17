@@ -91,13 +91,8 @@ namespace Sudoku_Solver_NEA
             return true;
         }
 
-        internal void ChangeMostRecentCell(Cell cell)
-        {
-            MostRecentlyChangedCell = cell;
-        }
-
         // same functionality as CheckInvalidFull(), but speeds up the process by only checking nodes linked to the last changed cell
-        protected bool CheckInvalid(Cell cell)
+        public bool CheckInvalid(Cell cell)
         {
             // if null no cells have been changed yet
             if (cell == null)
@@ -113,6 +108,11 @@ namespace Sudoku_Solver_NEA
                 }
             }
             return false;
+        }
+
+        internal void ChangeMostRecentCell(Cell cell)
+        {
+            MostRecentlyChangedCell = cell;
         }
 
         protected void PrintBoard(Board board)
