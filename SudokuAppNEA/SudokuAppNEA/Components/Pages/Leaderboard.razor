@@ -49,7 +49,7 @@ else
     {
         // fetches leaderboard entries from database in a list
         _leaderboardEntriesGlobal = _databaseCallerBoard.GetLeaderboardEntries();
-        _leaderboardEntriesPersonal = _databaseCallerBoard.GetLeaderboardEntriesPersonal(UserClient.User!);
+        _leaderboardEntriesPersonal = _databaseCallerBoard.GetLeaderboardEntriesPersonal(UserClient.User!.Id);
     }
 
     private List<LeaderboardEntry> GetLeaderboardType()

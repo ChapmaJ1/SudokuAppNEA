@@ -15,31 +15,40 @@ namespace Sudoku_Solver_NEA.Tests
         [TestMethod]
         public void TestGraph9x9()
         {
-            string[,] boardSketch = GenerateBoardSketch(9);
+            string[,] boardSketch = GenerateEmptyBoardSketch(9);
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
             // checks whether a node has the correct number of connected nodes for 9x9 boards
-            Assert.AreEqual(20, board.AdjacencyList[board.VariableNodes[0]].Count);
+            foreach (Cell cell in board.AdjacencyList.Keys)
+            {
+                Assert.AreEqual(20, board.AdjacencyList[cell].Count);
+            }
         }
 
         [TestMethod]
         public void TestGraph16x16()
         {
-            string[,] boardSketch = GenerateBoardSketch(16);
+            string[,] boardSketch = GenerateEmptyBoardSketch(16);
             Board board = new Board("", boardSketch, 16);
             board.InitialiseGraph();
             // checks whether a node has the correct number of connected nodes for 16x16 boards
-            Assert.AreEqual(39, board.AdjacencyList[board.VariableNodes[0]].Count);
+            foreach (Cell cell in board.AdjacencyList.Keys)
+            {
+                Assert.AreEqual(39, board.AdjacencyList[cell].Count);
+            }
         }
 
         [TestMethod]
         public void TestGraph25x25()
         {
-            string[,] boardSketch = GenerateBoardSketch(25);
+            string[,] boardSketch = GenerateEmptyBoardSketch(25);
             Board board = new Board("", boardSketch, 25);
             board.InitialiseGraph();
             // checks whether a node has the correct number of connected nodes for 25x25 boards
-            Assert.AreEqual(64, board.AdjacencyList[board.VariableNodes[0]].Count);
+            foreach (Cell cell in board.AdjacencyList.Keys)
+            {
+                Assert.AreEqual(64, board.AdjacencyList[cell].Count);
+            }
         }
 
         [TestMethod]
@@ -124,6 +133,32 @@ namespace Sudoku_Solver_NEA.Tests
         }
 
         [TestMethod]
+        public void TestMoveStackPushPop()
+        {
+            MoveStack stack = new MoveStack(5);
+            stack.Push(new Move(new Cell((0, 1), 3), 3));
+            stack.Push(new Move(new Cell((0, 2), 5), 5));
+            // checks if Push() method operates as expected
+            Assert.AreEqual(2, stack.Count);
+            Assert.AreEqual((0,2), stack.StackArray[1].Cell.Position);
+            Assert.AreEqual(5, stack.StackArray[1].OldEntry);
+            stack.Pop();
+            // check if Pop() method operates as expected
+            Assert.AreEqual(1, stack.Count);
+            Move move = stack.Pop();
+            Assert.AreEqual((0, 1), move.Cell.Position);
+            Assert.AreEqual(3, move.OldEntry);
+        }
+
+        [TestMethod]
+        public void TestMoveStackThrowsExceptionWhenPopEmpty()
+        {
+            // checks if Pop() method throws an exception when trying to pop from an empty stack
+            MoveStack stack = new MoveStack(5);
+            Assert.ThrowsException<InvalidOperationException>(() => stack.Pop());
+        }
+
+        [TestMethod]
         public void TestBacktrackingSolver()
         {
             string[,] boardSketch =
@@ -171,7 +206,7 @@ namespace Sudoku_Solver_NEA.Tests
         [TestMethod]
         public void TestAnnealer()
         {
-            string[,] boardSketch = GenerateBoardSketch(25);
+            string[,] boardSketch = GenerateEmptyBoardSketch(25);
             Board board = new Board("", boardSketch, 25);
             board.InitialiseGraph();
             // validates functionality of the simulated annealing solver
@@ -182,34 +217,27 @@ namespace Sudoku_Solver_NEA.Tests
         }
 
         [TestMethod]
-        public void TestAPIUniqueGenerator()
+        public async Task TestAPIUniqueGenerator()
         {
-            string[,] boardSketch =
-            { {"1","0v","0v","0v","2","8","4","3","0v" },
-              {"2","0v","0v","3","0v","0v","8","0v","0v" },
-              {"0v","0v","0v","1","0v","0v","6","0v","0v" },
-              {"0v","0v","0v","5","7","0v","0v","0v","0v" },
-              {"8","0v","0v","0v","0v","0v","2","0v","9" },
-              {"0v","7","0v","9","0v","2","0v","5","0v" },
-              {"0v","0v","1","4","0v","0v","0v","0v","0v" },
-              {"0v","6","0v","0v","0v","0v","0v","0v","0v" },
-              {"0v","0v","0v","2","0v","0v","5","4","6" }
-            };
+            BoardGeneratorAPI generator = new();
+            // generates a board from the API
+            List<Board> boards = await generator.GenerateBoard();
+            string[,] boardSketch = boards[0].BoardSketch;
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
-            // validates functionality of the first unique solution generator (comparing solutions) for 16x16 boards
-            BoardGeneratorAPI generator = new BoardGeneratorAPI();
+            // validates functionality of the first unique solution generator (comparing solutions) for 9x9 boards
             generator.GenerateUniqueSolution(9, board);
+            // checks for uniqueness of solution
             Assert.AreEqual(1, board.SolutionCount);
         }
 
         [TestMethod]
         public void TestGeneralUniqueGenerator9x9()  // not strictly used in program but nice for completeness
         {
-            string[,] boardSketch = GenerateBoardSketch(9);
+            string[,] boardSketch = GenerateEmptyBoardSketch(9);
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
-            // validates functionality of the first unique solution generator (comparing solutions) for 9x9 boards
+            // validates functionality of the second unique solution generator (backtracking) for 9x9 boards
             UniqueBoardGenerator generator = new();
             generator.GenerateUniqueSolution(9, board);
             Assert.AreEqual(1, board.SolutionCount);
@@ -218,7 +246,7 @@ namespace Sudoku_Solver_NEA.Tests
         [TestMethod]
         public void TestGeneralUniqueGenerator16x16()
         {
-            string[,] boardSketch = GenerateBoardSketch(16);
+            string[,] boardSketch = GenerateEmptyBoardSketch(16);
             Board board = new Board("", boardSketch, 16);
             board.InitialiseGraph();
             // validates functionality of the second unique solution generator (backtracking) for 16x16 boards
@@ -227,61 +255,7 @@ namespace Sudoku_Solver_NEA.Tests
             Assert.AreEqual(1, board.SolutionCount);
         }
 
-        [TestMethod]
-        public void TestMoveStackPushPop()
-        {
-            MoveStack stack = new MoveStack(5);
-            stack.Push(new Move(new Cell((0, 1), 3), 3));
-            stack.Push(new Move(new Cell((0, 2), 5), 5));
-            // checks if Push() method operates as expected
-            Assert.AreEqual(2, stack.Count);
-            Assert.ReferenceEquals(new Move(new Cell((0,2),5),5), stack.StackArray[1]);
-            stack.Pop();
-            // check if Pop() method operates as expected
-            Assert.AreEqual(1, stack.Count);
-            Move move = stack.Pop();
-            Assert.ReferenceEquals(new Move(new Cell((0, 1), 3), 3), move);
-        }
-
-        [TestMethod]
-        public void TestMoveStackThrowsExceptionWhenPopEmpty()
-        {
-            // checks if Pop() method throws an exception when trying to pop from an empty stack
-            MoveStack stack = new MoveStack(5);
-            Assert.ThrowsException<InvalidOperationException>(() => stack.Pop());
-        }
-
-        [TestMethod]
-        public void TestPriorityQueue()
-        {
-            Cell newCell1 = new Cell((0, 1), 1);
-            // sets domain of cells to a particular size
-            newCell1.InitialiseDomain(5);
-            Cell newCell2 = new Cell((0, 2), 2);
-            newCell2.InitialiseDomain(4);
-            Cell newCell3 = new Cell((0, 3), 3);
-            newCell3.InitialiseDomain(2);
-
-            HeapPriorityQueue queue = new HeapPriorityQueue(new List<Cell> { newCell1, newCell2, newCell3});
-            // tests push up operation
-            queue.Enqueue(newCell1);
-            queue.Enqueue(newCell2);
-            queue.Enqueue(newCell3);
-            // tests push down operation
-            Assert.ReferenceEquals(new Cell((0, 3), 3), queue.Dequeue());
-            Assert.AreEqual(2, queue.Occupied);;
-            Assert.ReferenceEquals(new Cell((0,2),2), queue.Dequeue());
-        }
-
-        [TestMethod]
-        public void TestPriorityQueueThrowsExceptionWhenDequeueEmpty()
-        {
-            // tests if Dequeue() method throws an exception when trying to dequeue from an empty queue
-            HeapPriorityQueue queue = new HeapPriorityQueue(new List<Cell>());
-            Assert.ThrowsException<InvalidOperationException>(() => queue.Dequeue());
-        }
-
-        private string[,] GenerateBoardSketch(int dimensions)
+        private string[,] GenerateEmptyBoardSketch(int dimensions)
         {
             // generates an board sketch of specified size, with all cells empty and variable
             string[,] sketch = new string[dimensions,dimensions];

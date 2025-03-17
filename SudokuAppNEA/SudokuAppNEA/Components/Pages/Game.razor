@@ -5,7 +5,7 @@
 
 <h1>Game</h1>
 
-@if (_invalidFetch == true)
+@if (_invalidFetch)
 {
     <h1 style="margin-top: 100px">Invalid Continue Request</h1>
     <div class="form-container">
@@ -89,10 +89,11 @@ else
     private string[,]? _boardSketch;
     private Board? _board;
     private Cell[,]? _boardArray;
-    private ForwardChecker? solver;
+    private ForwardChecker? _solver;
     private int[,]? _correctNumbers;
     private string? _path;
     private bool _solved;
+    private bool _continuedBoard = false;
     private bool _userCompleted = false;
     private DateTime _launchTime;
     private int _minuteDelay = 0;
@@ -121,27 +122,30 @@ else
         await InitialiseBoardAndSolver();
         // sets the dimensions of the frontend display (board and buttons) based on board size
         SetFrontendValues();
-        int cellCounter = 0;
-        // array populated to store the cells representing each board square
-        // for rapid access in the DisplayCell() and OnCellSelected() rendering methods
-        _boardArray = new Cell[_dimensions, _dimensions];
-        foreach (Cell cell in _board!.AdjacencyList.Keys)
+        if (!_invalidFetch)
         {
-            _boardArray[cellCounter/_dimensions, cellCounter%_dimensions] = cell;
-            cellCounter++;
+            int cellCounter = 0;
+            // array populated to store the cells representing each board square
+            // for rapid access in the DisplayCell() and OnCellSelected() rendering methods
+            _boardArray = new Cell[_dimensions, _dimensions];
+            foreach (Cell cell in _board!.AdjacencyList.Keys)
+            {
+                _boardArray[cellCounter / _dimensions, cellCounter % _dimensions] = cell;
+                cellCounter++;
+            }
+            _rendered = true;
+            _launchTime = DateTime.Now.Add(new TimeSpan(0, _minuteDelay, _secondDelay));
+            Task backgroundBoardsTask = GetBackgroundBoards();
+            // re-renders the page every second while the board is not solved
+            // this is required to update the timer to reflect real-time
+            while (_solved == false)
+            {
+                await Task.Delay(1000);
+                StateHasChanged();
+            }
+            // retrieves new boards in the background during gameplay
+            await backgroundBoardsTask;
         }
-        _rendered = true;
-        _launchTime = DateTime.Now.Add(new TimeSpan(0, _minuteDelay, _secondDelay));
-        Task backgroundBoardsTask = GetBackgroundBoards();
-        // re-renders the page every second while the board is not solved
-        // this is required to update the timer to reflect real-time
-        while (_solved == false)
-        {                        
-            await Task.Delay(1000);
-            StateHasChanged();
-        }
-        // retrieves new boards in the background during gameplay
-        await backgroundBoardsTask;
     }
 
     private async Task InitialiseBoardAndSolver()
@@ -166,6 +170,7 @@ else
         // if the user has opted to continue a previous board, load the save from the text file
         else if (difficulty == "continue")
         {
+            _continuedBoard = true;
             _boardSketch = LoadSavedBoard();
         }
         // if the user has chosen another option, generate a new empty board sketch of the specified dimensions
@@ -190,7 +195,7 @@ else
             _board = new Board(difficulty, _boardSketch, _dimensions);
             // initialise the board ready for solving
             _board!.InitialiseGraph();
-            solver = new ForwardChecker(_board);
+            _solver = new ForwardChecker(_board);
             RecordVariableNodesWithValues();
             // alters the board by adding or removing numbers as required to form a board with a unique solution
             await MakeUniqueSolution(_board!);
@@ -332,8 +337,7 @@ else
     }
 
     private void GetBoard()
-    {
-        BoardGeneratorAPI generator = new BoardGeneratorAPI();  
+    { 
         foreach (Board savedBoard in UserClient!.FetchedBoards!)
         {
             // checks if difficulty of a cached board matches the desired difficulty
@@ -397,6 +401,15 @@ else
             }
         }
         _solved = true;
+        // if the "continue" option was used for this board
+        if (_continuedBoard)
+        {
+            // ensures that the same board cannot be resumed again after being solved
+            using (StreamWriter streamWriter = new StreamWriter(_path!))
+            {
+                streamWriter.WriteLine("Complete");
+            }
+        }
     }
 
 
@@ -545,7 +558,7 @@ else
     private void CheckBoard()
     {
         // if board is complete + has not been solved in previous renders
-        if (solver!.CheckInvalidFull() == false && solver!.CheckFinished() == true && _solved == false)
+        if (_solver!.CheckInvalidFull() == false && _solver!.CheckFinished() == true && _solved == false)
         {
             // _userCompleted implies that the user has completed the board without using the solve functionality
             _userCompleted = true;
@@ -566,9 +579,14 @@ else
                 UserClient.AddEntry(GenerateScore(difficulty!), difficulty!, _mistakeCount, _hintCount, FormatTime());
                 _databaseCallerBoard.AddEntry(UserClient.Entry!);
             }
-            using (StreamWriter streamWriter = new StreamWriter(_path!))
+            // if the "continue" option was used for this board
+            if (_continuedBoard)
             {
-                streamWriter.WriteLine("Complete");
+                // ensures that the same board cannot be resumed again after being solved
+                using (StreamWriter streamWriter = new StreamWriter(_path!))
+                {
+                    streamWriter.WriteLine("Complete");
+                }
             }
         }
     }

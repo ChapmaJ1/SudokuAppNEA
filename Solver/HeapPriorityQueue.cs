@@ -23,7 +23,7 @@ namespace Sudoku_Solver_NEA
             // indicates that the queue is full
             if (Occupied == NodeArray.Length)
             {
-                throw new IndexOutOfRangeException("Queue is full");
+                throw new InvalidOperationException("Queue is full");
             }
             else
             {

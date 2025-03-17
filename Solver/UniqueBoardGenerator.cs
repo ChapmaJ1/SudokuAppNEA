@@ -1,5 +1,6 @@
 ﻿using Sudoku_Solver_NEA;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -43,12 +44,12 @@ namespace Sudoku_Solver_NEA
             {
                 variableNodesCopy.Add(cell);
             }
-            // solver interacts with the board's variable nodes when solving - the initial variable nodes should all be removed + added gradually
+            // solver interacts with the board's variable nodes when solving - the initial variable nodes are all removed + added gradually
             board.VariableNodes.Clear();
             while (!validBoard)
             {
                 // if the number of variable nodes is greater than the upper limit
-                // generation gets exponentially slower after this point (by experimentation, for 16x16 boards)
+                // generation gets much slower after this point (by experimentation, for 16x16 boards)
                 if (board.VariableNodes.Count > stackSize)
                 {
                     // revert all changed cells back to their initial, fixed values
@@ -62,32 +63,16 @@ namespace Sudoku_Solver_NEA
                 }
                 // chooses a random cell from the selection list
                 Cell randomCell = variableNodesCopy[random.Next(variableNodesCopy.Count)];
-                Move move = new(randomCell, randomCell.Entry);
-                // adds any new potential domains to all affected cells on the board
-                AddDomains(move, board);
-                // records move
-                stack.Push(move);
-                randomCell.ChangeCellValue(0);
-                // adds cell to VariableNodes + initialises queue and MostRecentlyChangedCell for solving
-                board.VariableNodes.Add(randomCell);
-                board.InitialiseQueue();
+                SetUpInitialSolvingConditions(board, randomCell, stack);
                 solver.ChangeMostRecentCell(null);
                 solver.HasUniqueSolution();
-                // if the board does not have a unique solution
+                // if the board no longer has a unique solution, end the generation process
                 if (board.SolutionCount != 1)
                 {
-                    // undo the previous move, reverting the most recently changed variable node to fixed with a set value
-                    Move previousMove = stack.Pop();
-                    board.VariableNodes.Remove(randomCell);
-                    previousMove.Cell.ChangeCellValue(previousMove.OldEntry);
-                    ResetBoardProperties(board);
-                    // initialises queue and MostRecentlyChangedCell for solving
-                    board.InitialiseQueue();
-                    RemoveDomains(previousMove, board);
+                    UndoMove(board, randomCell, stack);
                     solver.ChangeMostRecentCell(null);
-                    // gets single unique solution + stores it in solutions
+                    // gets the single unique solution + stores it in solutions
                     solver.HasUniqueSolution();
-                    // ends loop
                     validBoard = true;
                 }
                 // if board has a unique solution, keep increasing the number of variable nodes 
@@ -99,6 +84,31 @@ namespace Sudoku_Solver_NEA
                 }
             }
             return board;
+        }
+
+        private void SetUpInitialSolvingConditions(Board board, Cell randomCell, MoveStack stack)
+        {
+            Move move = new(randomCell, randomCell.Entry);
+            // adds any new potential domains to all affected cells on the board
+            AddDomains(move, board);
+            // records move
+            stack.Push(move);
+            randomCell.ChangeCellValue(0);
+            // adds cell to VariableNodes + initialises queue and MostRecentlyChangedCell for solving
+            board.VariableNodes.Add(randomCell);
+            board.InitialiseQueue();
+        }
+
+        private void UndoMove(Board board, Cell randomCell, MoveStack stack)
+        {
+            // undoes the previous move, reverting the most recently changed variable node to fixed with a set value
+            Move previousMove = stack.Pop();
+            board.VariableNodes.Remove(randomCell);
+            previousMove.Cell.ChangeCellValue(previousMove.OldEntry);
+            ResetBoardProperties(board);
+            // initialises queue and MostRecentlyChangedCell for solving
+            board.InitialiseQueue();
+            RemoveDomains(previousMove, board);
         }
 
         // used when converting a node from fixed to variable

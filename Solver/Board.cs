@@ -28,14 +28,14 @@ namespace Sudoku_Solver_NEA
             Dimensions = dimensions;
         }
 
-        public void InitialiseGraph()   // DESIGN
+        public void InitialiseGraph()
         {
             for (int i = 0; i < Dimensions; i++)
             {
                 for (int j = 0; j < Dimensions; j++)
                 {
                     string entry = "";
-                    // strips the 'v' character from the end of the string if required
+                    // omits the 'v' character from the end of the string if required
                     if (BoardSketch[i, j].Contains('v'))
                     {
                         entry = BoardSketch[i, j].Substring(0, BoardSketch[i, j].Length - 1);

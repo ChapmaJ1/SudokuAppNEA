@@ -6,11 +6,8 @@ using System.Threading.Tasks;
 
 namespace SharedLibrary
 {
-    internal static class Program
+    internal class Program
     {
-        static void Main(string[] args)
-        {
 
-        }
     }
 }

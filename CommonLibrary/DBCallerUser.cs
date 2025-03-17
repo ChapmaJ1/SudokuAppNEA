@@ -55,7 +55,7 @@ namespace SQLDatabase
             return 0;
         }
 
-        public bool UsernameAlreadyRegistered(string username)  // ADD TO WRITE UP
+        public bool UsernameAlreadyRegistered(string username)
         {
             using (SqliteConnection connection = new SqliteConnection())
             {
@@ -92,7 +92,7 @@ namespace SQLDatabase
             }
         }
 
-        public int GetTableCount(string parameter)
+        public int GetTableCount(string tableName)
         {
             int count = 0;
             using (SqliteConnection connection = new SqliteConnection())
@@ -102,7 +102,8 @@ namespace SQLDatabase
                 using (SqliteCommand command = connection.CreateCommand())
                 {
                     // fetches the number of entries in a given table
-                    command.CommandText = $"SELECT Count(*) FROM {parameter}";
+                    command.CommandText = $"SELECT Count(*) FROM @TableName";
+                    command.Parameters.Add("@TableName", SqliteType.Text).Value = tableName;
                     count = Convert.ToInt32(command.ExecuteScalar());
                 }
             }

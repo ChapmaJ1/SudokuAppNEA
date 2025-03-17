@@ -57,7 +57,7 @@ namespace SQLDatabase
             return data;
         }
 
-        public List<LeaderboardEntry> GetLeaderboardEntriesPersonal(User user)  // REMOVE OR ADD NEW PAGE
+        public List<LeaderboardEntry> GetLeaderboardEntriesPersonal(int userID)
         {
             List<LeaderboardEntry> data = new();
             using (SqliteConnection connection = new())
@@ -67,8 +67,8 @@ namespace SQLDatabase
                 using (SqliteCommand command = connection.CreateCommand())
                 {
                     // selects details of all boards in the database for a particular user
-                    command.CommandText = "SELECT u.Username, b.Score, b.CompletionTime, b.Difficulty, s.CalendarDate FROM Boards b JOIN Sessions s on b.SessionID = s.SessionID JOIN Users u on s.UserID = u.UserID where u.UserID = @UserID order by b.Score DESC\r\n";
-                    command.Parameters.Add("@UserID", SqliteType.Integer).Value = user.Id;
+                    command.CommandText = "SELECT u.Username, b.Score, b.CompletionTime, b.Difficulty, s.CalendarDate FROM Boards b JOIN Sessions s on b.SessionID = s.SessionID JOIN Users u on s.UserID = u.UserID where u.UserID = @UserID order by b.Score DESC";
+                    command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
                     var reader = command.ExecuteReader();
                     while (reader.Read())
                     {
@@ -89,28 +89,27 @@ namespace SQLDatabase
                 int score;
                 using (SqliteCommand command = connection.CreateCommand())
                 {
-                    // selects the average score for a user across all of their completed boards
-                    command.CommandText = $"SELECT avg(score) from Boards b JOIN Sessions s on b.SessionID = s.SessionID where s.UserID = @UserID";  // gets average score of all board previously solved by user
+                    // selects the average score for a user across all of their previously completed boards
+                    command.CommandText = $"SELECT avg(score) from Boards b JOIN Sessions s on b.SessionID = s.SessionID where s.UserID = @UserID";  
                     command.Parameters.Add("@UserID", SqliteType.Integer).Value = userID;
                     var reader = command.ExecuteReader();
                     // attempts to fetch the average score from the query
-                    try
+                    if (reader.Read() && !reader.IsDBNull(0))
                     {
                         score = reader.GetInt32(0);
                     }
-                    // exception thrown if query returns NULL, which occurs when the user has played no board previously
-                    // in this case recommend the "easy" difficulty
-                    catch (InvalidOperationException)
+                    // in the case of no previously played boards, return 0
+                    else
                     {
-                        return "Easy";
+                        score = 0;
                     }
                 }
                 // return a recommended difficulty based on the user's previous performances, using their average score as a metric
-                if (score >= 4000)
+                if (score >= 4500)
                 {
                     return "Hard";
                 }
-                else if (score >= 3000)
+                else if (score >= 4000)
                 {
                     return "Medium";
                 }
