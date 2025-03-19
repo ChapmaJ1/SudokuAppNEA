@@ -39,13 +39,9 @@ else
                     // for all cells as the loop would have finished by the time of user interaction, causing a logic error
                     int columnTemp = column;
                     int rowTemp = row;
-                    string backgroundColour = "white";
-                    @if (UserClient.MistakeDetection == "On")
-                    {
-                        // selects background colour of each cell based on correctness
-                        // and whether or not it is connected to the currently selected cell
-                        backgroundColour = GetBackgroundColour(rowTemp, columnTemp);
-                    }
+                    // selects background colour of each cell based on correctness
+                    // and whether or not it is connected to the currently selected cell
+                    string backgroundColour = GetBackgroundColour(rowTemp, columnTemp);
                     <button class="sudoku-cell-@_cellType" style="background-color: @backgroundColour" @onclick="() => OnCellSelected(rowTemp, columnTemp)">@DisplayCell(rowTemp, columnTemp)</button>
                 }
             </div>
@@ -109,6 +105,7 @@ else
         _path = "SavedBoard.txt";
         if (difficulty != "16")
         {
+            // allows api to finish board fetching if some difficulties still have no cached boards
             while (UserClient!.EasyFetched == 0 || UserClient!.MediumFetched == 0 || UserClient!.HardFetched == 0)
             {
                 await Task.Delay(500);
@@ -135,7 +132,8 @@ else
             }
             _rendered = true;
             _launchTime = DateTime.Now.Add(new TimeSpan(0, _minuteDelay, _secondDelay));
-            Task backgroundBoardsTask = GetBackgroundBoards();
+            // generates boards in the background while user is playing
+            Task backgroundApiBoardsTask = GetBackgroundApiBoards();
             // re-renders the page every second while the board is not solved
             // this is required to update the timer to reflect real-time
             while (_solved == false)
@@ -144,47 +142,49 @@ else
                 StateHasChanged();
             }
             // retrieves new boards in the background during gameplay
-            await backgroundBoardsTask;
+            await backgroundApiBoardsTask;
         }
     }
 
     private async Task InitialiseBoardAndSolver()
     {
         // if a 9x9 board selected, use the API to generate a board
-        if (_dimensions == 9)
+        if (difficulty != "continue")
         {
-            bool boardFetched = false;
-            while (boardFetched == false)
+            if (_dimensions == 9)
             {
-                try
+                bool boardFetched = false;
+                while (boardFetched == false)
                 {
-                    GetBoard();
-                    boardFetched = true;
+                    try
+                    {
+                        GetBoard();
+                        boardFetched = true;
+                    }
+                    catch (Exception)
+                    {
+                        NavigateToMenu();
+                    }
                 }
-                catch (Exception)
+            }
+            else
+            {
+                _boardSketch = new string[_dimensions, _dimensions];
+                for (int i=0; i<_dimensions; i++)
                 {
-                    NavigateToMenu();
+                    for (int j=0; j<_dimensions; j++)
+                    {
+                        _boardSketch[i, j] = "0v";
+                    }
                 }
             }
         }
         // if the user has opted to continue a previous board, load the save from the text file
-        else if (difficulty == "continue")
+        else
         {
             _continuedBoard = true;
             _boardSketch = LoadSavedBoard();
-        }
-        // if the user has chosen another option, generate a new empty board sketch of the specified dimensions
-        else
-        {
-            _boardSketch = new string[_dimensions, _dimensions];
-            for (int i = 0; i < _dimensions; i++)
-            {
-                for (int j = 0; j < _dimensions; j++)
-                {
-                    _boardSketch[i, j] = "0v";
-                }
-            }
-        }
+        } 
         // occurs if the most recent board save is bound to a user other than the one currently logged in
         if (_boardSketch!.Length == 0)
         {
@@ -192,8 +192,8 @@ else
         }
         else
         {
-            _board = new Board(difficulty, _boardSketch, _dimensions);
             // initialise the board ready for solving
+            _board = new Board(difficulty, _boardSketch, _dimensions);
             _board!.InitialiseGraph();
             _solver = new ForwardChecker(_board);
             RecordVariableNodesWithValues();
@@ -343,10 +343,12 @@ else
             // checks if difficulty of a cached board matches the desired difficulty
             if (savedBoard.Difficulty == difficulty)
             {
-                // sets the board to the cached board, removing it from the cache and eliminating the need for another API call
-                _board = savedBoard;
+                // sets the board to the cached board and removes it from the cache
+                // this eliminates the need for any synchronous API calls
                 _boardSketch = savedBoard.BoardSketch;
+                // records the removal of the board from the cache
                 UserClient!.FetchedBoards.Remove(savedBoard);
+                UserClient.DecrementDifficultiesFetched(difficulty);
                 break;
             }
         }
@@ -540,7 +542,7 @@ else
         // splits the entry into separate parts - the cell value + any notes
         string[] entriesSplit = cellValue.Split(' ');
         // if cell is non-empty and is filled with an incorrect value
-        if (cellValue[0].ToString() != " " && entriesSplit[0] != _correctNumbers![row, column].ToString())
+        if (cellValue[0].ToString() != " " && entriesSplit[0] != _correctNumbers![row, column].ToString() && UserClient.MistakeDetection == "On")
         {
             return "red";
         }
@@ -697,11 +699,10 @@ else
         NavigationManager.NavigateTo("/menu");
     }
 
-    private async Task GetBackgroundBoards()
+    private async Task GetBackgroundApiBoards()
     {
         bool fetched = false;
-
-            // catches exceptions in case of the API call failing for any reason
+        // catches exceptions in case of the API call failing for any reason
         while (fetched == false)
         {
             try
@@ -715,6 +716,7 @@ else
                     List<Board> fetchedBoards = await generator.GenerateBoard();
                     for (int i = 0; i < 10; i++)
                     {
+                        // records board in cache list
                         UserClient.IncrementDifficultiesFetched(fetchedBoards[i].Difficulty);
                         UserClient!.FetchedBoards!.Add(fetchedBoards[i]);
                     }
@@ -723,7 +725,8 @@ else
             }
             catch (Exception)
             {
-                fetched = false;
+                // waits before retrying to prevent excessive API calls
+                await Task.Delay(1000);
             }
         }
     }

@@ -102,8 +102,7 @@ namespace SQLDatabase
                 using (SqliteCommand command = connection.CreateCommand())
                 {
                     // fetches the number of entries in a given table
-                    command.CommandText = $"SELECT Count(*) FROM @TableName";
-                    command.Parameters.Add("@TableName", SqliteType.Text).Value = tableName;
+                    command.CommandText = $"SELECT Count(*) FROM {tableName}";
                     count = Convert.ToInt32(command.ExecuteScalar());
                 }
             }

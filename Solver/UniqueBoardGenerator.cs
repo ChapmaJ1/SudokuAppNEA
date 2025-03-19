@@ -20,6 +20,7 @@ namespace Sudoku_Solver_NEA
                     stackSize = 70;
                     break;
                 default:
+                    // generation gets much slower after this point for 16x16 boards (by experimentation)
                     stackSize = 90;
                     break;
             }
@@ -49,11 +50,10 @@ namespace Sudoku_Solver_NEA
             while (!validBoard)
             {
                 // if the number of variable nodes is greater than the upper limit
-                // generation gets much slower after this point (by experimentation, for 16x16 boards)
                 if (board.VariableNodes.Count > stackSize)
                 {
-                    // revert all changed cells back to their initial, fixed values
-                    while (stack.Count > 0)
+                    // partial rollback to jump out of current generation branch
+                    while (stack.Count > stackSize / 2)
                     {
                         Move tempMove = stack.Pop();
                         tempMove.Cell.ChangeCellValue(tempMove.OldEntry);
@@ -121,13 +121,14 @@ namespace Sudoku_Solver_NEA
             {
                 move.Cell.Domain.Add(move.OldEntry);
             }
-            foreach (Cell connectedNode in board.AdjacencyList[move.Cell])
+            // a foreach loop where different iterations can be run in parallel
+            Parallel.ForEach(board.AdjacencyList[move.Cell], connectedNode =>
             {
-                if (!connectedNode.Domain.Contains(move.OldEntry))
+                if (board.AdjacencyList[connectedNode].Any(c => c.Entry == move.OldEntry))
                 {
                     connectedNode.Domain.Add(move.OldEntry);
                 }
-            }
+            });
         }
 
         // used when converting a node from variable to fixed

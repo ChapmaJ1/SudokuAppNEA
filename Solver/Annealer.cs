@@ -147,7 +147,7 @@ namespace Sudoku_Solver_NEA
             }
         }
 
-            private (Dictionary<Cell, List<Cell>>, int) GetInitialConflicts()
+        private (Dictionary<Cell, List<Cell>>, int) GetInitialConflicts()
         {
             Dictionary<Cell, List<Cell>> conflictedCells = new();
             // for all cells on the board

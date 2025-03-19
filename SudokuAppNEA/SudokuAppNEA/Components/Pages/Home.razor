@@ -62,7 +62,7 @@
             }
             catch (Exception)
             {
-                fetched = false;
+                await Task.Delay(1000);
             }
         }
     }

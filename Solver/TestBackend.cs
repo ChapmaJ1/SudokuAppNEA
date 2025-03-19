@@ -157,6 +157,41 @@ namespace Sudoku_Solver_NEA.Tests
             MoveStack stack = new MoveStack(5);
             Assert.ThrowsException<InvalidOperationException>(() => stack.Pop());
         }
+        [TestMethod]
+        public void TestPriorityQueueEnqueueDequeue()
+        {
+            // initialises cells with different numbers of elements in their domains
+            Cell cell1 = new Cell((0, 0), 3);
+            cell1.InitialiseDomain(3);
+            Cell cell2 = new Cell((0, 1), 4);
+            cell2.InitialiseDomain(4);
+            Cell cell3 = new Cell((0, 2), 1);
+            cell3.InitialiseDomain(1);
+            List<Cell> cellList = new() { cell1, cell2, cell3 };
+            HeapPriorityQueue queue = new(cellList);
+            // enqueues all cells
+            queue.Enqueue(cell1);
+            queue.Enqueue(cell2);
+            // checks whether the element at the top of the queue is the one with the smallest domain
+            // the domain count can be used as each cell was initialised with a unique domain size
+            Assert.AreEqual(3, queue.NodeArray[0].Domain.Count);
+            queue.Enqueue(cell3);
+            // tests if occupied property is working properly
+            Assert.AreEqual(3, queue.Occupied);
+            // tests dequeue operation
+            Cell dequeuedCell = queue.Dequeue();
+            Assert.AreEqual(1, dequeuedCell.Domain.Count);
+            dequeuedCell = queue.Dequeue();
+            Assert.AreEqual(3, dequeuedCell.Domain.Count);
+            Assert.AreEqual(1, queue.Occupied);
+        }
+
+        [TestMethod]
+        public void TestPriorityQueueThrowsExceptionWhenDequeueEmptyQueue()
+        {
+            HeapPriorityQueue queue = new(new List<Cell>());
+            Assert.ThrowsException<InvalidOperationException>(() => queue.Dequeue());
+        }
 
         [TestMethod]
         public void TestBacktrackingSolver()

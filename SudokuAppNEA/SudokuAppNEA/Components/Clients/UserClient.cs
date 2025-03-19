@@ -48,12 +48,17 @@ namespace SudokuAppNEA.Components.Clients
             SaveScores = input;
         }
 
+        internal void SetSessionId(int id)
+        {
+            SessionId = id;
+        }
+
         internal void IncrementDifficultiesFetched(string difficulty)
         {
             // increments one of the difficulty counters based on the difficulty of a particular board fetched from the api
             switch (difficulty)
             {
-                case "Easy": 
+                case "Easy":
                     EasyFetched++;
                     break;
                 case "Medium":
@@ -65,9 +70,21 @@ namespace SudokuAppNEA.Components.Clients
             }
         }
 
-        internal void SetSessionId(int id)
+        internal void DecrementDifficultiesFetched(string difficulty)
         {
-            SessionId = id;
+            // decrements one of the difficulty counters based on the difficulty of a particular board chosen by the user
+            switch (difficulty)
+            {
+                case "Easy":
+                    EasyFetched--;
+                    break;
+                case "Medium":
+                    MediumFetched--;
+                    break;
+                case "Hard":
+                    HardFetched--;
+                    break;
+            }
         }
     }
 }
