@@ -136,8 +136,8 @@ namespace Sudoku_Solver_NEA.Tests
         public void TestMoveStackPushPop()
         {
             MoveStack stack = new MoveStack(5);
-            stack.Push(new Move(new Cell((0, 1), 3), 3));
-            stack.Push(new Move(new Cell((0, 2), 5), 5));
+            stack.Push(new Cell((0, 1), 3), 3);
+            stack.Push(new Cell((0, 2), 5), 5);
             // checks if Push() method operates as expected
             Assert.AreEqual(2, stack.Count);
             Assert.AreEqual((0,2), stack.StackArray[1].Cell.Position);
@@ -145,9 +145,9 @@ namespace Sudoku_Solver_NEA.Tests
             stack.Pop();
             // check if Pop() method operates as expected
             Assert.AreEqual(1, stack.Count);
-            Move move = stack.Pop();
-            Assert.AreEqual((0, 1), move.Cell.Position);
-            Assert.AreEqual(3, move.OldEntry);
+            (Cell, int) move = stack.Pop();
+            Assert.AreEqual((0, 1), move.Item1.Position);
+            Assert.AreEqual(3, move.Item2);
         }
 
         [TestMethod]
@@ -216,39 +216,81 @@ namespace Sudoku_Solver_NEA.Tests
         }
 
         [TestMethod]
-        public void TestForwardChecker()
+        public async Task TestForwardChecker9x9()
         {
-            string[,] boardSketch =
-            { {"7","6","0v","0v","1","0v","0v","0v","0v"},
-              {"1","4","0v","6","0v","0v","0v","0v","0v" },
-              {"5","0v","0v","4","0v","0v","7","1","0v"},
-              {"4","0v","0v","0v","2","3","0v","7","5"},
-              {"2","0v","7","0v","0v","0v","3","9","8"},
-              {"0v","8","6","0v","5","0v","0v","4","2" },
-              {"0v","2","0v","0v","0v","6","0v","0v","7" },
-              {"8","3","0v","0v","0v","0v","2","6","0v" },
-              {"6","7","4","0v","9","0v","0v","5","0v" } };
-            Board board = new Board("", boardSketch, 9);
-            board.InitialiseGraph();
-            board.InitialiseQueue();
-            // validates functionality of the forward checking solver
-            ForwardChecker solver = new ForwardChecker(board);
-            solver.Solve();
-            Assert.IsFalse(solver.CheckInvalidFull());
-            Assert.IsTrue(solver.CheckFinished());
+            BoardGeneratorAPI generator = new();
+            List<Board> boards = await generator.GenerateBoard(10);
+            foreach (Board board in boards)
+            {
+                board.InitialiseGraph();
+                board.InitialiseQueue();
+                ForwardChecker solver = new ForwardChecker(board);
+                solver.Solve();
+                Assert.IsFalse(solver.CheckInvalidFull());
+                Assert.IsTrue(solver.CheckFinished());
+            }
+        }
+
+        [TestMethod]
+        public void TestForwardChecker16x16()
+        {
+            for (int i=0; i<10; i++)
+            {
+                Board board = GenerateRandomBoard(16);
+                board.InitialiseQueue();
+                // validates functionality of the forward checking solver
+                ForwardChecker solver = new ForwardChecker(board);
+                solver.Solve();
+                Assert.IsFalse(solver.CheckInvalidFull());
+                Assert.IsTrue(solver.CheckFinished());
+            }
         }
 
         [TestMethod]
         public void TestAnnealer()
         {
-            string[,] boardSketch = GenerateEmptyBoardSketch(25);
-            Board board = new Board("", boardSketch, 25);
+            for (int i=0; i<10; i++)
+            {
+                Board board = GenerateRandomBoard(25);
+                // validates functionality of the simulated annealing solver
+                Annealer solver = new Annealer(board);
+                solver.Solve();
+                Assert.IsFalse(solver.CheckInvalidFull());
+                Assert.IsTrue(solver.CheckFinished());
+            }
+        }
+
+        [TestMethod]
+        public void TestCheckUniqueSolution()
+        {
+            string[,] boardSketch = new string[9, 9]
+            {
+                {"9", "8", "0v", "5", "0v","0v","0v","0v","0v"},
+                {"2","7","3","6","9","8","0v","0v","1"},
+                {"0v","0v","4","0v","0v","3","0v","6","0v" },
+                {"8","0v","0v","2","0v","7","0v","1","6" },
+                {"3","0v","0v","0v","1","0v","2","5","0v" },
+                {"0v","1","2","0v","6","4","0v","0v","0v" },
+                {"4","3","8","0v","0v","0v","6","0v","0v" },
+                {"0v","0v","5","4","8","0v","1","7","0v" },
+                {"7","2","0v","9","0v","6","0v","8","5" }
+            };
+            Board board = new("", boardSketch, 9);
             board.InitialiseGraph();
-            // validates functionality of the simulated annealing solver
-            Annealer solver = new Annealer(board);
-            solver.Solve();
-            Assert.IsFalse(solver.CheckInvalidFull());
-            Assert.IsTrue(solver.CheckFinished());
+            board.InitialiseQueue();
+            ForwardChecker solver = new(board);
+            solver.HasUniqueSolution();
+            // indicates a Sudoku board has a unique solution
+            Assert.AreEqual(1, board.SolutionCount);
+            boardSketch = GenerateEmptyBoardSketch(9);
+
+            board = new("", boardSketch, 9);
+            board.InitialiseGraph();
+            board.InitialiseQueue();
+            solver = new(board);
+            solver.HasUniqueSolution();
+            // indicates a board has multiple (at least 2) solutions as the solver stops after finding 2 solutions
+            Assert.AreEqual(2, board.SolutionCount);
         }
 
         [TestMethod]
@@ -256,7 +298,7 @@ namespace Sudoku_Solver_NEA.Tests
         {
             BoardGeneratorAPI generator = new();
             // generates a board from the API
-            List<Board> boards = await generator.GenerateBoard();
+            List<Board> boards = await generator.GenerateBoard(1);
             string[,] boardSketch = boards[0].BoardSketch;
             Board board = new Board("", boardSketch, 9);
             board.InitialiseGraph();
@@ -290,9 +332,43 @@ namespace Sudoku_Solver_NEA.Tests
             Assert.AreEqual(1, board.SolutionCount);
         }
 
+        private Board GenerateRandomBoard(int dimensions)
+        {
+            // generated a board sketch of specified size, with a set number of random cells filled
+            string[,] sketch = GenerateEmptyBoardSketch(dimensions);
+            Random random = new Random();
+            Board board = new("", sketch, dimensions);
+            board.InitialiseGraph();
+            int randomCellPicks = 0;
+            if (dimensions == 16)
+            {
+                randomCellPicks = 50;
+            }
+            else if (dimensions == 25)
+            {
+                randomCellPicks = 150;
+            }
+            for (int i = 0; i < randomCellPicks; i++)
+            {
+                int randomIndex = random.Next((int)Math.Pow(dimensions,2));
+                int newCellValue = random.Next(1, dimensions);
+                Cell chosenCell = board.AdjacencyList.Keys.ElementAt(randomIndex);
+                if (chosenCell.Entry != 0)
+                {
+                    chosenCell.ChangeCellValue(chosenCell.Domain[random.Next(chosenCell.Domain.Count)]);
+                    board.VariableNodes.Remove(chosenCell);
+                    foreach (Cell cell in board.AdjacencyList[chosenCell])
+                    {
+                        cell.Domain.Remove(newCellValue);
+                    }
+                }
+            }
+            return board;
+        }
+
         private string[,] GenerateEmptyBoardSketch(int dimensions)
         {
-            // generates an board sketch of specified size, with all cells empty and variable
+            // generates a board sketch of specified size, with all cells empty and variable
             string[,] sketch = new string[dimensions,dimensions];
             for (int i=0; i<dimensions; i++)
             {

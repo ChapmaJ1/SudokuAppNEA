@@ -21,11 +21,11 @@ namespace Sudoku_Solver_NEA
             Capacity = capacity;
         }
 
-        public void Push(Move move)
+        public void Push(Cell cell, int entry)
         {
             // increments front pointer, bringing it back to the start of the array if index gets too large
             FrontPointer = (FrontPointer + 1) % Capacity;
-            StackArray[FrontPointer] = move;
+            StackArray[FrontPointer] = new Move(cell, entry);
             // if stack is not full, record the increase in moves being stored
             if (Count < Capacity) 
             {
@@ -33,18 +33,17 @@ namespace Sudoku_Solver_NEA
             }
         }
 
-        public Move Pop()
+        public (Cell, int) Pop()
         {
             // if stack is not empty - there is a move that can be popped
             if (Count > 0)
             {
-                // returns the move at the top of the stack, indicated by the pointer
+                // returns the properties of the move at the top of the stack, indicated by the pointer
                 Move move = StackArray[FrontPointer];
                 // moves the pointer back by 1 position, or to the back of the array if it is currently at the front
                 FrontPointer = (FrontPointer + (Capacity - 1)) % Capacity;
-                // records the decrease in moves being stored
                 Count--;
-                return move;
+                return (move.Cell, move.OldEntry);
             }
             throw new InvalidOperationException();
         }

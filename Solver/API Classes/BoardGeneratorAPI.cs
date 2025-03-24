@@ -18,22 +18,23 @@ namespace Sudoku_Solver_NEA
             PropertyNameCaseInsensitive = true
         };
 
-        public async Task<List<Board>> GenerateBoard()
+        public async Task<List<Board>> GenerateBoard(int boardNumber)
         {
             List<Board> boards = new List<Board>();
-            // sends GET request, fetching 10 boards along with their associated difficulties
-            string url = "https://sudoku-api.vercel.app/api/dosuku?query={newboard(limit:10){grids{value,difficulty}}}";
+            // sends GET request, fetching some number of boards along with their associated difficulties
+            string url = "https://sudoku-api.vercel.app/api/dosuku?query={newboard(limit:boardNumber){grids{value,difficulty}}}";
+            url = url.Replace("boardNumber", boardNumber.ToString());
             HttpResponseMessage response = await _client.GetAsync(url);
-            // until request is successful + response is received
-            while (!response.IsSuccessStatusCode)
+            // if request is successful + response is received
+            if (!response.IsSuccessStatusCode)
             {
-                response = await _client.GetAsync(url);
+                throw new FieldAccessException();
             }
             // serialises the data into a string
             string data = await response.Content.ReadAsStringAsync();
             // deserialises the data a single ResponseData object
             var result = JsonSerializer.Deserialize<ResponseData>(data, _options);
-            for (int i=0; i<10; i++)
+            for (int i=0; i<boardNumber; i++)
             {
                 boards.Add(ConvertToBoard(result, i));
             }

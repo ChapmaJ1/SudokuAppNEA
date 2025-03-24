@@ -52,13 +52,13 @@ namespace Sudoku_Solver_NEA
                 // if the number of variable nodes is greater than the upper limit
                 if (board.VariableNodes.Count > stackSize)
                 {
-                    // partial rollback to jump out of current generation branch
+                    // partial rollback, resetting some cells to fixed to jump out of current generation branch
                     while (stack.Count > stackSize / 2)
                     {
-                        Move tempMove = stack.Pop();
-                        tempMove.Cell.ChangeCellValue(tempMove.OldEntry);
-                        board.VariableNodes.Remove(tempMove.Cell);
-                        variableNodesCopy.Add(tempMove.Cell);
+                        (Cell, int) tempMove = stack.Pop();
+                        tempMove.Item1.ChangeCellValue(tempMove.Item2);
+                        board.VariableNodes.Remove(tempMove.Item1);
+                        variableNodesCopy.Add(tempMove.Item1);
                     }
                 }
                 // chooses a random cell from the selection list
@@ -88,11 +88,10 @@ namespace Sudoku_Solver_NEA
 
         private void SetUpInitialSolvingConditions(Board board, Cell randomCell, MoveStack stack)
         {
-            Move move = new(randomCell, randomCell.Entry);
+            stack.Push(randomCell, randomCell.Entry);
             // adds any new potential domains to all affected cells on the board
-            AddDomains(move, board);
+            AddDomains((randomCell, randomCell.Entry), board);
             // records move
-            stack.Push(move);
             randomCell.ChangeCellValue(0);
             // adds cell to VariableNodes + initialises queue and MostRecentlyChangedCell for solving
             board.VariableNodes.Add(randomCell);
@@ -102,9 +101,9 @@ namespace Sudoku_Solver_NEA
         private void UndoMove(Board board, Cell randomCell, MoveStack stack)
         {
             // undoes the previous move, reverting the most recently changed variable node to fixed with a set value
-            Move previousMove = stack.Pop();
+            (Cell, int) previousMove = stack.Pop();
             board.VariableNodes.Remove(randomCell);
-            previousMove.Cell.ChangeCellValue(previousMove.OldEntry);
+            previousMove.Item1.ChangeCellValue(previousMove.Item2);
             ResetBoardProperties(board);
             // initialises queue and MostRecentlyChangedCell for solving
             board.InitialiseQueue();
@@ -112,35 +111,36 @@ namespace Sudoku_Solver_NEA
         }
 
         // used when converting a node from fixed to variable
-        private void AddDomains(Move move, Board board)
+        private void AddDomains((Cell,int) move, Board board)
         {
-            // for the changed node and each connected node
-            // if the domain of the node does not contain the previous fixed value of the changed cell prior to removal
-            // add the value to the domain
-            if (!move.Cell.Domain.Contains(move.OldEntry))
+            Cell cell = move.Item1;
+            int oldEntry = move.Item2;
+            if (!move.Item1.Domain.Contains(move.Item2))
             {
-                move.Cell.Domain.Add(move.OldEntry);
+                cell.Domain.Add(oldEntry);
             }
-            // a foreach loop where different iterations can be run in parallel
-            Parallel.ForEach(board.AdjacencyList[move.Cell], connectedNode =>
+            // for each cell that is connected to the altered node
+            // if no connected nodes contain the previous value of the altered node
+            // add this previous value to its domain
+            Parallel.ForEach(board.AdjacencyList[cell], connectedNode =>
             {
-                if (board.AdjacencyList[connectedNode].Any(c => c.Entry == move.OldEntry))
+                if (board.AdjacencyList[connectedNode].Any(c => c.Entry == oldEntry))
                 {
-                    connectedNode.Domain.Add(move.OldEntry);
+                    connectedNode.Domain.Add(oldEntry);
                 }
             });
         }
 
         // used when converting a node from variable to fixed
-        private void RemoveDomains(Move move, Board board)
+        private void RemoveDomains((Cell, int) move, Board board)
         {
             // for each connected node to a cell
-            foreach (Cell cell in board.AdjacencyList[move.Cell])
+            foreach (Cell cell in board.AdjacencyList[move.Item1])
             {
                 // if the cell's domain contains the previous, fixed value of the base cell, remove the value from the cell's domain
-                if (cell.Domain.Contains(move.OldEntry))
+                if (cell.Domain.Contains(move.Item2))
                 {
-                    cell.Domain.Remove(move.OldEntry);
+                    cell.Domain.Remove(move.Item2);
                 }
             }
         }

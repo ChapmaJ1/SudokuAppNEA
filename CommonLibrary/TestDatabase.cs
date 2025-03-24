@@ -94,7 +94,7 @@ namespace SQLDatabase
         }
 
         [TestMethod]
-        public void TestUsernameAlreadyRegisteredTrue()
+        public void TestUsernameAlreadyRegistered()
         {
             DBCallerUser dbCaller = new();
             // validates that if the database already contains the input username, the method returns true

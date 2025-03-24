@@ -29,7 +29,7 @@ namespace Sudoku_Solver_NEA
             }
             Random random = new Random();
             double initialTemperature = 40;
-            // sets up the initial dictionary of Cells taking on identical values
+            // sets up the initial dictionary, recording Cells taking on identical values
             (Dictionary<Cell, List<Cell>>, int) conflictData = GetInitialConflicts();
             for (int i = 0; i < 1000000; i++)
             {
@@ -39,9 +39,9 @@ namespace Sudoku_Solver_NEA
                 // this allows for greater initial exploration, while narrowing in on the global minimum later on in the process
                 switch (i)
                 {
-                    case < 5000: 
+                   /* case < 5000: 
                         swapNumber = BoxGroupings.Count; 
-                        break;
+                        break; */
                     case > 20000:
                         swapNumber = 1;
                         break;
@@ -51,20 +51,20 @@ namespace Sudoku_Solver_NEA
                 }
                 // performs a certain number of swaps within boxes, defined by swapNumber
                 List<Cell> changedCells = ChangeRandomCells(swapNumber);
-                // updates the conflicts dictionary and number of conflicts present based on the performed swap
+                // updates the conflicts dictionary and number of conflicts present based on the performed swaps
                 (List<(Cell, Cell, int)>, int) changedConflicts = UpdateConflicts(conflictData, changedCells);
                 conflictData.Item2 += changedConflicts.Item2; 
                 // if board is not solved
                 if (conflictData.Item2 == 0)
                 {
                     PrintBoard(Board);
-                    break;
+                    return true;
                 }
                 // if the number of conflicts decreases or stays the same, always accept the change
                 if (changedConflicts.Item2 > 0)
                 {
                     temperature = initialTemperature * Math.Pow(Math.E, -0.05 * i);
-                    // calculate the acceptance probability based on the magnitude of the increase in conflicts and the iteration number (temperature)
+                    // calculates the acceptance probability
                     double acceptanceProbability = CalculateAcceptanceProbability(changedConflicts.Item2, temperature);
                     int number = random.Next(1000);
                     // if the number is sufficiently high, do not accept the change and revert back the board back to its state in the previous iteration
@@ -72,29 +72,18 @@ namespace Sudoku_Solver_NEA
                     {
                         // reverts the conflict number counter
                         conflictData.Item2 -= changedConflicts.Item2;
-                        // undoes all the changes of the iteration, resetting all the values of cells to their previous values
+                        // undoes all the changes of the iteration, resetting values of cells to those in the previous iteration
                         for (int j = 0; j < swapNumber * 2; j++)
                         {
-                            Move move = Stack.Pop();
-                            move.Cell.ChangeCellValue(move.OldEntry);
+                            (Cell, int) move = Stack.Pop();
+                            move.Item1.ChangeCellValue(move.Item2);
                         }
 
                         ReinstateConflicts(changedConflicts.Item1, conflictData.Item1);
                     }
                 }
             }
-            // if board not solved by the end of the iterations
-            // for all cells which still have conflicts, set them to 0 and variable (empty)
-            Board.VariableNodes.Clear();
-            foreach (KeyValuePair<Cell, List<Cell>> pair in conflictData.Item1)
-            {
-                if (pair.Value.Count != 0)
-                {
-                    pair.Key.ChangeCellValue(0);
-                    Board.VariableNodes.Add(pair.Key);
-                }
-            }
-            return true;
+            return false;
         }
 
         private void InitialiseBoard()
@@ -280,8 +269,8 @@ namespace Sudoku_Solver_NEA
                     secondRandomCell = random.Next(boxCells.Count);
                 }
                 // records the previous values of each cell for later reversion if equired
-                Stack.Push(new Move(boxCells[firstRandomCell], boxCells[firstRandomCell].Entry));
-                Stack.Push(new Move(boxCells[secondRandomCell], boxCells[secondRandomCell].Entry));
+                Stack.Push(boxCells[firstRandomCell], boxCells[firstRandomCell].Entry);
+                Stack.Push(boxCells[secondRandomCell], boxCells[secondRandomCell].Entry);
                 // swaps the entries of the two cells
                 int tempEntry = boxCells[firstRandomCell].Entry;
                 boxCells[firstRandomCell].ChangeCellValue(boxCells[secondRandomCell].Entry);
@@ -296,7 +285,6 @@ namespace Sudoku_Solver_NEA
         // uses the criterion of probabilistic acceptance of a worse board state
         private double CalculateAcceptanceProbability(int change, double temperature)
         {
-            // calculate and return the acceptance probability based on the temperature and how much "worse" the solution is
             double probability = Math.Pow(Math.E, -(change / temperature));
             // occurs due to an underflow , at which point take the probability as 0 since it is so small
             if (probability > 1)

@@ -30,7 +30,6 @@ namespace Sudoku_Solver_NEA
             Cell node = GetMRV();
             // creates a list of domains in order of increasing impact
             List<(int,int)> orderedDomain = SortByLCV(node);
-            // iterates through domains by increasing impact
             for (int i = 0; i < orderedDomain.Count; i++)
             {
                 node.ChangeCellValue(orderedDomain[i].Item2);
@@ -54,7 +53,6 @@ namespace Sudoku_Solver_NEA
             }
             // backtracks up the tree - resetting the most recently edited cell
             node.ChangeCellValue(0);
-            // adds the reset node back into the priority queue
             Board.Queue.Enqueue(node);
             return false;
         }
@@ -69,7 +67,6 @@ namespace Sudoku_Solver_NEA
             }
             if (CheckFinished())
             {
-                // increment solution count
                 Board.SetSolutionCount(Board.SolutionCount + 1);
                 PrintBoard(Board);
                 // clones the board and adds it to the list of solutions
@@ -101,7 +98,7 @@ namespace Sudoku_Solver_NEA
                     {
                         return true;
                     }
-                    // if this is the first solution to be found, continue iterating through the for loop
+                    // if this is the first solution to be found, continue iterating through the loop
                     continue;
                 }
                 RestorePrunedValues(removed);
@@ -123,7 +120,7 @@ namespace Sudoku_Solver_NEA
                 {
                     // removes the value of the connected node from the cell's domain
                     changeNode.Domain.Remove(node.Entry);
-                    // records the cell which the number has been removed from for later use
+                    // records the cell which the number has been removed from for later reversion if necessary
                     removedNumbers.Add((changeNode, node.Entry));
                     // if an unassigned cell has no potential values it can take on in future recursive loops without violating Sudoku constraints
                     if (changeNode.Domain.Count == 0)
@@ -143,7 +140,6 @@ namespace Sudoku_Solver_NEA
                 // if the domain of the cell does not already contain the stated number
                 if (!pair.Item1.Domain.Contains(pair.Item2))
                 {
-                    // adds the removed number back into the domain
                     pair.Item1.Domain.Add(pair.Item2); 
                 }
             }

@@ -107,7 +107,7 @@ namespace Sudoku_Solver_NEA
         {
             // creates a new board with identical structure
             Board newBoard = new Board("", new string[inputBoard.BoardSketch.GetLength(1), inputBoard.BoardSketch.GetLength(0)], inputBoard.Dimensions);
-             // clones the board sketch of the original input board
+             // clones the board sketch of the original input board by the value of each index
             for (int i = 0; i < newBoard.BoardSketch.GetLength(0); i++)
             {
                 for (int j = 0; j < newBoard.BoardSketch.GetLength(1); j++)

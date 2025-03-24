@@ -25,12 +25,13 @@ else
     }
     <h3 style="margin-left: 100px">Hints: @_hintCount</h3>
     CheckBoard();
+    <h3>@_apiWarning</h3>
     @if (_userCompleted == true)
     {
         <h3>Board Completed!          Your Score: @GenerateScore(difficulty!)</h3>
     }
     <div class="sudoku-container-@_containerType">
-        @for (int row = 0; row < _dimensions; row++)  // prints 81 square buttons in a 9x9 format
+        @for (int row = 0; row < _dimensions; row++)  // prints _dimensions^2 square buttons in a _dimensions x _dimensions format
         {
             <div class="sudoku-column">
                 @for (int column = 0; column < _dimensions; column++)
@@ -61,7 +62,7 @@ else
     </div>
 
     <div class="number-buttons-container-@_containerType">
-        @for (int i = 1; i <= _dimensions; i++)  // prints {_dimensions} numbered input buttons in a line
+        @for (int i = 1; i <= _dimensions; i++)  // prints _dimensions numbered input buttons in a line
         {
             // if i was directly used, ChangeCellValue(_dimensions + 1) would be called
             // for all button clicks, causing a logic error
@@ -97,6 +98,7 @@ else
     private int _mistakeCount;
     private int _hintCount;
     private string _noteTaking = "Off";
+    private string? _apiWarning;
     private MoveStack _stack = new MoveStack(100);
     private DBCallerBoard _databaseCallerBoard = new();
 
@@ -132,7 +134,7 @@ else
             }
             _rendered = true;
             _launchTime = DateTime.Now.Add(new TimeSpan(0, _minuteDelay, _secondDelay));
-            // generates boards in the background while user is playing
+            // retrieves new  boards in the background while user is playing
             Task backgroundApiBoardsTask = GetBackgroundApiBoards();
             // re-renders the page every second while the board is not solved
             // this is required to update the timer to reflect real-time
@@ -141,16 +143,15 @@ else
                 await Task.Delay(1000);
                 StateHasChanged();
             }
-            // retrieves new boards in the background during gameplay
             await backgroundApiBoardsTask;
         }
     }
 
     private async Task InitialiseBoardAndSolver()
     {
-        // if a 9x9 board selected, use the API to generate a board
         if (difficulty != "continue")
         {
+            // if a new 9x9 board selected, use the API to generate a board
             if (_dimensions == 9)
             {
                 bool boardFetched = false;
@@ -167,9 +168,11 @@ else
                     }
                 }
             }
+            // if a different board is selected, create an empty 2D array of the requested size
             else
             {
                 _boardSketch = new string[_dimensions, _dimensions];
+                // populate all cells to signify an empty, variable node
                 for (int i=0; i<_dimensions; i++)
                 {
                     for (int j=0; j<_dimensions; j++)
@@ -306,6 +309,7 @@ else
             // returns nothing if the ID's do not match
             return new string[0, 0];
         }
+        // if exception is thrown, simply state that request was invalid
         catch (Exception)
         {
             return new string[0, 0];
@@ -319,7 +323,7 @@ else
         {
             if (cell.Entry != 0)
             {
-                _stack!.Push(new Move(cell, cell.Entry));
+                _stack!.Push(cell, cell.Entry);
                 cell.ChangeCellValue(0);
             }
         }
@@ -331,8 +335,8 @@ else
         // resets the values of variable nodes to those input by the user in case of a continued game
         while (_stack.Count > 0)
         {
-            Move move = _stack.Pop();
-            move.Cell.ChangeCellValue(move.OldEntry);
+            (Cell, int) move = _stack.Pop();
+            move.Item1.ChangeCellValue(move.Item2);
         }
     }
 
@@ -344,7 +348,6 @@ else
             if (savedBoard.Difficulty == difficulty)
             {
                 // sets the board to the cached board and removes it from the cache
-                // this eliminates the need for any synchronous API calls
                 _boardSketch = savedBoard.BoardSketch;
                 // records the removal of the board from the cache
                 UserClient!.FetchedBoards.Remove(savedBoard);
@@ -508,8 +511,7 @@ else
                 if (!(_selectedCell == null))
                 {
                     // records the change + pushes it onto move stack, providing the option to undo later if necessary
-                    Move move = new Move(_selectedCell, _selectedCell!.Entry);
-                    _stack.Push(move);
+                    _stack.Push(_selectedCell, _selectedCell.Entry);
                     _selectedCell.ChangeCellValue(number);
                     // if the input number is incorrect - does not match the value in the solution
                     if (number != _correctNumbers![_selectedCell.Position.Item1, _selectedCell.Position.Item2])
@@ -622,10 +624,9 @@ else
     {
         // calculates the time spent on the board
         TimeSpan currentTime = DateTime.Now - _launchTime;
-        // splits the time into minutes and seconds
         if (currentTime.Seconds < 10)
         {
-            // e.g. time formats as 7:06 instead of 7:6
+            // ensures correct formatting e.g. time formats as 7:06 instead of 7:6
             return $"{currentTime.Minutes}:0{currentTime.Seconds}";
         }
         return $"{currentTime.Minutes}:{currentTime.Seconds}";
@@ -689,8 +690,8 @@ else
         if (_stack.Count > 0)
         {
             // sets the given cell to its original entry before being changed
-            Move move = _stack.Pop();
-            move.Cell.ChangeCellValue(move.OldEntry);
+            (Cell, int) move = _stack.Pop();
+            move.Item1.ChangeCellValue(move.Item2);
         }
     }
 
@@ -712,9 +713,8 @@ else
                 // boards are continuously fetched until at least one board of each difficulty is stored
                 while (UserClient.EasyFetched == 0 || UserClient.MediumFetched == 0 || UserClient.HardFetched == 0)
                 {
-                    // 10 boards fetched to minimise the number of fetches needed, while also preventing individual fetches from taking too long
-                    List<Board> fetchedBoards = await generator.GenerateBoard();
-                    for (int i = 0; i < 10; i++)
+                    List<Board> fetchedBoards = await generator.GenerateBoard(5);
+                    for (int i = 0; i < 5; i++)
                     {
                         // records board in cache list
                         UserClient.IncrementDifficultiesFetched(fetchedBoards[i].Difficulty);
@@ -723,9 +723,10 @@ else
                 }
                 fetched = true;
             }
-            catch (Exception)
+            catch (FieldAccessException)
             {
-                // waits before retrying to prevent excessive API calls
+                _apiWarning = "Failed to fetch boards from API";
+                // attempt to fetch again after 1 second
                 await Task.Delay(1000);
             }
         }
